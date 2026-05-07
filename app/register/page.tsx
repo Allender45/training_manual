@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Input, Button } from '@/components';
 
 interface FormState {
     last_name: string;
@@ -28,56 +29,32 @@ const INITIAL: FormState = {
 export default function RegisterPage() {
     const router = useRouter();
     const [form, setForm] = useState<FormState>(INITIAL);
-    const [photo, setPhoto] = useState<File | null>(null);
-    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
-    const fileRef = useRef<HTMLInputElement>(null);
+    const [phoneError, setPhoneError] = useState<string | null>(null);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
         setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
     }
 
-    function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
-        let value = e.target.value.replace(/[^\d]/g, '');
-        if (value.length > 0 && !value.startsWith('7')) {
-            value = '7' + value;
-        }
-        if (value.length > 11) {
-            value = value.slice(0, 11);
-        }
-        if (value.length >= 2) {
-            value = value.replace(/(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})/, '+$1 ($2) $3-$4-$5');
-        }
-        setForm(prev => ({ ...prev, phone: value }));
-    }
-
-    function handleBirthdayChange(e: React.ChangeEvent<HTMLInputElement>) {
-        let value = e.target.value.replace(/[^\d]/g, '');
-        if (value.length >= 2) {
-            value = value.slice(0, 2) + '.' + value.slice(2);
-        }
-        if (value.length >= 5) {
-            value = value.slice(0, 5) + '.' + value.slice(5);
-        }
-        if (value.length > 10) {
-            value = value.slice(0, 10);
-        }
-        setForm(prev => ({ ...prev, birthday: value }));
-    }
-
-    function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0] ?? null;
-        setPhoto(file);
-        if (file) {
-            setPhotoPreview(URL.createObjectURL(file));
+    function handlePhoneBlur() {
+        const digits = form.phone.replace(/\D/g, '');
+        if (digits.length > 0 && digits.length < 11) {
+            setPhoneError('Номер должен содержать 12 символов включая +');
+        } else {
+            setPhoneError(null);
         }
     }
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError(null);
+
+        if (form.phone.replace(/\D/g, '').length !== 11) {
+            setError('Номер телефона должен содержать 12 символов (включая +)');
+            return;
+        }
 
         if (form.password !== form.confirm_password) {
             setError('Пароли не совпадают');
@@ -88,7 +65,6 @@ export default function RegisterPage() {
         Object.entries(form).forEach(([key, val]) => {
             if (key !== 'confirm_password') data.append(key, val);
         });
-        if (photo) data.append('photo', photo);
 
         setLoading(true);
         try {
@@ -99,7 +75,8 @@ export default function RegisterPage() {
                 return;
             }
             setSuccess(true);
-        } catch {
+        } catch (err) {
+            console.error('[register] fetch error:', err);
             setError('Не удалось подключиться к серверу');
         } finally {
             setLoading(false);
@@ -113,12 +90,12 @@ export default function RegisterPage() {
                     <div className="text-green-500 text-5xl mb-4">✓</div>
                     <h2 className="text-xl font-semibold text-gray-800 mb-2">Регистрация завершена</h2>
                     <p className="text-gray-500 text-sm mb-6">Ваш аккаунт успешно создан</p>
-                    <button
+                    <Button
                         onClick={() => router.push('/')}
                         className="w-full bg-blue-600 text-white py-3 rounded-3 text-lg font-medium hover:bg-blue-700 transition"
                     >
                         На главную
-                    </button>
+                    </Button>
                 </div>
             </div>
         );
@@ -130,11 +107,8 @@ export default function RegisterPage() {
                 <div className="bg-white rounded-2xl shadow-sm p-4">
                     {/* Logo */}
                     <div className="text-center mb-4">
-                        <div className="flex items-center justify-center gap-2">
-                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                                <span className="text-white font-bold text-lg">P</span>
-                            </div>
-                            <span className="text-xl font-semibold text-gray-800">Portal</span>
+                        <div className="flex items-center justify-center gap-2 w-[80%] m-auto">
+                            <a href="/"><img src="/raz_logo.png" alt="logo" /></a>
                         </div>
                     </div>
 
@@ -144,66 +118,20 @@ export default function RegisterPage() {
 
                         {/* ФИО */}
                         <div className="space-y-3">
-                            <Field label="Фамилия *" name="last_name" value={form.last_name} onChange={handleChange} required />
-                            <Field label="Имя *" name="first_name" value={form.first_name} onChange={handleChange} required />
-                            <Field label="Отчество *" name="middle_name" value={form.middle_name} onChange={handleChange} required />
+                            <Input label="Фамилия *" name="last_name" value={form.last_name} onChange={handleChange} required icon="user" />
+                            <Input label="Имя *" name="first_name" value={form.first_name} onChange={handleChange} required icon="user" />
+                            <Input label="Отчество *" name="middle_name" value={form.middle_name} onChange={handleChange} required icon="user" />
                         </div>
 
                         {/* Телефон и Email */}
                         <div className="space-y-3">
-                            <Field label="Телефон *" name="phone" type="tel" value={form.phone} onChange={handlePhoneChange} required placeholder="+7 (999) 999-99-99" />
-                            <Field label="Email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="name@domain.com" />
-                        </div>
-
-                        {/* День рождения */}
-                        <Field label="День рождения" name="birthday" type="text" value={form.birthday} onChange={handleBirthdayChange} placeholder="dd.mm.yyyy" />
-
-                        {/* Фото */}
-                        <div>
-                            <label className="block text-gray-500 text-sm mb-2">Фото</label>
-                            <div className="flex items-center gap-3">
-                                {photoPreview ? (
-                                    <img src={photoPreview} alt="preview" className="w-12 h-12 rounded-full object-cover border" />
-                                ) : (
-                                    <div className="w-12 h-12 rounded-full bg-gray-100 border flex items-center justify-center text-gray-400">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                    </div>
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={() => fileRef.current?.click()}
-                                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                                >
-                                    Выбрать фото
-                                </button>
-                                <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.webp,.gif" className="hidden" onChange={handlePhoto} />
-                            </div>
-                        </div>
-
-                        {/* Паспорт */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <Field label="Серия паспорта" name="passport_series" value={form.passport_series} onChange={handleChange} maxLength={4} placeholder="XXXX" />
-                            <Field label="Номер паспорта" name="passport_number" value={form.passport_number} onChange={handleChange} maxLength={6} placeholder="XXXXXX" />
-                        </div>
-
-                        {/* Комментарий */}
-                        <div>
-                            <label className="block text-gray-500 text-sm mb-2">Комментарий</label>
-                            <textarea
-                                name="comment"
-                                value={form.comment}
-                                onChange={handleChange}
-                                rows={2}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
+                            <Input label="Телефон *" name="phone" type="tel" value={form.phone} onChange={handleChange} onBlur={handlePhoneBlur} required placeholder="+7 (999) 999-99-99" icon="phone" error={phoneError ?? undefined} />
                         </div>
 
                         {/* Пароли */}
                         <div className="space-y-3">
-                            <Field label="Пароль *" name="password" type="password" value={form.password} onChange={handleChange} required minLength={8} />
-                            <Field label="Повторите пароль *" name="confirm_password" type="password" value={form.confirm_password} onChange={handleChange} required minLength={8} />
+                            <Input label="Пароль *" name="password" type="password" value={form.password} onChange={handleChange} required minLength={8} />
+                            <Input label="Повторите пароль *" name="confirm_password" type="password" value={form.confirm_password} onChange={handleChange} required minLength={8} />
                         </div>
 
                         {error && (
@@ -213,13 +141,13 @@ export default function RegisterPage() {
                         )}
 
                         {/* Sign Up Button */}
-                        <button
+                        <Button
                             type="submit"
                             disabled={loading}
                             className="w-full bg-blue-600 text-white py-3 rounded-3 text-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition"
                         >
                             {loading ? 'Регистрация...' : 'Зарегистрироваться'}
-                        </button>
+                        </Button>
 
                         {/* Divider */}
                         <div className="text-center text-gray-500 text-sm pt-2">

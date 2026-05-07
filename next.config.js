@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // твои настройки
+    serverExternalPackages: ['pg'],
 };
 
 module.exports = nextConfig;

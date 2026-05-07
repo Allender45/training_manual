@@ -1,5 +1,21 @@
 import React from 'react';
 
+function formatPhone(raw: string): string {
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length === 0) return '';
+    let d = digits.startsWith('7') ? digits : '7' + digits;
+    d = d.slice(0, 11);
+    let formatted = '+' + d[0];
+    if (d.length > 1) {
+        formatted += ' (' + d.slice(1, Math.min(4, d.length));
+        if (d.length >= 4) formatted += ')';
+        if (d.length > 4) formatted += ' ' + d.slice(4, Math.min(7, d.length));
+    }
+    if (d.length > 7) formatted += '-' + d.slice(7, Math.min(9, d.length));
+    if (d.length > 9) formatted += '-' + d.slice(9, 11);
+    return formatted;
+}
+
 type InputProps = {
     label: string;
     name: string;
@@ -12,6 +28,8 @@ type InputProps = {
     minLength?: number;
     icon?: 'user' | 'email' | 'phone' | 'lock';
     error?: string;
+    onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
+    onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 };
 
 const icons = {
@@ -37,7 +55,23 @@ const icons = {
     ),
 };
 
-export default function Input({ label, name, type = 'text', value, onChange, required, placeholder, maxLength, minLength, icon, error }: InputProps) {
+export default function Input({ label, name, type = 'text', value, onChange, required, placeholder, maxLength, minLength, icon, error, onFocus, onBlur }: InputProps) {
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        if (type === 'tel') {
+            const formatted = formatPhone(e.target.value);
+            onChange({ target: { name: e.target.name, value: formatted } } as React.ChangeEvent<HTMLInputElement>);
+        } else {
+            onChange(e);
+        }
+    }
+
+    function handleFocus(e: React.FocusEvent<HTMLInputElement>) {
+        if (type === 'tel' && !value) {
+            onChange({ target: { name: e.target.name, value: '+7' } } as React.ChangeEvent<HTMLInputElement>);
+        }
+        onFocus?.(e);
+    }
+
     return (
         <div className="relative">
             <label htmlFor={name} className="block text-gray-500 text-sm mb-2">
@@ -49,7 +83,9 @@ export default function Input({ label, name, type = 'text', value, onChange, req
                     name={name}
                     type={type}
                     value={value}
-                    onChange={onChange}
+                    onChange={handleChange}
+                    onFocus={handleFocus}
+                    onBlur={onBlur}
                     required={required}
                     placeholder={placeholder}
                     maxLength={maxLength}

@@ -3,7 +3,15 @@ import '../app/globals.css';
 
 const preview: Preview = {
     parameters: {
-        actions: { argTypesRegex: '^on[A-Z].*' },
+        backgrounds: {
+            default: 'gray',
+            values: [
+                { name: 'white', value: '#ffffff' },
+                { name: 'gray',  value: '#f3f4f6' },
+                { name: 'dark',  value: '#1f2937' },
+            ],
+        },
+        actions: {},
         controls: {
             matchers: {
                 color: /(background|color)$/i,
@@ -11,6 +19,7 @@ const preview: Preview = {
             },
         },
     },
+
 };
 
 export default preview;

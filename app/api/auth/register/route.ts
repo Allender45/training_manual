@@ -110,6 +110,6 @@ export async function POST(req: NextRequest) {
             );
         }
         console.error('[register]', error);
-        return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
+        return NextResponse.json({ error: 'Внутренняя ошибка сервера', detail: String(error?.message ?? error) }, { status: 500 });
     }
 }
