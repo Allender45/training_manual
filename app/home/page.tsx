@@ -21,30 +21,11 @@ const categories = [
     { initials: 'GD', color: 'bg-gray-500', name: 'Graphic Design', courses: '16+ Courses' },
 ];
 
-const messages = [
-    { msg: 'We talked about a project...', time: '30 min ago' },
-    { msg: 'You sent an email to the client...', time: '1 hour ago' },
-    { msg: 'Meeting with the design team...', time: '2 hours ago' },
-    { msg: 'Reviewed the project documents...', time: 'Yesterday' },
-    { msg: 'Finalized the project timeline...', time: '2 days ago' },
-];
-
-const notifications = [
-    { msg: 'Dr Smith uploaded a new report', time: '10 December 2023 - 08:15 AM' },
-    { msg: 'New Appointment Scheduled', time: '10 December 2023 - 09:45 AM' },
-    { msg: 'Patient checked in at reception', time: '10 December 2023 - 10:20 AM' },
-    { msg: 'Dr Alice shared a prescription', time: '10 December 2023 - 11:00 AM' },
-    { msg: 'Emergency Alert: Critical Patient', time: '10 December 2023 - 11:30 AM' },
-    { msg: 'Next Appointment Reminder', time: '10 December 2023 - 12:00 PM' },
-];
-
 export default function HomePage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
     const { user, fetchUser } = useUserStore();
-
-    console.log(user)
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
@@ -53,7 +34,6 @@ export default function HomePage() {
     return (
         <div className="flex min-h-screen bg-gray-100">
 
-            {/* Mobile overlay */}
             <Sidebar
                 sidebarOpen={sidebarOpen}
                 mobileMenuOpen={mobileMenuOpen}

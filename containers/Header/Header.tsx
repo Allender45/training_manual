@@ -4,6 +4,9 @@ import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Menu, Search, MessageSquare, Bell, ChevronDown } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useUserStore } from '@/store/userStore';
+import {Avatar} from "@/components";
 
 const messages = [
     { msg: 'We talked about a project...', time: '30 min ago' },
@@ -34,6 +37,19 @@ export default function Header({ sidebarOpen, setSidebarOpen, mobileMenuOpen, se
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const ref = useRef<HTMLElement>(null);
+    const router = useRouter();
+    const logout = useUserStore(state => state.logout);
+    const { user, fetchUser } = useUserStore();
+
+    useEffect(() => {
+        fetchUser(() => router.push('/login'));
+    }, []);
+
+    async function handleLogout() {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        logout();
+        router.push('/login');
+    }
 
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
@@ -128,19 +144,18 @@ export default function Header({ sidebarOpen, setSidebarOpen, mobileMenuOpen, se
                         onClick={() => { setProfileOpen(!profileOpen); setMessagesOpen(false); setNotificationsOpen(false); }}
                         className="flex items-center gap-2 pl-2"
                     >
-                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">A</div>
+                        <Avatar src={user?.photo || ''} size="sm" className={'border-0'} />
                         <div className="hidden lg:block text-left">
                             <span className="block text-xs text-gray-400 leading-tight">Administrator</span>
-                            <span className="block text-sm font-medium text-gray-700 leading-tight">Admin Lauren</span>
+                            <span className="block text-sm font-medium text-gray-700 leading-tight">{user?.last_name} {user?.first_name}</span>
                         </div>
                         <ChevronDown size={14} className="text-gray-400" />
                     </button>
                     {profileOpen && (
                         <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-lg border z-50">
-                            <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl">Profile</Link>
-                            <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Settings</Link>
+                            <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl">Профиль</Link>
                             <hr className="my-1" />
-                            <Link href="/login" className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50 rounded-b-xl">Logout</Link>
+                            <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 rounded-b-xl">Выход</button>
                         </div>
                     )}
                 </div>

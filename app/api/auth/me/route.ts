@@ -22,3 +22,34 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
+
+export async function PATCH(req: NextRequest) {
+    const raw = req.cookies.get('session')?.value ?? '';
+    const userId = unsignSession(raw);
+    if (!userId) {
+        return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    }
+    try {
+        const body = await req.json();
+        const { last_name, first_name, middle_name, email,
+            passport_series, passport_number, birthday, comment } = body;
+
+        const phone = (body.phone as string ?? '').replace(/\D/g, '').replace(/^7/, '').slice(0, 10);
+
+        const result = await pool.query(
+            `UPDATE users
+             SET last_name=$1, first_name=$2, middle_name=$3, phone=$4,
+                 email=$5, passport_series=$6, passport_number=$7, birthday=$8, comment=$9
+             WHERE id=$10
+             RETURNING id, last_name, first_name, middle_name, phone, email,
+                       photo, passport_series, passport_number, birthday, comment, registered_at`,
+            [last_name, first_name, middle_name, phone,
+                email || null, passport_series || null, passport_number || null,
+                birthday || null, comment || null, userId]
+        );
+        return NextResponse.json({ user: result.rows[0] });
+    } catch (error: any) {
+        console.error('[patch me]', error);
+        return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
+    }
+}

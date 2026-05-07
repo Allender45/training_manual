@@ -19,6 +19,7 @@ type UserStore = {
     user: User | null;
     loaded: boolean;
     setUser: (user: User | null) => void;
+    logout: () => void;
     fetchUser: (onUnauthorized?: () => void) => Promise<void>;
 };
 
@@ -26,6 +27,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
     user: null,
     loaded: false,
     setUser: (user) => set({ user, loaded: true }),
+    logout: () => set({ user: null, loaded: false }),
     fetchUser: async (onUnauthorized) => {
         if (get().loaded) return;
         const res = await fetch('/api/auth/me');

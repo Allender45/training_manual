@@ -24,7 +24,9 @@ const config: StorybookConfig = {
             ...config.resolve,
             alias: {
                 ...(config.resolve?.alias as Record<string, string> ?? {}),
-                'next/link': path.resolve(__dirname, './mocks/next-link.tsx'),
+                'next/link':       path.resolve(__dirname, './mocks/next-link.tsx'),
+                'next/navigation': path.resolve(__dirname, './mocks/next-navigation.ts'),
+                '@':               path.resolve(__dirname, '..'),
             },
         };
         return config;
