@@ -10,7 +10,12 @@ export async function GET(req: NextRequest) {
     }
     try {
         const result = await pool.query(
-            'SELECT id, last_name, first_name, middle_name, phone, email, photo, passport_series, passport_number, birthday, comment, registered_at FROM users WHERE id = $1',
+            `SELECT u.id, u.last_name, u.first_name, u.middle_name, u.phone, u.email,
+                    u.photo, u.passport_series, u.passport_number, u.birthday,
+                    u.comment, u.registered_at, u.role_id, r.name AS role
+             FROM users u
+             LEFT JOIN roles r ON r.id = u.role_id
+             WHERE u.id = $1`,
             [userId]
         );
         if (result.rows.length === 0) {
@@ -42,12 +47,18 @@ export async function PATCH(req: NextRequest) {
                  email=$5, passport_series=$6, passport_number=$7, birthday=$8, comment=$9
              WHERE id=$10
              RETURNING id, last_name, first_name, middle_name, phone, email,
-                       photo, passport_series, passport_number, birthday, comment, registered_at`,
+                 photo, passport_series, passport_number, birthday, comment,
+                 registered_at, role_id`,
             [last_name, first_name, middle_name, phone,
                 email || null, passport_series || null, passport_number || null,
                 birthday || null, comment || null, userId]
         );
-        return NextResponse.json({ user: result.rows[0] });
+        const user = result.rows[0];
+        if (user) {
+            const roleRes = await pool.query('SELECT name FROM roles WHERE id = $1', [user.role_id]);
+            user.role = roleRes.rows[0]?.name ?? null;
+        }
+        return NextResponse.json({ user });
     } catch (error: any) {
         console.error('[patch me]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });

@@ -146,7 +146,7 @@ export default function Header({ sidebarOpen, setSidebarOpen, mobileMenuOpen, se
                     >
                         <Avatar src={user?.photo || ''} size="sm" className={'border-0'} />
                         <div className="hidden lg:block text-left">
-                            <span className="block text-xs text-gray-400 leading-tight">Administrator</span>
+                            <span className="block text-xs text-gray-400 leading-tight">{user?.role}</span>
                             <span className="block text-sm font-medium text-gray-700 leading-tight">{user?.last_name} {user?.first_name}</span>
                         </div>
                         <ChevronDown size={14} className="text-gray-400" />

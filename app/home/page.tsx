@@ -190,16 +190,6 @@ export default function HomePage() {
                     </div>
                 </main>
 
-                {/* Footer */}
-                <footer className="bg-white shadow-sm py-3 text-center mt-auto">
-                    <p className="text-sm text-gray-400">
-                        Copyright © 2024. All Rights Reserved.{' '}
-                        <a href="https://www.templaterise.com/" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                            Themes By TemplateRise
-                        </a>
-                    </p>
-                </footer>
-
             </div>
         </div>
     );
