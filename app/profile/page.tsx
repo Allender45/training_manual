@@ -5,11 +5,13 @@ import {useRouter} from 'next/navigation';
 import {useUserStore} from '@/store/userStore';
 import {Header, Sidebar} from '@/containers';
 import {Input, Button, Checkbox} from '@/components';
+import Select from "@/components/Select/Select";
 
 type ProfileForm = {
     last_name: string; first_name: string; middle_name: string;
     phone: string; email: string; passport_series: string;
     passport_number: string; birthday: string; comment: string;
+    role: string;
 };
 
 function formatPhoneDisplay(raw: string): string {
@@ -33,6 +35,7 @@ function userToForm(user: ReturnType<typeof useUserStore.getState>['user']): Pro
         middle_name: user?.middle_name ?? '',
         phone: formatPhoneDisplay(user?.phone ?? ''),
         email: user?.email ?? '',
+        role: user?.role ?? '',
         passport_series: user?.passport_series ?? '',
         passport_number: user?.passport_number ?? '',
         birthday: user?.birthday ? String(user.birthday).slice(0, 10) : '',
@@ -52,6 +55,7 @@ export default function ProfilePage() {
     const [saveError, setSaveError] = useState<string | null>(null);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -66,9 +70,18 @@ export default function ProfilePage() {
         }
     }, [user]);
 
+    useEffect(() => {
+        fetchUser(() => router.push('/login'));
+        fetch('/api/roles')
+            .then(r => r.json())
+            .then(data => setRoleOptions(
+                (data.roles ?? []).map((r: { name: string }) => ({ value: r.name, label: r.name }))
+            ));
+    }, []);
+
     const isDirty = JSON.stringify(form) !== JSON.stringify(original) || photoFile !== null;
 
-    function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
         const {name, value} = e.target;
         if (name === 'birthday') {
             setForm(prev => ({...prev, birthday: formatBirthday(value)}));
@@ -195,6 +208,9 @@ export default function ProfilePage() {
                                    placeholder="ГГГГ-ММ-ДД"/>
                             <Input label="Серия паспорта" name="passport_series" value={form.passport_series}
                                    onChange={handleChange} placeholder="1234"/>
+                            <Select label="Роль" name="role" value={form.role}
+                                    onChange={handleChange} placeholder="Выберите роль"
+                                    options={roleOptions} />
                             <Input label="Номер паспорта" name="passport_number" value={form.passport_number}
                                    onChange={handleChange} placeholder="567890"/>
                             <div className="sm:col-span-2">
