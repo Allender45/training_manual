@@ -19,7 +19,7 @@ function formatPhone(raw: string): string {
 type InputProps = {
     label: string;
     name?: string;
-    type?: 'text' | 'email' | 'tel' | 'password' | 'fileUpload';
+    type?: 'text' | 'email' | 'tel' | 'password' | 'fileUpload' | 'number';
     value?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     required?: boolean;

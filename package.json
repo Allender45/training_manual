@@ -11,6 +11,8 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-react": "^11.1.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/pg": "^8.20.0",
     "bcryptjs": "^3.0.3",

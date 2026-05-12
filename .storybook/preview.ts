@@ -1,5 +1,8 @@
 import type { Preview } from '@storybook/react';
+import * as React from 'react';
 import '../app/globals.css';
+
+(window as any).React = React;
 
 const preview: Preview = {
     parameters: {
@@ -19,7 +22,6 @@ const preview: Preview = {
             },
         },
     },
-
 };
 
 export default preview;

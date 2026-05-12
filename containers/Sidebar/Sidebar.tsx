@@ -45,11 +45,12 @@ export default function Sidebar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen
                 <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
                     {([
                         { href: '/home',        icon: Home,          label: 'Dashboard'     },
-                        { href: '/courses',     icon: FileText,      label: 'Материалы'     },
+                        { href: '/courses',     icon: FileText,      label: 'Курсы'         },
+                        { href: '/manuals',     icon: FileText,      label: 'Материалы'     },
                         { href: '/trainers',    icon: Dumbbell,      label: 'Тренажёры'     },
                         { href: '/tests',       icon: ClipboardList, label: 'Тесты'         },
                         { href: '/users',       icon: Users,         label: 'Пользователи'  },
-                        { href: '/departments',  icon: Building2,     label: 'Подразделения' },
+                        { href: '/departments',  icon: Building2,     label: 'Подразделения'},
                         { href: '/roles',       icon: Shield,        label: 'Роли'          },
                         { href: '/achivments',  icon: Trophy,        label: 'Награды'       },
                         { href: '/reports',     icon: BarChart2,     label: 'Отчёты'        },

@@ -29,6 +29,14 @@ const config: StorybookConfig = {
                 '@':               path.resolve(__dirname, '..'),
             },
         };
+        config.optimizeDeps = {
+            ...config.optimizeDeps,
+            include: [
+                ...(config.optimizeDeps?.include ?? []),
+                '@ckeditor/ckeditor5-build-classic',
+                '@ckeditor/ckeditor5-react',
+            ],
+        };
         return config;
     },
 };
