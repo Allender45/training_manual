@@ -139,18 +139,17 @@ export default function EditCoursePage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-gray-500 text-sm mb-2">Иконка</label>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-end gap-3">
                                         {previewSrc ? (
                                             <img src={previewSrc} alt="preview"
-                                                 className="w-14 h-14 rounded-xl object-cover flex-shrink-0 border border-gray-200" />
+                                                 className="w-10 h-10 rounded-xl object-cover flex-shrink-0 border border-gray-200" />
                                         ) : (
-                                            <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 border border-dashed border-gray-300">
+                                            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 border border-dashed border-gray-300">
                                                 <span className="text-gray-400 text-xs text-center leading-tight">нет<br/>фото</span>
                                             </div>
                                         )}
                                         <Input
-                                            label=""
+                                            label="Загрузка файла"
                                             type="fileUpload"
                                             accept="image/*"
                                             onChange={handleIconChange}

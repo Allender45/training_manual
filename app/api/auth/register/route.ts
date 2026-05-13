@@ -84,17 +84,18 @@ export async function POST(req: NextRequest) {
 
         const password_hash = await bcrypt.hash(password, 12);
 
+        // Хардкод при регистрации выдавать роль с ID = 6 (Стажёр)
         const result = await pool.query(
             `INSERT INTO users
              (last_name, first_name, middle_name, phone, email,
               photo, passport_series, passport_number,
-              birthday, comment, password_hash)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+              birthday, comment, password_hash, role_id)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
              RETURNING id, last_name, first_name, middle_name, phone, email, registered_at`,
             [
                 last_name, first_name, middle_name, phone, email,
                 photoPath, passport_series, passport_number,
-                birthday, comment, password_hash,
+                birthday, comment, password_hash, 6,
             ]
         );
 

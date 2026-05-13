@@ -6,6 +6,7 @@ import { Column } from '@/components/Table/Table';
 import { Settings, ChevronLeft, ChevronRight, Plus, Search, X } from 'lucide-react';
 import Modal from '../Modal/Modal';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export type CourseRow = {
     id: number; title: string; icon: string; description: string;
@@ -13,16 +14,33 @@ export type CourseRow = {
     is_active: boolean; created_at: string;
 };
 export type ManualRow = {
-    id: number; title: string; description: string | null;
-    is_active: boolean; created_at: string;
+    id: number;
+    title: string;
+    icon: string;
+    type: 'text' | 'video' | 'audio';
+    description: string;
+    content: string | null;
+    course_id: number | null;
+    course_title: string | null;
+    prerequisite_id: number | null;
+    comment: string | null;
+    is_active: boolean;
+    created_at: string;
 };
 export type TrainingRow = {
     id: number; title: string; description: string | null;
     is_active: boolean; created_at: string;
 };
 export type TestRow = {
-    id: number; title: string; description: string | null;
-    pass_score: number | null; is_active: boolean; created_at: string;
+    id: number;
+    title: string;
+    time_limit: number | null;
+    shuffle_questions: boolean;
+    shuffle_answers: boolean;
+    course_id: number | null;
+    course_title: string | null;
+    is_active: boolean;
+    created_at: string;
 };
 
 export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow;
@@ -64,7 +82,13 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
                 render: (row: CourseRow) => (
                     <div className="flex items-center gap-3">
                         <img src={row.icon} alt={row.title} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-                        <span className="font-medium text-gray-800">{row.title}</span>
+                        <Link
+                            href={`/courses/study?id=${row.id}`}
+                            onClick={e => e.stopPropagation()}
+                            className="font-medium text-gray-800 hover:text-[#41A141] hover:underline transition-colors"
+                        >
+                            {row.title}
+                        </Link>
                     </div>
                 ),
             },
@@ -91,19 +115,37 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         title: 'Материалы',
         addHref: '/manuals/new',
         emptyText: 'Материалы не найдены',
-        searchFields: (row: ManualRow) => [row.title, row.description],
-        colVisibilityDefaults: { description: true, is_active: true },
-        colLabels: { description: 'Описание', is_active: 'Статус' },
+        searchFields: (row: ManualRow) => [row.title, row.description, row.course_title],
+        colVisibilityDefaults: { type: true, course_title: true, description: false, is_active: true },
+        colLabels: { type: 'Тип', course_title: 'Курс', description: 'Описание', is_active: 'Статус' },
         columns: [
             {
                 key: 'title', header: 'Материал',
-                render: (row: ManualRow) => <span className="font-medium text-gray-800">{row.title}</span>,
+                render: (row: ManualRow) => (
+                    <div className="flex items-center gap-3">
+                        <img src={row.icon} alt={row.title} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                        <span className="font-medium text-gray-800">{row.title}</span>
+                    </div>
+                ),
+            },
+            {
+                key: 'type', header: 'Тип',
+                render: (row: ManualRow) => {
+                    const map: Record<string, string> = { text: '📝 Текст', video: '🎥 Видео', audio: '🎵 Аудио' };
+                    return <span className="text-sm text-gray-600">{map[row.type] ?? row.type}</span>;
+                },
+            },
+            {
+                key: 'course_title', header: 'Курс',
+                render: (row: ManualRow) => row.course_title
+                    ? <span className="text-sm text-gray-700">{row.course_title}</span>
+                    : <span className="text-gray-400 text-sm">—</span>,
             },
             {
                 key: 'description', header: 'Описание',
-                render: (row: ManualRow) => row.description
-                    ? <span className="text-sm text-gray-600 line-clamp-2">{row.description}</span>
-                    : <span className="text-gray-400 text-sm">—</span>,
+                render: (row: ManualRow) => (
+                    <span className="text-sm text-gray-600 line-clamp-2">{row.description}</span>
+                ),
             },
             {
                 key: 'is_active', header: 'Статус',
@@ -137,27 +179,43 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
     },
     tests: {
         title: 'Тесты',
-        addHref: '/tests/new',
+        addHref: '/courseTests/new',
         emptyText: 'Тесты не найдены',
-        searchFields: (row: TestRow) => [row.title, row.description],
-        colVisibilityDefaults: { description: true, pass_score: true, is_active: true },
-        colLabels: { description: 'Описание', pass_score: 'Проходной балл', is_active: 'Статус' },
+        searchFields: (row: TestRow) => [row.title, row.course_title],
+        colVisibilityDefaults: { course_title: true, time_limit: true, shuffle_questions: false, shuffle_answers: false, is_active: true },
+        colLabels: { course_title: 'Курс', time_limit: 'Лимит времени', shuffle_questions: 'Перемешивать вопросы', shuffle_answers: 'Перемешивать ответы', is_active: 'Статус' },
         columns: [
             {
                 key: 'title', header: 'Тест',
                 render: (row: TestRow) => <span className="font-medium text-gray-800">{row.title}</span>,
             },
             {
-                key: 'description', header: 'Описание',
-                render: (row: TestRow) => row.description
-                    ? <span className="text-sm text-gray-600 line-clamp-2">{row.description}</span>
+                key: 'course_title', header: 'Курс',
+                render: (row: TestRow) => row.course_title
+                    ? <span className="text-sm text-gray-600">{row.course_title}</span>
                     : <span className="text-gray-400 text-sm">—</span>,
             },
             {
-                key: 'pass_score', header: 'Проходной балл',
-                render: (row: TestRow) => row.pass_score != null
-                    ? <span className="text-sm text-gray-600">{row.pass_score}%</span>
+                key: 'time_limit', header: 'Лимит времени',
+                render: (row: TestRow) => row.time_limit
+                    ? <span className="text-sm text-gray-600">{row.time_limit} мин</span>
                     : <span className="text-gray-400 text-sm">—</span>,
+            },
+            {
+                key: 'shuffle_questions', header: 'Перемешивать вопросы',
+                render: (row: TestRow) => (
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${row.shuffle_questions ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {row.shuffle_questions ? 'Да' : 'Нет'}
+                </span>
+                ),
+            },
+            {
+                key: 'shuffle_answers', header: 'Перемешивать ответы',
+                render: (row: TestRow) => (
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${row.shuffle_answers ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {row.shuffle_answers ? 'Да' : 'Нет'}
+                </span>
+                ),
             },
             {
                 key: 'is_active', header: 'Статус',

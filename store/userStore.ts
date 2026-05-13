@@ -13,6 +13,7 @@ export type User = {
     birthday: string | null;
     comment: string | null;
     registered_at: string;
+    role_id: number | null;
     role: string | null;
 };
 
