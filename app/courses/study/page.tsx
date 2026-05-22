@@ -169,7 +169,24 @@ export default function CourseStudyPage() {
     }
 
     function finishTest() {
+        const finalScore = testQuestions.filter((q, i) => selectedAnswers[i] === q.correct_answer).length;
+        const scorePercent = testQuestions.length > 0
+            ? Math.round((finalScore / testQuestions.length) * 100)
+            : 0;
+
         setTestPhase('result');
+
+        if (course?.id) {
+            fetch('/api/user-progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content_type: 'course',
+                    content_id: course.id,
+                    score: scorePercent,
+                }),
+            }).catch(() => {});
+        }
     }
 
     function closeTestModal() {

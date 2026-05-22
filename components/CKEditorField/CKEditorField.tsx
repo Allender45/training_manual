@@ -24,7 +24,7 @@ export default function CKEditorField({
                 <label className="block text-gray-500 text-sm mb-2">{label}</label>
             )}
             <CKEditor
-                editor={ClassicEditor}
+                editor={ClassicEditor as any}
                 data={value}
                 config={{ placeholder }}
                 onReady={(editor) => {

@@ -1,18 +1,23 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Table, Checkbox, Button, Select } from '@/components';
-import { Column } from '@/components/Table/Table';
-import { Settings, ChevronLeft, ChevronRight, Plus, Search, X } from 'lucide-react';
+import React, {useState, useEffect, useMemo} from 'react';
+import {Table, Checkbox, Button, Select} from '@/components';
+import {Column} from '@/components/Table/Table';
+import {Settings, ChevronLeft, ChevronRight, Plus, Search, X} from 'lucide-react';
 import Modal from '../Modal/Modal';
-import { useRouter } from 'next/navigation';
+import {useRouter} from 'next/navigation';
 import Link from 'next/link';
+import {useUserStore} from '@/store/userStore';
+import {hasFeature} from '@/lib/permissions';
 
 export type CourseRow = {
     id: number; title: string; icon: string; description: string;
     study_time_minutes: number | null; achievement: string | null;
     is_active: boolean; created_at: string;
+    prerequisite_course_id: number | null;
+    is_locked: boolean;
 };
+
 export type ManualRow = {
     id: number;
     title: string;
@@ -58,7 +63,7 @@ type EntityConfig = {
     searchFields: (row: any) => (string | null | undefined)[];
 };
 
-function StatusBadge({ active }: { active: boolean }) {
+function StatusBadge({active}: { active: boolean }) {
     return (
         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
             active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
@@ -74,14 +79,20 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         addHref: '/courses/new',
         emptyText: 'Курсы не найдены',
         searchFields: (row: CourseRow) => [row.title, row.description],
-        colVisibilityDefaults: { description: false, study_time_minutes: true, achievement: true, is_active: true },
-        colLabels: { description: 'Описание', study_time_minutes: 'Время', achievement: 'Достижение', is_active: 'Статус' },
+        colVisibilityDefaults: {description: false, study_time_minutes: true, achievement: true, is_active: true},
+        colLabels: {
+            description: 'Описание',
+            study_time_minutes: 'Время',
+            achievement: 'Достижение',
+            is_active: 'Статус'
+        },
         columns: [
             {
                 key: 'title', header: 'Курс',
                 render: (row: CourseRow) => (
                     <div className="flex items-center gap-3">
-                        <img src={row.icon} alt={row.title} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                        <img src={row.icon} alt={row.title}
+                             className="w-10 h-10 rounded-lg object-cover flex-shrink-0"/>
                         <Link
                             href={`/courses/study?id=${row.id}`}
                             onClick={e => e.stopPropagation()}
@@ -92,7 +103,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
                     </div>
                 ),
             },
-            { key: 'description', header: 'Описание' },
+            {key: 'description', header: 'Описание'},
             {
                 key: 'study_time_minutes', header: 'Время',
                 render: (row: CourseRow) => row.study_time_minutes
@@ -107,7 +118,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
             },
             {
                 key: 'is_active', header: 'Статус',
-                render: (row: CourseRow) => <StatusBadge active={row.is_active} />,
+                render: (row: CourseRow) => <StatusBadge active={row.is_active}/>,
             },
         ],
     },
@@ -116,14 +127,15 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         addHref: '/manuals/new',
         emptyText: 'Материалы не найдены',
         searchFields: (row: ManualRow) => [row.title, row.description, row.course_title],
-        colVisibilityDefaults: { type: true, course_title: true, description: false, is_active: true },
-        colLabels: { type: 'Тип', course_title: 'Курс', description: 'Описание', is_active: 'Статус' },
+        colVisibilityDefaults: {type: true, course_title: true, description: false, is_active: true},
+        colLabels: {type: 'Тип', course_title: 'Курс', description: 'Описание', is_active: 'Статус'},
         columns: [
             {
                 key: 'title', header: 'Материал',
                 render: (row: ManualRow) => (
                     <div className="flex items-center gap-3">
-                        <img src={row.icon} alt={row.title} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                        <img src={row.icon} alt={row.title}
+                             className="w-10 h-10 rounded-lg object-cover flex-shrink-0"/>
                         <span className="font-medium text-gray-800">{row.title}</span>
                     </div>
                 ),
@@ -131,7 +143,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
             {
                 key: 'type', header: 'Тип',
                 render: (row: ManualRow) => {
-                    const map: Record<string, string> = { text: '📝 Текст', video: '🎥 Видео', audio: '🎵 Аудио' };
+                    const map: Record<string, string> = {text: '📝 Текст', video: '🎥 Видео', audio: '🎵 Аудио'};
                     return <span className="text-sm text-gray-600">{map[row.type] ?? row.type}</span>;
                 },
             },
@@ -149,7 +161,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
             },
             {
                 key: 'is_active', header: 'Статус',
-                render: (row: ManualRow) => <StatusBadge active={row.is_active} />,
+                render: (row: ManualRow) => <StatusBadge active={row.is_active}/>,
             },
         ],
     },
@@ -158,8 +170,8 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         addHref: '/trainings/new',
         emptyText: 'Тренинги не найдены',
         searchFields: (row: TrainingRow) => [row.title, row.description],
-        colVisibilityDefaults: { description: true, is_active: true },
-        colLabels: { description: 'Описание', is_active: 'Статус' },
+        colVisibilityDefaults: {description: true, is_active: true},
+        colLabels: {description: 'Описание', is_active: 'Статус'},
         columns: [
             {
                 key: 'title', header: 'Тренинг',
@@ -173,7 +185,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
             },
             {
                 key: 'is_active', header: 'Статус',
-                render: (row: TrainingRow) => <StatusBadge active={row.is_active} />,
+                render: (row: TrainingRow) => <StatusBadge active={row.is_active}/>,
             },
         ],
     },
@@ -182,8 +194,20 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         addHref: '/courseTests/new',
         emptyText: 'Тесты не найдены',
         searchFields: (row: TestRow) => [row.title, row.course_title],
-        colVisibilityDefaults: { course_title: true, time_limit: true, shuffle_questions: false, shuffle_answers: false, is_active: true },
-        colLabels: { course_title: 'Курс', time_limit: 'Лимит времени', shuffle_questions: 'Перемешивать вопросы', shuffle_answers: 'Перемешивать ответы', is_active: 'Статус' },
+        colVisibilityDefaults: {
+            course_title: true,
+            time_limit: true,
+            shuffle_questions: false,
+            shuffle_answers: false,
+            is_active: true
+        },
+        colLabels: {
+            course_title: 'Курс',
+            time_limit: 'Лимит времени',
+            shuffle_questions: 'Перемешивать вопросы',
+            shuffle_answers: 'Перемешивать ответы',
+            is_active: 'Статус'
+        },
         columns: [
             {
                 key: 'title', header: 'Тест',
@@ -204,7 +228,8 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
             {
                 key: 'shuffle_questions', header: 'Перемешивать вопросы',
                 render: (row: TestRow) => (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${row.shuffle_questions ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${row.shuffle_questions ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                     {row.shuffle_questions ? 'Да' : 'Нет'}
                 </span>
                 ),
@@ -212,21 +237,22 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
             {
                 key: 'shuffle_answers', header: 'Перемешивать ответы',
                 render: (row: TestRow) => (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${row.shuffle_answers ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${row.shuffle_answers ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                     {row.shuffle_answers ? 'Да' : 'Нет'}
                 </span>
                 ),
             },
             {
                 key: 'is_active', header: 'Статус',
-                render: (row: TestRow) => <StatusBadge active={row.is_active} />,
+                render: (row: TestRow) => <StatusBadge active={row.is_active}/>,
             },
         ],
     },
 };
 
 function getPageNumbers(current: number, total: number): (number | '...')[] {
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
     if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
     if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
     return [1, '...', current - 1, current, current + 1, '...', total];
@@ -235,11 +261,13 @@ function getPageNumbers(current: number, total: number): (number | '...')[] {
 type EntityTableProps = {
     entityType: EntityType;
     data: EntityRow[];
+    buttonEdit?: boolean;
+    buttonDel?: boolean;
     onEdit?: (row: EntityRow) => void;
     onDelete?: (row: EntityRow) => void;
 };
 
-export default function EntityTable({ entityType, data, onEdit, onDelete }: EntityTableProps) {
+export default function EntityTable({entityType, data, onEdit, onDelete, buttonEdit, buttonDel}: EntityTableProps) {
     const config = ENTITY_CONFIGS[entityType];
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -251,6 +279,9 @@ export default function EntityTable({ entityType, data, onEdit, onDelete }: Enti
     const [pageSize, setPageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const router = useRouter();
+    const user = useUserStore(s => s.user);
+    const isIntern = user?.role_id === 6;
+    const rid = user?.role_id ?? null;
 
     useEffect(() => {
         setColVisibility(config.colVisibilityDefaults);
@@ -274,14 +305,56 @@ export default function EntityTable({ entityType, data, onEdit, onDelete }: Enti
     const pageData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     const hasActiveFilters = !!(searchQuery || filterActive);
 
-    useEffect(() => { setCurrentPage(1); }, [filteredData.length, pageSize]);
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filteredData.length, pageSize]);
 
-    function resetFilters() { setSearchQuery(''); setFilterActive(''); }
-    function toggleCol(e: React.ChangeEvent<HTMLInputElement>) {
-        setColVisibility(prev => ({ ...prev, [e.target.name]: e.target.checked }));
+    function resetFilters() {
+        setSearchQuery('');
+        setFilterActive('');
     }
 
-    const columns = config.columns.filter(col => col.key === 'title' || colVisibility[col.key]);
+    function toggleCol(e: React.ChangeEvent<HTMLInputElement>) {
+        setColVisibility(prev => ({...prev, [e.target.name]: e.target.checked}));
+    }
+
+    const columns = useMemo(() => {
+        const base = config.columns.filter(col => col.key === 'title' || colVisibility[col.key]);
+        if (entityType !== 'courses' || !isIntern) return base;
+
+        return base.map(col => {
+            if (col.key === 'title') return {
+                ...col,
+                render: (row: CourseRow) => row.is_locked ? (
+                    <div className="flex items-center gap-3">
+                        <img src={row.icon} alt={row.title}
+                             className="w-10 h-10 rounded-lg object-cover flex-shrink-0 opacity-40 grayscale"/>
+                        <span className="font-medium text-gray-400 flex items-center gap-1.5">
+                        🔒 {row.title}
+                    </span>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-3">
+                        <img src={row.icon} alt={row.title}
+                             className="w-10 h-10 rounded-lg object-cover flex-shrink-0"/>
+                        <Link href={`/courses/study?id=${row.id}`} onClick={e => e.stopPropagation()}
+                              className="font-medium text-gray-800 hover:text-[#41A141] hover:underline transition-colors">
+                            {row.title}
+                        </Link>
+                    </div>
+                ),
+            };
+            if (col.key === 'is_active') return {
+                ...col,
+                render: (row: CourseRow) => row.is_locked
+                    ? <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">🔒 Недоступен</span>
+                    : <StatusBadge active={row.is_active}/>,
+            };
+            return col;
+        });
+    }, [config.columns, colVisibility, entityType, isIntern]);
+
     const pageNumbers = getPageNumbers(currentPage, totalPages);
 
     return (
@@ -289,19 +362,23 @@ export default function EntityTable({ entityType, data, onEdit, onDelete }: Enti
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <h3 className="text-xl font-semibold text-gray-800">{config.title}</h3>
-                    <button onClick={() => setSettingsOpen(true)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-200 transition-colors">
-                        <Settings size={18} />
+                    <button onClick={() => setSettingsOpen(true)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-200 transition-colors">
+                        <Settings size={18}/>
                     </button>
                 </div>
-                <Button size="sm" onClick={() => router.push(config.addHref)}>
-                    <Plus size={14} className="mr-1" />
-                    Добавить
-                </Button>
+                {hasFeature(rid, 'coursesTableButtons') &&
+                    <Button size="sm" onClick={() => router.push(config.addHref)}>
+                        <Plus size={14} className="mr-1"/>
+                        Добавить
+                    </Button>
+                }
             </div>
 
             {showSearch && (
                 <div className="relative mb-3">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <Search size={16}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"/>
                     <input
                         type="text"
                         placeholder="Поиск по названию..."
@@ -310,8 +387,9 @@ export default function EntityTable({ entityType, data, onEdit, onDelete }: Enti
                         className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                     />
                     {searchQuery && (
-                        <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                            <X size={14} />
+                        <button onClick={() => setSearchQuery('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <X size={14}/>
                         </button>
                     )}
                 </div>
@@ -323,15 +401,16 @@ export default function EntityTable({ entityType, data, onEdit, onDelete }: Enti
                         label="Статус" name="filterActive" value={filterActive}
                         onChange={e => setFilterActive(e.target.value)}
                         options={[
-                            { value: '', label: 'Все статусы' },
-                            { value: 'active', label: 'Активен' },
-                            { value: 'inactive', label: 'Неактивен' },
+                            {value: '', label: 'Все статусы'},
+                            {value: 'active', label: 'Активен'},
+                            {value: 'inactive', label: 'Неактивен'},
                         ]}
                         size="sm"
                     />
                     {hasActiveFilters && (
-                        <button onClick={resetFilters} className="self-end mb-1 flex items-center gap-1 text-sm text-gray-500 hover:text-red-500 transition-colors">
-                            <X size={14} /> Сбросить фильтры
+                        <button onClick={resetFilters}
+                                className="self-end mb-1 flex items-center gap-1 text-sm text-gray-500 hover:text-red-500 transition-colors">
+                            <X size={14}/> Сбросить фильтры
                         </button>
                     )}
                 </div>
@@ -339,7 +418,7 @@ export default function EntityTable({ entityType, data, onEdit, onDelete }: Enti
 
             <Table<any>
                 columns={columns} data={pageData} keyField="id"
-                emptyText={config.emptyText} buttonEdit buttonDel
+                emptyText={config.emptyText} buttonEdit={buttonEdit} buttonDel={buttonDel}
                 onEdit={onEdit} onDelete={onDelete}
             />
 
@@ -348,26 +427,31 @@ export default function EntityTable({ entityType, data, onEdit, onDelete }: Enti
                     <div className="flex items-center gap-1">
                         <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
                                 className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-30">
-                            <ChevronLeft size={16} />
+                            <ChevronLeft size={16}/>
                         </button>
                         {pageNumbers.map((page, i) => (
                             page === '...'
-                                ? <span key={i} className="w-8 h-8 flex items-center justify-center text-gray-400 text-sm">…</span>
+                                ? <span key={i}
+                                        className="w-8 h-8 flex items-center justify-center text-gray-400 text-sm">…</span>
                                 : <button key={i} onClick={() => setCurrentPage(page as number)}
                                           className={`w-8 h-8 rounded-lg text-sm transition-colors ${page === currentPage ? 'bg-[#41A141] text-white' : 'text-gray-500 hover:bg-gray-100'}`}>
                                     {page}
                                 </button>
                         ))}
-                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
                                 className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-30">
-                            <ChevronRight size={16} />
+                            <ChevronRight size={16}/>
                         </button>
                     </div>
                     <div className="flex items-end gap-2 text-sm text-gray-500">
                         <Select
                             label="Страница" name="currentPage" value={String(currentPage)}
                             onChange={e => setCurrentPage(Number(e.target.value))}
-                            options={Array.from({ length: totalPages }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))}
+                            options={Array.from({length: totalPages}, (_, i) => ({
+                                value: String(i + 1),
+                                label: String(i + 1)
+                            }))}
                             size="sm"
                         />
                         <span className="mb-2">из {totalPages}</span>
@@ -379,18 +463,24 @@ export default function EntityTable({ entityType, data, onEdit, onDelete }: Enti
                 <div className="flex flex-col gap-4">
                     <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Столбцы</p>
                     {Object.entries(config.colLabels).map(([key, label]) => (
-                        <Checkbox key={key} label={label} name={key} checked={!!colVisibility[key]} onChange={toggleCol} variant="switch" />
+                        <Checkbox key={key} label={label} name={key} checked={!!colVisibility[key]} onChange={toggleCol}
+                                  variant="switch"/>
                     ))}
                     <div className="pt-3 border-t border-gray-100 flex flex-col gap-3">
                         <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Показывать</p>
-                        <Checkbox label="Строку поиска" name="showSearch"  checked={showSearch}  onChange={e => setShowSearch(e.target.checked)}  variant="switch" />
-                        <Checkbox label="Фильтры"       name="showFilters" checked={showFilters} onChange={e => setShowFilters(e.target.checked)} variant="switch" />
+                        <Checkbox label="Строку поиска" name="showSearch" checked={showSearch}
+                                  onChange={e => setShowSearch(e.target.checked)} variant="switch"/>
+                        <Checkbox label="Фильтры" name="showFilters" checked={showFilters}
+                                  onChange={e => setShowFilters(e.target.checked)} variant="switch"/>
                     </div>
                     <div className="pt-3 border-t border-gray-100">
                         <Select
                             label="Записей на странице" name="pageSize" value={String(pageSize)}
                             onChange={e => setPageSize(Number(e.target.value))}
-                            options={[{ value: '10', label: '10' }, { value: '20', label: '20' }, { value: '50', label: '50' }]}
+                            options={[{value: '10', label: '10'}, {value: '20', label: '20'}, {
+                                value: '50',
+                                label: '50'
+                            }]}
                             size="sm"
                         />
                     </div>

@@ -52,66 +52,71 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                 </div>
 
                 <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+
+                    {/* Панель стажёра и доступная всем */}
                     <SidebarButton
                         href="/home" icon={Home} label="Dashboard"
                         sidebarOpen={sidebarOpen} active={pathname === '/home'}
                     />
                     <SidebarButton href="/courses" icon={FileText} label="Курсы" sidebarOpen={sidebarOpen}
                                    active={pathname.startsWith('/courses')}/>
-                    <SidebarButton href="/reports" icon={BarChart2} label="Отчёты" sidebarOpen={sidebarOpen}
-                                   active={pathname.startsWith('/reports')}/>
-                    {/* Обучение — группа с подменю */}
-                    <div>
-                        <button
-                            onClick={() => setLearningOpen(o => !o)}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                                LEARNING_HREFS.some(h => pathname.startsWith(h))
-                                    ? 'bg-[#e8f5e8] text-[#41A141]'
-                                    : 'text-gray-600 hover:bg-gray-100'
-                            }`}
-                        >
-                            <BookOpen size={18} className="flex-shrink-0"/>
-                            {sidebarOpen && (
-                                <>
-                                    <span className="flex-1 text-left">Администрирование</span>
-                                    <ChevronRight
-                                        size={16}
-                                        className={`transition-transform duration-200 ${learningOpen ? 'rotate-90' : ''}`}
-                                    />
-                                </>
-                            )}
-                        </button>
 
-                        {sidebarOpen && learningOpen && (
-                            <div className="mt-0.5 ml-4 pl-3 border-l border-gray-200 space-y-0.5">
-                                {hasFeature(rid, 'manuals') &&
+                    {/*Панель наставника*/}
+                    {hasFeature(rid, 'sidebarMentorMenu') &&
+                        <SidebarButton href="/users" icon={Users} label="Пользователи"
+                                       sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
+                    }
+
+
+                    {/* Обучение — группа с подменю */}
+                    {hasFeature(rid, 'sidebarAdminMenu') &&
+                        <div>
+                            <button
+                                onClick={() => setLearningOpen(o => !o)}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                                    LEARNING_HREFS.some(h => pathname.startsWith(h))
+                                        ? 'bg-[#e8f5e8] text-[#41A141]'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                <BookOpen size={18} className="flex-shrink-0"/>
+                                {sidebarOpen && (
+                                    <>
+                                        <span className="flex-1 text-left">Администрирование</span>
+                                        <ChevronRight
+                                            size={16}
+                                            className={`transition-transform duration-200 ${learningOpen ? 'rotate-90' : ''}`}
+                                        />
+                                    </>
+                                )}
+                            </button>
+
+                            {sidebarOpen && learningOpen && (
+                                <div className="mt-0.5 ml-4 pl-3 border-l border-gray-200 space-y-0.5">
                                     <SidebarButton href="/manuals" icon={FileText} label="Материалы"
-                                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/manuals')}/>}
-                                {hasFeature(rid, 'trainers') &&
+                                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/manuals')}/>
                                     <SidebarButton href="/trainers" icon={Dumbbell} label="Тренажёры"
                                                    sidebarOpen={sidebarOpen}
-                                                   active={pathname.startsWith('/trainers')}/>}
-                                {hasFeature(rid, 'courseTests') &&
+                                                   active={pathname.startsWith('/trainers')}/>
                                     <SidebarButton href="/courseTests" icon={ClipboardList} label="Тесты"
                                                    sidebarOpen={sidebarOpen}
-                                                   active={pathname.startsWith('/courseTests')}/>}
-                                {hasFeature(rid, 'users') &&
+                                                   active={pathname.startsWith('/courseTests')}/>
                                     <SidebarButton href="/users" icon={Users} label="Пользователи"
-                                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>}
-                                {hasFeature(rid, 'departments') &&
+                                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
                                     <SidebarButton href="/departments" icon={Building2} label="Подразделения"
                                                    sidebarOpen={sidebarOpen}
-                                                   active={pathname.startsWith('/departments')}/>}
-                                {hasFeature(rid, 'roles') &&
+                                                   active={pathname.startsWith('/departments')}/>
                                     <SidebarButton href="/roles" icon={Shield} label="Роли" sidebarOpen={sidebarOpen}
-                                                   active={pathname.startsWith('/roles')}/>}
-                                {hasFeature(rid, 'achievements') &&
+                                                   active={pathname.startsWith('/roles')}/>
                                     <SidebarButton href="/achievements" icon={Trophy} label="Награды"
                                                    sidebarOpen={sidebarOpen}
-                                                   active={pathname.startsWith('/achivments')}/>}
-                            </div>
-                        )}
-                    </div>
+                                                   active={pathname.startsWith('/achivments')}/>
+                                    <SidebarButton href="/reports" icon={BarChart2} label="Отчёты"
+                                                   sidebarOpen={sidebarOpen}
+                                                   active={pathname.startsWith('/reports')}/>
+                                </div>
+                            )}
+                        </div>}
                 </nav>
             </aside>
         </>

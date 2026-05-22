@@ -8,6 +8,14 @@ export type Feature =
     | 'departments'
     | 'roles'
     | 'achievements'
+    | 'sidebarAdminMenu'
+    | 'sidebarMentorMenu'
+    | 'usersTableCreateButton'
+    | 'usersTableFilters'
+    | 'usersTableRole'
+    | 'usersTableMentor'
+    | 'coursesTableButtons'
+    | 'editUser'
     | 'courseTests';
 
 type RolePermissions = Feature[] | '*';
@@ -16,7 +24,9 @@ type RolePermissions = Feature[] | '*';
 export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
     6: ['dashboard', 'courses'],                                    // Стажёр
     5: ['dashboard', 'courses', 'manuals', 'trainers', 'tests'],    // следующая роль
-    1: '*',                                                         // Администратор
+    4: ['sidebarMentorMenu'],    // Наставник
+    2: ['sidebarMentorMenu', 'usersTableCreateButton', 'usersTableFilters', 'coursesTableButtons', 'editUser'],    // Админ
+    1: '*',                                                         // СуперПользователь
 };
 
 export function hasFeature(roleId: number | null | undefined, feature: Feature): boolean {

@@ -10,10 +10,22 @@ export async function GET(req: NextRequest) {
     try {
         const result = await pool.query(
             `SELECT c.id, c.title, c.icon, c.description, c.study_time_minutes,
-                    c.is_active, c.created_at, a.title AS achievement
+                    c.is_active, c.created_at, a.title AS achievement,
+                    c.prerequisite_course_id,
+                    CASE
+                        WHEN c.prerequisite_course_id IS NOT NULL
+                            AND NOT EXISTS (
+                                SELECT 1 FROM user_progress up
+                                WHERE up.user_id = $1
+                                  AND up.content_type = 'course'
+                                  AND up.content_id = c.prerequisite_course_id
+                            )
+                            THEN true ELSE false
+                        END AS is_locked
              FROM courses c
                       LEFT JOIN achievements a ON a.id = c.achievement_id
-             ORDER BY c.created_at DESC`
+             ORDER BY c.created_at DESC`,
+            [userId]
         );
         return NextResponse.json({ courses: result.rows });
     } catch (error: any) {
@@ -32,7 +44,7 @@ export async function POST(req: NextRequest) {
         const title                  = (formData.get('title')                  as string)?.trim();
         const description            = (formData.get('description')            as string)?.trim();
         const comment                = (formData.get('comment')                as string)?.trim() || null;
-        const prerequisite_manual_id = (formData.get('prerequisite_manual_id') as string) || null;
+        const prerequisite_course_id = (formData.get('prerequisite_course_id') as string) || null;
         const study_time_minutes     = (formData.get('study_time_minutes')     as string) || null;
         const achievement_id         = (formData.get('achievement_id')         as string) || null;
         const is_active              = (formData.get('is_active')              as string) === 'true';
@@ -59,13 +71,13 @@ export async function POST(req: NextRequest) {
 
         const result = await pool.query(
             `INSERT INTO courses
-             (title, icon, description, comment, prerequisite_manual_id,
+             (title, icon, description, comment, prerequisite_course_id,
               study_time_minutes, achievement_id, is_active, created_by, updated_by)
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9)
              RETURNING id, title`,
             [
                 title, iconPath, description, comment,
-                prerequisite_manual_id || null,
+                prerequisite_course_id || null,
                 study_time_minutes ? Number(study_time_minutes) : null,
                 achievement_id || null,
                 is_active,

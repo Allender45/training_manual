@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const result = await pool.query(
         `SELECT c.id, c.title, c.icon, c.description, c.comment,
-                c.prerequisite_manual_id, c.study_time_minutes,
+                c.prerequisite_course_id, c.study_time_minutes,
                 c.achievement_id, c.is_active
          FROM courses c
          WHERE c.id = $1`,
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const title                  = (formData.get('title')                  as string)?.trim();
         const description            = (formData.get('description')            as string)?.trim();
         const comment                = (formData.get('comment')                as string)?.trim() || null;
-        const prerequisite_manual_id = (formData.get('prerequisite_manual_id') as string) || null;
+        const prerequisite_course_id = (formData.get('prerequisite_course_id') as string) || null;
         const study_time_minutes     = (formData.get('study_time_minutes')     as string) || null;
         const achievement_id         = (formData.get('achievement_id')         as string) || null;
         const is_active              = (formData.get('is_active')              as string) === 'true';
@@ -56,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 title                  = $1,
                 description            = $2,
                 comment                = $3,
-                prerequisite_manual_id = $4,
+                prerequisite_course_id = $4,
                 study_time_minutes     = $5,
                 achievement_id         = $6,
                 is_active              = $7,
@@ -66,7 +66,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
              RETURNING id`,
             [
                 title, description, comment,
-                prerequisite_manual_id || null,
+                prerequisite_course_id || null,
                 study_time_minutes ? Number(study_time_minutes) : null,
                 achievement_id || null,
                 is_active,

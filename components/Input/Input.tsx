@@ -32,6 +32,7 @@ type InputProps = {
     onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
     accept?: string;
     className?: string;
+    disabled?: boolean;
 };
 
 const icons = {
@@ -70,7 +71,7 @@ const icons = {
 const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
     {
         label, name, type = 'text', value, onChange, required, placeholder,
-        maxLength, minLength, icon, error, onFocus, onBlur, accept, className
+        maxLength, minLength, icon, error, onFocus, onBlur, accept, className, disabled
     },
     ref
 ) {
@@ -98,6 +99,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
             </label>
             <div className="relative">
                 <input
+                    disabled={disabled}
                     ref={ref}
                     id={name}
                     name={name}

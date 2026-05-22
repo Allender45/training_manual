@@ -10,7 +10,7 @@ type EditCourseForm = {
     title: string;
     description: string;
     comment: string;
-    prerequisite_manual_id: string;
+    prerequisite_course_id: string;
     study_time_minutes: string;
     achievement_id: string;
     is_active: boolean;
@@ -26,7 +26,7 @@ export default function EditCoursePage() {
 
     const [form, setForm] = useState<EditCourseForm>({
         title: '', description: '', comment: '',
-        prerequisite_manual_id: '', study_time_minutes: '', achievement_id: '',
+        prerequisite_course_id: '', study_time_minutes: '', achievement_id: '',
         is_active: true,
     });
     const [currentIcon, setCurrentIcon] = useState<string | null>(null);
@@ -35,14 +35,17 @@ export default function EditCoursePage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
-    const [manualOptions, setManualOptions] = useState<{ value: string; label: string }[]>([]);
+    const [courseOptions, setCourseOptions] = useState<{ value: string; label: string }[]>([]);
     const [achievementOptions, setAchievementOptions] = useState<{ value: string; label: string }[]>([]);
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
-        fetch('/api/manuals').then(r => r.json())
-            .then(d => setManualOptions((d.manuals ?? []).map((m: { id: number; title: string }) => ({ value: String(m.id), label: m.title }))))
-            .catch(() => {});
+        fetch('/api/courses').then(r => r.json())
+            .then(d => setCourseOptions(
+                (d.courses ?? [])
+                    .filter((c: any) => String(c.id) !== courseId)  // только в edit
+                    .map((c: any) => ({ value: String(c.id), label: c.title }))
+            ));
         fetch('/api/achievements').then(r => r.json())
             .then(d => setAchievementOptions((d.achievements ?? []).map((a: { id: number; title: string }) => ({ value: String(a.id), label: a.title }))))
             .catch(() => {});
@@ -56,7 +59,7 @@ export default function EditCoursePage() {
                     title:                  c.title ?? '',
                     description:            c.description ?? '',
                     comment:                c.comment ?? '',
-                    prerequisite_manual_id: c.prerequisite_manual_id ? String(c.prerequisite_manual_id) : '',
+                    prerequisite_course_id: c.prerequisite_course_id ? String(c.prerequisite_course_id) : '',
                     study_time_minutes:     c.study_time_minutes ? String(c.study_time_minutes) : '',
                     achievement_id:         c.achievement_id ? String(c.achievement_id) : '',
                     is_active:              c.is_active ?? true,
@@ -94,7 +97,7 @@ export default function EditCoursePage() {
             fd.append('title', form.title.trim());
             fd.append('description', form.description.trim());
             fd.append('comment', form.comment.trim());
-            fd.append('prerequisite_manual_id', form.prerequisite_manual_id);
+            fd.append('prerequisite_course_id', form.prerequisite_course_id);
             fd.append('study_time_minutes', form.study_time_minutes);
             fd.append('achievement_id', form.achievement_id);
             fd.append('is_active', String(form.is_active));
@@ -181,10 +184,10 @@ export default function EditCoursePage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Select
                                     label="Требуемый материал"
-                                    name="prerequisite_manual_id"
-                                    value={form.prerequisite_manual_id}
+                                    name="prerequisite_course_id"
+                                    value={form.prerequisite_course_id}
                                     onChange={handleChange}
-                                    options={[{ value: '', label: 'Не требуется' }, ...manualOptions]}
+                                    options={[{ value: '', label: 'Не требуется' }, ...courseOptions]}
                                     size="sm"
                                 />
                                 <Select

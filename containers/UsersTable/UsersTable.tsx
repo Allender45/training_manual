@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Table, Checkbox, Button, Select } from '@/components';
-import { Column } from '@/components/Table/Table';
-import { Settings, ChevronLeft, ChevronRight, Plus, Search, X } from 'lucide-react';
+import React, {useState, useEffect, useMemo} from 'react';
+import {Table, Checkbox, Button, Select} from '@/components';
+import {Column} from '@/components/Table/Table';
+import {Settings, ChevronLeft, ChevronRight, Plus, Search, X} from 'lucide-react';
 import Modal from '../Modal/Modal';
-import { useRouter } from 'next/navigation';
+import {useRouter} from 'next/navigation';
+import {hasFeature} from "@/lib/permissions";
+import {useUserStore} from "@/store/userStore";
 
 export type UserRow = {
     id: number;
@@ -15,6 +17,7 @@ export type UserRow = {
     role: string;
     active: boolean;
     photo: string | null;
+    mentor_name: string | null;
 };
 
 type UsersTableProps = {
@@ -24,19 +27,20 @@ type UsersTableProps = {
 };
 
 function getPageNumbers(current: number, total: number): (number | '...')[] {
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
     if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
     if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
     return [1, '...', current - 1, current, current + 1, '...', total];
 }
 
-export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) {
+export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [colVisibility, setColVisibility] = useState({
-        email:  true,
-        phone:  true,
-        role:   true,
+        email: true,
+        phone: true,
+        role: true,
         active: true,
+        mentor_name: false,
     });
     const [showSearch, setShowSearch] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
@@ -46,6 +50,8 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
     const [pageSize, setPageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const router = useRouter();
+    const user = useUserStore(s => s.user);
+    const rid = user?.role_id ?? null;
 
     const roleOptions = useMemo(
         () => [...new Set(data.map(r => r.role).filter(Boolean))].sort(),
@@ -79,7 +85,7 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
     }
 
     function toggleCol(e: React.ChangeEvent<HTMLInputElement>) {
-        setColVisibility(prev => ({ ...prev, [e.target.name]: e.target.checked }));
+        setColVisibility(prev => ({...prev, [e.target.name]: e.target.checked}));
     }
 
     const allColumns: Column<UserRow>[] = [
@@ -88,9 +94,11 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
             render: (row) => (
                 <div className="flex items-center gap-2">
                     {row.photo ? (
-                        <img src={row.photo} alt={row.name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                        <img src={row.photo} alt={row.name}
+                             className="w-8 h-8 rounded-full object-cover flex-shrink-0"/>
                     ) : (
-                        <div className="w-8 h-8 rounded-full bg-[#41A141] flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                        <div
+                            className="w-8 h-8 rounded-full bg-[#41A141] flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
                             {row.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
                     )}
@@ -98,9 +106,20 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
                 </div>
             ),
         },
-        { key: 'email', header: 'Email' },
-        { key: 'phone', header: 'Телефон' },
-        { key: 'role',  header: 'Роль' },
+        {key: 'email', header: 'Email'},
+        {key: 'phone', header: 'Телефон'},
+        ...(hasFeature(rid, 'usersTableRole') ? [{
+            key: 'role' as const, header: 'Роль',
+            render: (row: UserRow) => (
+                <span className="text-sm text-gray-500">{row.role ?? '—'}</span>
+            ),
+        }] : []),
+        ...(hasFeature(rid, 'usersTableMentor') ? [{
+            key: 'mentor_name' as const, header: 'Наставник',
+            render: (row: UserRow) => (
+                <span className="text-sm text-gray-500">{row.mentor_name ?? '—'}</span>
+            ),
+        }] : []),
         {
             key: 'active', header: 'Статус',
             render: (row) => (
@@ -128,18 +147,22 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
                         onClick={() => setSettingsOpen(true)}
                         className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-200 transition-colors"
                     >
-                        <Settings size={18} />
+                        <Settings size={18}/>
                     </button>
                 </div>
-                <Button size="sm" onClick={() => router.push('/users/new')}>
-                    <Plus size={14} className="mr-1" />
-                    Добавить пользователя
-                </Button>
+
+                {hasFeature(rid, 'usersTableCreateButton') &&
+                    <Button size="sm" onClick={() => router.push('/users/new')}>
+                        <Plus size={14} className="mr-1"/>
+                        Добавить пользователя
+                    </Button>
+                }
             </div>
 
             {showSearch && (
                 <div className="relative mb-3">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <Search size={16}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"/>
                     <input
                         type="text"
                         placeholder="Поиск по ФИО, телефону, email..."
@@ -152,46 +175,48 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
                             onClick={() => setSearchQuery('')}
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         >
-                            <X size={14} />
+                            <X size={14}/>
                         </button>
                     )}
                 </div>
             )}
 
-            {showFilters && (
-                <div className="flex items-start gap-3 mb-4 flex-wrap">
-                    <Select
-                        label="Роль"
-                        name="filterRole"
-                        value={filterRole}
-                        onMultiChange={setFilterRole}
-                        options={roleOptions.map(r => ({ value: r, label: r }))}
-                        size="sm"
-                        multiple={true}
-                    />
-                    <Select
-                        label="Статус"
-                        name="filterActive"
-                        value={filterActive}
-                        onChange={e => setFilterActive(e.target.value)}
-                        options={[
-                            { value: '', label: 'Все статусы' },
-                            { value: 'active', label: 'Активен' },
-                            { value: 'inactive', label: 'Неактивен' },
-                        ]}
-                        size="sm"
-                    />
-                    {hasActiveFilters && (
-                        <button
-                            onClick={resetFilters}
-                            className="self-end mb-1 flex items-center gap-1 text-sm text-gray-500 hover:text-red-500 transition-colors"
-                        >
-                            <X size={14} />
-                            Сбросить фильтры
-                        </button>
-                    )}
-                </div>
-            )}
+            {hasFeature(rid, 'usersTableFilters') && showFilters
+                && (
+                    <div className="flex items-start gap-3 mb-4 flex-wrap">
+                        <Select
+                            label="Роль"
+                            name="filterRole"
+                            value={filterRole}
+                            onMultiChange={setFilterRole}
+                            options={roleOptions.map(r => ({value: r, label: r}))}
+                            size="sm"
+                            multiple={true}
+                        />
+                        <Select
+                            label="Статус"
+                            name="filterActive"
+                            value={filterActive}
+                            onChange={e => setFilterActive(e.target.value)}
+                            options={[
+                                {value: '', label: 'Все статусы'},
+                                {value: 'active', label: 'Активен'},
+                                {value: 'inactive', label: 'Неактивен'},
+                            ]}
+                            size="sm"
+                        />
+                        {hasActiveFilters && (
+                            <button
+                                onClick={resetFilters}
+                                className="self-end mb-1 flex items-center gap-1 text-sm text-gray-500 hover:text-red-500 transition-colors"
+                            >
+                                <X size={14}/>
+                                Сбросить фильтры
+                            </button>
+                        )}
+                    </div>
+                )
+            }
 
             <Table<UserRow>
                 columns={columns}
@@ -199,7 +224,7 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
                 keyField="id"
                 emptyText="Пользователи не найдены"
                 buttonEdit
-                buttonDel
+                buttonDel={hasFeature(rid, 'usersTableMentor')}
                 onEdit={onEdit}
                 onDelete={onDelete}
             />
@@ -212,11 +237,12 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
                             disabled={currentPage === 1}
                             className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-30"
                         >
-                            <ChevronLeft size={16} />
+                            <ChevronLeft size={16}/>
                         </button>
                         {pageNumbers.map((page, i) => (
                             page === '...'
-                                ? <span key={i} className="w-8 h-8 flex items-center justify-center text-gray-400 text-sm">…</span>
+                                ? <span key={i}
+                                        className="w-8 h-8 flex items-center justify-center text-gray-400 text-sm">…</span>
                                 : <button
                                     key={i}
                                     onClick={() => setCurrentPage(page as number)}
@@ -232,7 +258,7 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
                             disabled={currentPage === totalPages}
                             className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-30"
                         >
-                            <ChevronRight size={16} />
+                            <ChevronRight size={16}/>
                         </button>
                     </div>
                     <div className="flex items-end gap-2 text-sm text-gray-500">
@@ -241,7 +267,7 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
                             name="currentPage"
                             value={String(currentPage)}
                             onChange={e => setCurrentPage(Number(e.target.value))}
-                            options={Array.from({ length: totalPages }, (_, i) => ({
+                            options={Array.from({length: totalPages}, (_, i) => ({
                                 value: String(i + 1),
                                 label: String(i + 1),
                             }))}
@@ -255,15 +281,29 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
             <Modal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} title="Настройки таблицы">
                 <div className="flex flex-col gap-4">
                     <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Столбцы</p>
-                    <Checkbox label="Email"   name="email"  checked={colVisibility.email}  onChange={toggleCol} variant="switch" />
-                    <Checkbox label="Телефон" name="phone"  checked={colVisibility.phone}  onChange={toggleCol} variant="switch" />
-                    <Checkbox label="Роль"    name="role"   checked={colVisibility.role}   onChange={toggleCol} variant="switch" />
-                    <Checkbox label="Статус"  name="active" checked={colVisibility.active} onChange={toggleCol} variant="switch" />
+                    <Checkbox label="Email" name="email" checked={colVisibility.email} onChange={toggleCol}
+                              variant="switch"/>
+                    <Checkbox label="Телефон" name="phone" checked={colVisibility.phone} onChange={toggleCol}
+                              variant="switch"/>
+                    {hasFeature(rid, 'usersTableRole') &&
+                        <Checkbox label="Роль" name="role" checked={colVisibility.role} onChange={toggleCol}
+                                  variant="switch"/>
+                    }
+                    <Checkbox label="Статус" name="active" checked={colVisibility.active} onChange={toggleCol}
+                              variant="switch"/>
+                    {hasFeature(rid, 'usersTableMentor') &&
+                        <Checkbox label="Наставник" name="mentor_name" checked={colVisibility.mentor_name}
+                                  onChange={toggleCol} variant="switch"/>
+                    }
 
                     <div className="pt-3 border-t border-gray-100 flex flex-col gap-3">
                         <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Показывать</p>
-                        <Checkbox label="Строку поиска" name="showSearch"  checked={showSearch}  onChange={e => setShowSearch(e.target.checked)}  variant="switch" />
-                        <Checkbox label="Фильтры"       name="showFilters" checked={showFilters} onChange={e => setShowFilters(e.target.checked)} variant="switch" />
+                        <Checkbox label="Строку поиска" name="showSearch" checked={showSearch}
+                                  onChange={e => setShowSearch(e.target.checked)} variant="switch"/>
+                        {hasFeature(rid, 'usersTableFilters') &&
+                            <Checkbox label="Фильтры" name="showFilters" checked={showFilters}
+                                      onChange={e => setShowFilters(e.target.checked)} variant="switch"/>
+                        }
                     </div>
 
                     <div className="pt-3 border-t border-gray-100">
@@ -273,9 +313,9 @@ export default function UsersTable({ data, onEdit, onDelete }: UsersTableProps) 
                             value={String(pageSize)}
                             onChange={e => setPageSize(Number(e.target.value))}
                             options={[
-                                { value: '10', label: '10' },
-                                { value: '20', label: '20' },
-                                { value: '50', label: '50' },
+                                {value: '10', label: '10'},
+                                {value: '20', label: '20'},
+                                {value: '50', label: '50'},
                             ]}
                             size="sm"
                         />

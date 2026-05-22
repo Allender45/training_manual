@@ -10,18 +10,45 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
     }
     try {
-        const result = await pool.query(
-            `SELECT u.id,
-                    TRIM(u.last_name || ' ' || u.first_name) AS name,
-                    COALESCE(u.email, '')                    AS email,
-                    COALESCE(u.phone, '')                    AS phone,
-                    COALESCE(r.name, '')                     AS role,
-                    u.is_active                              AS active,
-                    u.photo
-             FROM users u
-                      LEFT JOIN roles r ON r.id = u.role_id
-             ORDER BY u.last_name, u.first_name`
-        );
+        const meRes = await pool.query('SELECT role_id FROM users WHERE id = $1', [userId]);
+        const roleId: number | null = meRes.rows[0]?.role_id ?? null;
+
+        let result;
+        if (roleId === 4) {
+            result = await pool.query(
+                `SELECT u.id,
+                        TRIM(u.last_name || ' ' || u.first_name) AS name,
+                        COALESCE(u.email, '')                    AS email,
+                        COALESCE(u.phone, '')                    AS phone,
+                        COALESCE(r.name, '')                     AS role,
+                        u.is_active                              AS active,
+                        u.photo,
+                        TRIM(m_user.last_name || ' ' || m_user.first_name) AS mentor_name
+                 FROM users u
+                          LEFT JOIN roles r ON r.id = u.role_id
+                          JOIN mentorships ms ON ms.intern_id = u.id AND ms.end_date IS NULL AND ms.mentor_id = $1
+                          LEFT JOIN users m_user ON m_user.id = ms.mentor_id
+                 ORDER BY u.last_name, u.first_name`,
+                [userId]
+            );
+        } else {
+            result = await pool.query(
+                `SELECT u.id,
+                        TRIM(u.last_name || ' ' || u.first_name) AS name,
+                        COALESCE(u.email, '')                    AS email,
+                        COALESCE(u.phone, '')                    AS phone,
+                        COALESCE(r.name, '')                     AS role,
+                        u.is_active                              AS active,
+                        u.photo,
+                        TRIM(m_user.last_name || ' ' || m_user.first_name) AS mentor_name
+                 FROM users u
+                          LEFT JOIN roles r ON r.id = u.role_id
+                          LEFT JOIN mentorships ms ON ms.intern_id = u.id AND ms.end_date IS NULL
+                          LEFT JOIN users m_user ON m_user.id = ms.mentor_id
+                 ORDER BY u.last_name, u.first_name`
+            );
+        }
+
         return NextResponse.json({ users: result.rows });
     } catch (error: any) {
         console.error('[GET /api/users]', error);

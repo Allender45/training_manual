@@ -6,12 +6,15 @@ import { useUserStore } from '@/store/userStore';
 import { Header, Sidebar, CoursesTable, Modal } from '@/containers';
 import { Button } from '@/components';
 import { CourseRow } from '@/containers/CoursesTable/CoursesTable';
+import { hasFeature } from "@/lib/permissions";
 
 export default function CoursesPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
     const { fetchUser } = useUserStore();
+    const user = useUserStore(s => s.user);
+    const rid = user?.role_id ?? null;
 
     const [courses, setCourses] = useState<CourseRow[]>([]);
     const [courseToDelete, setCourseToDelete] = useState<CourseRow | null>(null);
@@ -54,6 +57,8 @@ export default function CoursesPage() {
                         mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
                 <main className="flex-1 p-6">
                     <CoursesTable
+                        buttonEdit={hasFeature(rid, 'coursesTableButtons')}
+                        buttonDel={hasFeature(rid, 'coursesTableButtons')}
                         data={courses}
                         onEdit={(row) => router.push(`/courses/edit?id=${row.id}`)}
                         onDelete={(row) => { setCourseToDelete(row); setDeleteError(null); }}
