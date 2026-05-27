@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
     Home, FileText, Dumbbell, ClipboardList,
     Users, Building2, Shield, Trophy, BarChart2,
-    BookOpen, ChevronRight, BadgePercent, Sheet,
+    BookOpen, ChevronRight, BadgePercent, Sheet, Phone,
 } from 'lucide-react';
 import {usePathname} from 'next/navigation';
 import {SidebarButton} from '@/components';
@@ -62,6 +62,8 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                    active={pathname.startsWith('/courses')}/>
                     <SidebarButton href="/adaptation" icon={BadgePercent} label="Адаптация"
                                    sidebarOpen={sidebarOpen} active={pathname.startsWith('/adaptation/')}/>
+                    <SidebarButton href="/calls" icon={Phone} label="Звонки"
+                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/calls')}/>
 
                     {/*Панель наставника*/}
                     {hasFeature(rid, 'sidebarMentorMenu') &&

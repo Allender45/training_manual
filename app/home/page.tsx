@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/store/userStore';
+import { useUserStore } from '@/store';
 import {Users, BookOpen, DollarSign, ChevronRight, Star, TrendingUp, CalendarDays} from 'lucide-react';
 import {Header, Sidebar} from '@/containers';
 import {StatCard} from "@/components";

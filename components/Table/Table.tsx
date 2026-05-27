@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {Pencil, Trash2, Eye} from 'lucide-react';
+import {Pencil, Trash2, Eye, Play, Sparkles, Loader2} from 'lucide-react';
 
 export type Column<T> = {
     key: string;
@@ -18,6 +18,14 @@ type TableProps<T extends Record<string, any>> = {
     buttonEdit?: boolean;
     buttonDel?: boolean;
     buttonDetail?: boolean;
+    buttonPlay?: boolean;
+    buttonAnalyze?: boolean | ((row: T) => boolean);
+    buttonViewAnalysis?: boolean;
+    onPlay?: (row: T) => void;
+    onAnalyze?: (row: T) => void;
+    onViewAnalysis?: (row: T) => void;
+    isAnalysing?: (row: T) => boolean;
+    hasAnalysis?: (row: T) => boolean;
     onEdit?: (row: T) => void;
     onDelete?: (row: T) => void;
 };
@@ -25,6 +33,9 @@ type TableProps<T extends Record<string, any>> = {
 export default function Table<T extends Record<string, any>>({
                                                                  columns, data, keyField, emptyText = 'Нет данных',
                                                                  buttonEdit, buttonDel, buttonDetail, onEdit, onDelete,
+                                                                 buttonPlay, buttonAnalyze, buttonViewAnalysis,
+                                                                 onPlay, onAnalyze, onViewAnalysis,
+                                                                 isAnalysing, hasAnalysis,
                                                              }: TableProps<T>) {
     return (
         <div className="overflow-x-auto rounded-xl border border-gray-100">
@@ -37,7 +48,7 @@ export default function Table<T extends Record<string, any>>({
                             {col.header}
                         </th>
                     ))}
-                    {(buttonEdit || buttonDel) && <th className="px-4 py-3"/>}
+                    {(buttonEdit || buttonDel || buttonPlay || buttonAnalyze || buttonViewAnalysis) && <th className="px-4 py-3"/>}
                 </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -55,7 +66,7 @@ export default function Table<T extends Record<string, any>>({
                                         {col.render ? col.render(row) : row[col.key]}
                                     </td>
                                 ))}
-                                {(buttonEdit || buttonDel || buttonDetail) && (
+                                {(buttonEdit || buttonDel || buttonDetail || buttonPlay || buttonAnalyze || buttonViewAnalysis) && (
                                     <td className="px-4 py-3">
                                         <div className="flex items-center justify-center gap-2">
                                             {buttonEdit && (
@@ -80,6 +91,27 @@ export default function Table<T extends Record<string, any>>({
                                                     onClick={() => onEdit?.(row)}
                                                 >
                                                     <Eye  size={14} />
+                                                </button>
+                                            )}
+                                            {buttonPlay && (
+                                                <button className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                                        onClick={() => onPlay?.(row)} title="Воспроизвести">
+                                                    <Play size={14} />
+                                                </button>
+                                            )}
+                                            {(typeof buttonAnalyze === 'function' ? buttonAnalyze(row) : buttonAnalyze) && (
+                                                <button className="p-1.5 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 disabled:opacity-50"
+                                                        disabled={isAnalysing?.(row)}
+                                                        onClick={() => onAnalyze?.(row)} title="Анализировать">
+                                                    {isAnalysing?.(row)
+                                                        ? <Loader2 size={14} className="animate-spin" />
+                                                        : <Sparkles size={14} />}
+                                                </button>
+                                            )}
+                                            {buttonViewAnalysis && hasAnalysis?.(row) && (
+                                                <button className="p-1.5 rounded-lg bg-green-100 text-green-600 hover:bg-green-200"
+                                                        onClick={() => onViewAnalysis?.(row)} title="Просмотр анализа">
+                                                    <Eye size={14} />
                                                 </button>
                                             )}
                                         </div>
