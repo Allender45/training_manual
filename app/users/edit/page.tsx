@@ -2,10 +2,11 @@
 
 import {useState, useEffect, useRef} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
-import {useUserStore} from '@/store/userStore';
 import {Header, Sidebar} from '@/containers';
 import {Input, Button, Select, Checkbox} from '@/components';
 import {hasFeature} from '@/lib/permissions';
+import { Plus } from 'lucide-react';
+import { useAdaptationPlansStore, useUserStore, useRolesStore, useEditedUserStore } from '@/store';
 
 type EditUserForm = {
     last_name: string; first_name: string; middle_name: string;
@@ -14,18 +15,8 @@ type EditUserForm = {
     passport_series: string; passport_number: string;
     birthday: string; comment: string;
     is_active: boolean;
-};
-
-type UserData = {
-    id: number;
-    photo: string | null;
-    registered_at: string | null;
-};
-
-type Mentorship = {
-    id: number;
-    mentor_id: number;
-    mentor_name: string;
+    crm_id: string;
+    adaptation_access: boolean;
 };
 
 const emptyForm: EditUserForm = {
@@ -34,6 +25,8 @@ const emptyForm: EditUserForm = {
     passport_series: '', passport_number: '',
     birthday: '', comment: '',
     is_active: true,
+    crm_id: '',
+    adaptation_access: false,
 };
 
 export default function EditUserPage() {
@@ -42,27 +35,31 @@ export default function EditUserPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userId = searchParams.get('id');
+
     const activeUser = useUserStore(s => s.user);
     const rid = activeUser?.role_id ?? null;
 
+    const {roles, fetchRoles} = useRolesStore();
+    const {editedUser, mentorship, mentorOptions, loading, fetchEditedUser, clearEditedUser} = useEditedUserStore();
+
     const [form, setForm] = useState<EditUserForm>(emptyForm);
     const [originalForm, setOriginalForm] = useState<EditUserForm>(emptyForm);
-    const [user, setUser] = useState<UserData | null>(null);
-    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [selectedPlanId, setSelectedPlanId] = useState('');
+    const [originalPlanId, setOriginalPlanId] = useState('');
     const [saveError, setSaveError] = useState<string | null>(null);
-    const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [mentorship, setMentorship] = useState<Mentorship | null>(null);
-    const [mentorOptions, setMentorOptions] = useState<{ value: string; label: string }[]>([]);
     const [mentorForm, setMentorForm] = useState({mentor_id: ''});
     const [originalMentorId, setOriginalMentorId] = useState('');
+    const { plans: adaptationPlans, fetchPlans } = useAdaptationPlansStore();
+
 
     const isDirty = JSON.stringify(form) !== JSON.stringify(originalForm)
         || photoFile !== null
-        || mentorForm.mentor_id !== originalMentorId;
+        || mentorForm.mentor_id !== originalMentorId
+        || selectedPlanId !== originalPlanId;
 
     const canEdit = !hasFeature(rid, 'editUser');
 
@@ -70,53 +67,47 @@ export default function EditUserPage() {
         .filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
     useEffect(() => {
-        fetch('/api/roles')
-            .then(r => r.json())
-            .then(data => setRoleOptions(
-                (data.roles ?? []).map((r: { name: string }) => ({value: r.name, label: r.name}))
-            ));
-        if (userId) {
-            fetch(`/api/users/${userId}`)
-                .then(r => r.json())
-                .then(data => {
-                    const u = data.user;
-                    const filled: EditUserForm = {
-                        last_name: u.last_name ?? '',
-                        first_name: u.first_name ?? '',
-                        middle_name: u.middle_name ?? '',
-                        phone: u.phone ?? '',
-                        email: u.email ?? '',
-                        role: u.role ?? '',
-                        passport_series: u.passport_series ?? '',
-                        passport_number: u.passport_number ?? '',
-                        birthday: u.birthday ?? '',
-                        comment: u.comment ?? '',
-                        is_active: u.is_active ?? true,
-                    };
-                    setForm(filled);
-                    setOriginalForm(filled);
-                    setUser({id: u.id, photo: u.photo ?? null, registered_at: u.registered_at ?? null});
-                    if (u.role === 'Стажёр') {
-                        Promise.all([
-                            fetch(`/api/mentorships?intern_id=${userId}`).then(r => r.json()),
-                            fetch('/api/users').then(r => r.json()),
-                        ]).then(([mData, uData]) => {
-                            const m: Mentorship | null = mData.mentorship ?? null;
-                            setMentorship(m);
-                            if (m) {
-                                setMentorForm({mentor_id: String(m.mentor_id)});
-                                setOriginalMentorId(String(m.mentor_id));
-                            }
-                            setMentorOptions(
-                                (uData.users ?? [])
-                                    .filter((u: any) => u.id !== Number(userId) && u.active && u.role === 'Наставник')
-                                    .map((u: any) => ({value: String(u.id), label: u.name}))
-                            );
-                        });
-                    }
-                })
-                .finally(() => setLoading(false));
+        fetchRoles();
+        fetchPlans();
+        if (userId) fetchEditedUser(userId);
+        return () => clearEditedUser();
+    }, [userId]);
+
+    useEffect(() => {
+        if (!editedUser) return;
+        const filled: EditUserForm = {
+            last_name: editedUser.last_name ?? '',
+            first_name: editedUser.first_name ?? '',
+            middle_name: editedUser.middle_name ?? '',
+            phone: editedUser.phone ?? '',
+            email: editedUser.email ?? '',
+            role: editedUser.role ?? '',
+            passport_series: editedUser.passport_series ?? '',
+            passport_number: editedUser.passport_number ?? '',
+            birthday: editedUser.birthday ?? '',
+            comment: editedUser.comment ?? '',
+            is_active: editedUser.is_active ?? true,
+            crm_id: String(editedUser.crm_id ?? ''),
+            adaptation_access: editedUser.adaptation_access ?? false,
+        };
+        setForm(filled);
+        setOriginalForm(filled);
+        if (mentorship) {
+            setMentorForm({mentor_id: String(mentorship.mentor_id)});
+            setOriginalMentorId(String(mentorship.mentor_id));
         }
+    }, [editedUser, mentorship]);
+
+    useEffect(() => {
+        if (!userId) return;
+        fetch(`/api/adaptations/${userId}`)
+            .then(r => r.json())
+            .then(d => {
+                if (d.adaptation?.plan_id) {
+                    setSelectedPlanId(String(d.adaptation.plan_id));
+                    setOriginalPlanId(String(d.adaptation.plan_id));
+                }
+            });
     }, [userId]);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
@@ -176,6 +167,14 @@ export default function EditUserPage() {
                 }
             }
 
+            if (selectedPlanId && selectedPlanId !== originalPlanId) {
+                await fetch('/api/adaptations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: Number(userId), plan_id: Number(selectedPlanId) }),
+                });
+            }
+
             router.push('/users');
         } catch {
             setSaveError('Ошибка соединения с сервером');
@@ -185,6 +184,9 @@ export default function EditUserPage() {
     }
 
     if (loading) return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
+
+    console.log(mentorForm)
+    console.log(mentorOptions)
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -199,8 +201,8 @@ export default function EditUserPage() {
                     <div className="bg-white rounded-2xl shadow-sm p-6">
                         <div className="flex w-full gap-5 mb-6">
                             <div className="flex flex-col flex-1 items-center gap-2 flex-shrink-0">
-                                {photoPreview || user?.photo ? (
-                                    <img src={photoPreview ?? user!.photo!} alt="Фото профиля"
+                                {photoPreview || editedUser?.photo ? (
+                                    <img src={photoPreview ?? editedUser!.photo!} alt="Фото профиля"
                                          className="w-28 h-28 rounded-full object-cover"/>
                                 ) : (
                                     <div
@@ -209,7 +211,7 @@ export default function EditUserPage() {
                                     </div>
                                 )}
                                 <span className="text-xs text-gray-400">
-                                    {user?.registered_at ? `С ${new Date(user.registered_at).toLocaleDateString('ru-RU')}` : ''}
+                                    {editedUser?.registered_at ? `С ${new Date(editedUser.registered_at).toLocaleDateString('ru-RU')}` : ''}
                                 </span>
                                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
                                        onChange={handlePhotoChange}/>
@@ -237,7 +239,7 @@ export default function EditUserPage() {
                             <Input label="Серия паспорта" name="passport_series" value={form.passport_series}
                                    onChange={handleChange} placeholder="1234" disabled={canEdit}/>
                             <Select label="Роль" name="role" value={form.role} onChange={handleChange}
-                                    placeholder="Выберите роль" options={roleOptions} disabled={canEdit}/>
+                                    placeholder="Выберите роль" options={roles} disabled={canEdit}/>
                             <Input label="Номер паспорта" name="passport_number" value={form.passport_number}
                                    onChange={handleChange} placeholder="567890" disabled={canEdit}/>
                             {form.role === 'Стажёр' && (
@@ -250,6 +252,36 @@ export default function EditUserPage() {
                                     placeholder="Выберите наставника"
                                     disabled={canEdit}
                                 />
+
+                            )}
+                            <Input label="ID в CRM" name="crm_id" type="number" value={form.crm_id}
+                                   onChange={handleChange} disabled={canEdit}/>
+                            <Checkbox label="Допуск к адаптации" name="adaptation_access"
+                                      checked={form.adaptation_access} onChange={handleChange}
+                                      variant="switch" disabled={canEdit}/>
+                            {form.adaptation_access && (
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                        <Select
+                                            label="План адаптации"
+                                            name="adaptation_plan_id"
+                                            value={selectedPlanId}
+                                            onChange={e => setSelectedPlanId(e.target.value)}
+                                            options={adaptationPlans}
+                                            placeholder="Выберите план"
+                                            disabled={canEdit}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => router.push('/adaptationPlans')}
+                                        disabled={canEdit}
+                                        title="Создать план адаптации"
+                                        className="p-2 mb-0.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors flex-shrink-0"
+                                    >
+                                        <Plus size={16} />
+                                    </button>
+                                </div>
                             )}
                             <div className="sm:col-span-2">
                                 <label className="block text-gray-500 text-sm mb-2">Комментарий</label>

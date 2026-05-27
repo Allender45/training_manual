@@ -10,11 +10,20 @@ export type Feature =
     | 'achievements'
     | 'sidebarAdminMenu'
     | 'sidebarMentorMenu'
+    | 'sidebarHrMenu'
     | 'usersTableCreateButton'
     | 'usersTableFilters'
     | 'usersTableRole'
     | 'usersTableMentor'
     | 'coursesTableButtons'
+    | 'usersTableEditUserButton'
+    | 'usersTableDellUserButton'
+    | 'usersTableDetailUserButton'
+    | 'adaptationTableAddButtons'
+    | 'coursesTableAddButtons'
+    | 'manualsTableAddButtons'
+    | 'trainingsTableAddButtons'
+    | 'testsTableAddButtons'
     | 'editUser'
     | 'courseTests';
 
@@ -22,11 +31,37 @@ type RolePermissions = Feature[] | '*';
 
 // ID: [доступные инструменты]
 export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
-    6: ['dashboard', 'courses'],                                    // Стажёр
-    5: ['dashboard', 'courses', 'manuals', 'trainers', 'tests'],    // следующая роль
-    4: ['sidebarMentorMenu'],    // Наставник
-    2: ['sidebarMentorMenu', 'usersTableCreateButton', 'usersTableFilters', 'coursesTableButtons', 'editUser'],    // Админ
-    1: '*',                                                         // СуперПользователь
+    6: [
+        'dashboard',
+        'courses'
+    ],   // Стажёр
+    4: [
+        'sidebarMentorMenu',
+        'usersTableDetailUserButton',
+        'usersTableFilters',
+        'adaptationTableAddButtons',
+    ],    // Наставник
+    3: [
+        'sidebarHrMenu',
+        'usersTableDetailUserButton',
+        'usersTableFilters',
+        'editUser',
+        'usersTableCreateButton',
+        'coursesTableButtons',
+        'coursesTableAddButtons',
+        'usersTableEditUserButton',
+        'usersTableDellUserButton'
+    ],    // Кадровик
+    2: [
+        'sidebarMentorMenu',
+        'usersTableCreateButton',
+        'usersTableFilters',
+        'coursesTableButtons',
+        'editUser',
+        'usersTableDellUserButton',
+        'usersTableEditUserButton'
+    ],    // Админ
+    1: '*',  // СуперПользователь
 };
 
 export function hasFeature(roleId: number | null | undefined, feature: Feature): boolean {

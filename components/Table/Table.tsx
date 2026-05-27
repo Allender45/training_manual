@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {Pencil, Trash2} from 'lucide-react';
+import {Pencil, Trash2, Eye} from 'lucide-react';
 
 export type Column<T> = {
     key: string;
@@ -17,13 +17,14 @@ type TableProps<T extends Record<string, any>> = {
     emptyText?: string;
     buttonEdit?: boolean;
     buttonDel?: boolean;
+    buttonDetail?: boolean;
     onEdit?: (row: T) => void;
     onDelete?: (row: T) => void;
 };
 
 export default function Table<T extends Record<string, any>>({
                                                                  columns, data, keyField, emptyText = 'Нет данных',
-                                                                 buttonEdit, buttonDel, onEdit, onDelete,
+                                                                 buttonEdit, buttonDel, buttonDetail, onEdit, onDelete,
                                                              }: TableProps<T>) {
     return (
         <div className="overflow-x-auto rounded-xl border border-gray-100">
@@ -54,7 +55,7 @@ export default function Table<T extends Record<string, any>>({
                                         {col.render ? col.render(row) : row[col.key]}
                                     </td>
                                 ))}
-                                {(buttonEdit || buttonDel) && (
+                                {(buttonEdit || buttonDel || buttonDetail) && (
                                     <td className="px-4 py-3">
                                         <div className="flex items-center justify-center gap-2">
                                             {buttonEdit && (
@@ -71,6 +72,14 @@ export default function Table<T extends Record<string, any>>({
                                                     onClick={() => onDelete?.(row)}
                                                 >
                                                     <Trash2 size={14} />
+                                                </button>
+                                            )}
+                                            {buttonDetail && (
+                                                <button
+                                                    className="p-1.5 rounded-lg text-white bg-blue-500 transition-colors"
+                                                    onClick={() => onEdit?.(row)}
+                                                >
+                                                    <Eye  size={14} />
                                                 </button>
                                             )}
                                         </div>

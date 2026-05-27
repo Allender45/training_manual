@@ -6,6 +6,20 @@ import bcrypt from 'bcryptjs';
 export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
     const userId = unsignSession(raw);
+    const url = new URL(req.url);
+    const scope = url.searchParams.get('scope');
+
+    if (scope === 'mentors') {
+        const result = await pool.query(`
+        SELECT u.id, TRIM(u.last_name || ' ' || u.first_name) AS name
+        FROM users u
+        JOIN roles r ON u.role_id = r.id
+        WHERE r.name = 'Наставник' AND u.is_active = true
+        ORDER BY u.last_name
+    `);
+        return NextResponse.json({ users: result.rows });
+    }
+
     if (!userId) {
         return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
     }
@@ -23,6 +37,8 @@ export async function GET(req: NextRequest) {
                         COALESCE(r.name, '')                     AS role,
                         u.is_active                              AS active,
                         u.photo,
+                        u.crm_id,
+                        u.adaptation_access,
                         TRIM(m_user.last_name || ' ' || m_user.first_name) AS mentor_name
                  FROM users u
                           LEFT JOIN roles r ON r.id = u.role_id
@@ -40,6 +56,8 @@ export async function GET(req: NextRequest) {
                         COALESCE(r.name, '')                     AS role,
                         u.is_active                              AS active,
                         u.photo,
+                        u.crm_id,
+                        u.adaptation_access,
                         TRIM(m_user.last_name || ' ' || m_user.first_name) AS mentor_name
                  FROM users u
                           LEFT JOIN roles r ON r.id = u.role_id

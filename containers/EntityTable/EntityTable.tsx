@@ -36,6 +36,22 @@ export type TrainingRow = {
     id: number; title: string; description: string | null;
     is_active: boolean; created_at: string;
 };
+
+export type AdaptationPlanRow = {
+    id: number;
+    name: string;
+    calls: number | null;
+    conversion: string | null;
+    revenue_new: string | null;
+    revenue_total: string | null;
+    comment: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    author_name: string | null;
+    author_id: number | null;
+};
+
 export type TestRow = {
     id: number;
     title: string;
@@ -48,8 +64,8 @@ export type TestRow = {
     created_at: string;
 };
 
-export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow;
-export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests';
+export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow;
+export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans';
 
 type ColVisibility = Record<string, boolean>;
 
@@ -61,6 +77,7 @@ type EntityConfig = {
     colVisibilityDefaults: ColVisibility;
     colLabels: Record<string, string>;
     searchFields: (row: any) => (string | null | undefined)[];
+    addButtonFeature: string;
 };
 
 function StatusBadge({active}: { active: boolean }) {
@@ -121,6 +138,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
                 render: (row: CourseRow) => <StatusBadge active={row.is_active}/>,
             },
         ],
+        addButtonFeature: 'coursesTableAddButtons',
     },
     manuals: {
         title: 'Материалы',
@@ -164,6 +182,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
                 render: (row: ManualRow) => <StatusBadge active={row.is_active}/>,
             },
         ],
+        addButtonFeature: 'manualsTableAddButtons',
     },
     trainings: {
         title: 'Тренинги',
@@ -188,6 +207,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
                 render: (row: TrainingRow) => <StatusBadge active={row.is_active}/>,
             },
         ],
+        addButtonFeature: 'trainingsTableAddButtons',
     },
     tests: {
         title: 'Тесты',
@@ -248,6 +268,48 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
                 render: (row: TestRow) => <StatusBadge active={row.is_active}/>,
             },
         ],
+        addButtonFeature: 'testsTableAddButtons',
+    },
+    adaptation_plans: {
+        title: 'Планы адаптации',
+        addHref: '/adaptationPlans/new',
+        emptyText: 'Планы адаптации не найдены',
+        searchFields: (row: AdaptationPlanRow) => [row.name, row.author_name],
+        colVisibilityDefaults: {
+            calls: true,
+            conversion: true,
+            revenue_new: true,
+            revenue_total: true,
+            comment: false,
+            is_active: true,
+            author_name: true,
+            created_at: false,
+            updated_at: false,
+        },
+        colLabels: {
+            calls: 'Звонки',
+            conversion: 'Конверсия, %',
+            revenue_new: 'Касса (новые)',
+            revenue_total: 'Касса (общая)',
+            comment: 'Комментарий',
+            is_active: 'Статус',
+            author_name: 'Автор',
+            created_at: 'Дата создания',
+            updated_at: 'Дата изменения',
+        },
+        columns: [
+            { key: 'name', header: 'Название', render: (row: AdaptationPlanRow) => <span className="font-medium text-gray-800">{row.name}</span> },
+            { key: 'calls', header: 'Звонки', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.calls ?? '—'}</span> },
+            { key: 'conversion', header: 'Конверсия, %', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.conversion ?? '—'}</span> },
+            { key: 'revenue_new', header: 'Касса (новые)', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.revenue_new ? Number(row.revenue_new).toLocaleString('ru-RU') : '—'}</span> },
+            { key: 'revenue_total', header: 'Касса (общая)', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.revenue_total ? Number(row.revenue_total).toLocaleString('ru-RU') : '—'}</span> },
+            { key: 'comment', header: 'Комментарий', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-400 line-clamp-2">{row.comment ?? '—'}</span> },
+            { key: 'is_active', header: 'Статус', render: (row: AdaptationPlanRow) => <StatusBadge active={row.is_active} /> },
+            { key: 'author_name', header: 'Автор', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.author_name ?? '—'}</span> },
+            { key: 'created_at', header: 'Дата создания', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{new Date(row.created_at).toLocaleDateString('ru-RU')}</span> },
+            { key: 'updated_at', header: 'Дата изменения', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{new Date(row.updated_at).toLocaleDateString('ru-RU')}</span> },
+        ],
+        addButtonFeature: 'adaptationTableAddButtons',
     },
 };
 
@@ -265,9 +327,11 @@ type EntityTableProps = {
     buttonDel?: boolean;
     onEdit?: (row: EntityRow) => void;
     onDelete?: (row: EntityRow) => void;
+    onAdd?: () => void;
+    additionalFilters?: React.ReactNode;
 };
 
-export default function EntityTable({entityType, data, onEdit, onDelete, buttonEdit, buttonDel}: EntityTableProps) {
+export default function EntityTable({entityType, data, onEdit, onDelete, buttonEdit, buttonDel, onAdd, additionalFilters}: EntityTableProps) {
     const config = ENTITY_CONFIGS[entityType];
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -319,7 +383,7 @@ export default function EntityTable({entityType, data, onEdit, onDelete, buttonE
     }
 
     const columns = useMemo(() => {
-        const base = config.columns.filter(col => col.key === 'title' || colVisibility[col.key]);
+        const base = config.columns.filter(col => col.key === 'title' || col.key === 'name' || colVisibility[col.key]);
         if (entityType !== 'courses' || !isIntern) return base;
 
         return base.map(col => {
@@ -367,12 +431,12 @@ export default function EntityTable({entityType, data, onEdit, onDelete, buttonE
                         <Settings size={18}/>
                     </button>
                 </div>
-                {hasFeature(rid, 'coursesTableButtons') &&
-                    <Button size="sm" onClick={() => router.push(config.addHref)}>
+                {hasFeature(rid, config.addButtonFeature as any) && (
+                    <Button size="sm" onClick={() => onAdd ? onAdd() : router.push(config.addHref)}>
                         <Plus size={14} className="mr-1"/>
                         Добавить
                     </Button>
-                }
+                )}
             </div>
 
             {showSearch && (
@@ -407,6 +471,7 @@ export default function EntityTable({entityType, data, onEdit, onDelete, buttonE
                         ]}
                         size="sm"
                     />
+                    {additionalFilters}
                     {hasActiveFilters && (
                         <button onClick={resetFilters}
                                 className="self-end mb-1 flex items-center gap-1 text-sm text-gray-500 hover:text-red-500 transition-colors">

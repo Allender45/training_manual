@@ -14,7 +14,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 u.passport_series, u.passport_number,
                 TO_CHAR(u.birthday, 'YYYY-MM-DD') AS birthday,
                 u.comment, u.is_active,
-                COALESCE(r.name, '') AS role
+                COALESCE(r.name, '') AS role,
+                u.registered_at,
+                u.crm_id,
+                u.adaptation_access
          FROM users u
          LEFT JOIN roles r ON r.id = u.role_id
          WHERE u.id = $1`,
@@ -43,6 +46,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const comment     = (formData.get('comment')     as string)?.trim() || null;
         const photoFile   = formData.get('photo') as File | null;
         const is_active = formData.get('is_active') as string;
+        const crm_id = formData.get('crm_id') ? Number(formData.get('crm_id')) : null;
+        const adaptation_access = formData.get('adaptation_access') as string;
 
         const phone = phoneRaw?.replace(/\D/g, '').replace(/^7/, '').slice(0, 10) || null;
 
@@ -76,12 +81,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 comment = $9,
                 role_id = COALESCE($10, role_id),
                 photo = COALESCE($11, photo),
-                is_active = COALESCE(NULLIF($12, '')::boolean, is_active)
-             WHERE id = $13
+                is_active = COALESCE(NULLIF($12, '')::boolean, is_active),
+                crm_id = $13,
+                adaptation_access = COALESCE(NULLIF($14, '')::boolean, adaptation_access)
+             WHERE id = $15
              RETURNING id`,
             [last_name, first_name, middle_name, phone, email,
                 passport_series, passport_number, birthday, comment,
-                role_id, photoPath, is_active, params.id]
+                role_id, photoPath, is_active, crm_id, adaptation_access, params.id]
         );
 
         if (!result.rows[0]) return NextResponse.json({ error: 'Не найден' }, { status: 404 });

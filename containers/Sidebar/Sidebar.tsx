@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
     Home, FileText, Dumbbell, ClipboardList,
     Users, Building2, Shield, Trophy, BarChart2,
-    BookOpen, ChevronRight,
+    BookOpen, ChevronRight, BadgePercent, Sheet,
 } from 'lucide-react';
 import {usePathname} from 'next/navigation';
 import {SidebarButton} from '@/components';
@@ -60,11 +60,25 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                     />
                     <SidebarButton href="/courses" icon={FileText} label="Курсы" sidebarOpen={sidebarOpen}
                                    active={pathname.startsWith('/courses')}/>
+                    <SidebarButton href="/adaptation" icon={BadgePercent} label="Адаптация"
+                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/adaptation/')}/>
 
                     {/*Панель наставника*/}
                     {hasFeature(rid, 'sidebarMentorMenu') &&
-                        <SidebarButton href="/users" icon={Users} label="Пользователи"
-                                       sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
+                        <>
+                            <SidebarButton href="/users" icon={Users} label="Пользователи"
+                                           sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
+                            <SidebarButton href="/adaptationPlans" icon={Sheet} label="Планы адаптации"
+                                           sidebarOpen={sidebarOpen} active={pathname.startsWith('/adaptationPlans')}/>
+                        </>
+                    }
+
+                    {/*Панель кадровика*/}
+                    {hasFeature(rid, 'sidebarHrMenu') &&
+                        <>
+                            <SidebarButton href="/users" icon={Users} label="Пользователи"
+                                           sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
+                        </>
                     }
 
 

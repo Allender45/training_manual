@@ -13,7 +13,7 @@ type NewUserForm = {
     confirmPassword: string;
     role: string;
     passport_series: string; passport_number: string;
-    birthday: string; comment: string;
+    birthday: string; comment: string; crm_id: string;
 };
 
 const emptyForm: NewUserForm = {
@@ -21,7 +21,7 @@ const emptyForm: NewUserForm = {
     phone: '', email: '', password: '', confirmPassword: '',
     role: '',
     passport_series: '', passport_number: '',
-    birthday: '', comment: '',
+    birthday: '', comment: '', crm_id: '',
 };
 
 export default function NewUserPage() {
@@ -139,6 +139,9 @@ export default function NewUserPage() {
                                        onChange={handleChange}/>
                                 <Input label="Фото" accept="image/*"
                                        onChange={handlePhotoChange} type='fileUpload'/>
+                                <Input label="ID в CRM" name="crm_id" type="number" value={form.crm_id}
+                                       onChange={handleChange}/>
+
                             </div>
                             <div className="sm:col-span-2">
                                 <label className="block text-gray-500 text-sm mb-2">Комментарий</label>

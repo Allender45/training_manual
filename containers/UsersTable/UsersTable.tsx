@@ -3,7 +3,7 @@
 import React, {useState, useEffect, useMemo} from 'react';
 import {Table, Checkbox, Button, Select} from '@/components';
 import {Column} from '@/components/Table/Table';
-import {Settings, ChevronLeft, ChevronRight, Plus, Search, X} from 'lucide-react';
+import {Settings, ChevronLeft, ChevronRight, Plus, Search, X, CheckCircle2, XCircle, Check} from 'lucide-react';
 import Modal from '../Modal/Modal';
 import {useRouter} from 'next/navigation';
 import {hasFeature} from "@/lib/permissions";
@@ -18,6 +18,8 @@ export type UserRow = {
     active: boolean;
     photo: string | null;
     mentor_name: string | null;
+    crm_id: number | null;
+    adaptation_access: boolean;
 };
 
 type UsersTableProps = {
@@ -41,11 +43,14 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
         role: true,
         active: true,
         mentor_name: false,
+        crm_id: false,
+        adaptation_access: false,
     });
     const [showSearch, setShowSearch] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterRole, setFilterRole] = useState<string[]>([]);
+    const [filterAdaptation, setFilterAdaptation] = useState('');
     const [filterActive, setFilterActive] = useState('');
     const [pageSize, setPageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
@@ -65,14 +70,16 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
             if (filterRole.length > 0 && !filterRole.includes(row.role)) return false;
             if (filterActive === 'active' && !row.active) return false;
             if (filterActive === 'inactive' && row.active) return false;
+            if (filterAdaptation === 'yes' && !row.adaptation_access) return false;
+            if (filterAdaptation === 'no' && row.adaptation_access) return false;
             return true;
         });
-    }, [data, searchQuery, filterRole, filterActive]);
+    }, [data, searchQuery, filterRole, filterActive, filterAdaptation]);
 
     const totalPages = Math.ceil(filteredData.length / pageSize);
     const showPagination = totalPages > 1;
     const pageData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-    const hasActiveFilters = !!(searchQuery || filterRole.length > 0 || filterActive);
+    const hasActiveFilters = !!(searchQuery || filterRole.length > 0 || filterActive || filterAdaptation);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -82,6 +89,7 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
         setSearchQuery('');
         setFilterRole([]);
         setFilterActive('');
+        setFilterAdaptation('');
     }
 
     function toggleCol(e: React.ChangeEvent<HTMLInputElement>) {
@@ -127,6 +135,20 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                     row.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                 }`}>
                     {row.active ? 'Активен' : 'Неактивен'}
+                </span>
+            ),
+        },
+        {
+            key: 'crm_id', header: 'ID в CRM',
+            render: (row) => <span className="text-sm text-gray-500">{row.crm_id ?? '—'}</span>,
+        },
+        {
+            key: 'adaptation_access', header: 'Адаптация',
+            render: (row) => (
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    row.adaptation_access ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                }`}>
+                    {row.adaptation_access ? 'Допущен' : 'Не допущен'}
                 </span>
             ),
         },
@@ -205,14 +227,26 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                             ]}
                             size="sm"
                         />
+                        <Select
+                            label="Адаптация"
+                            name="filterAdaptation"
+                            value={filterAdaptation}
+                            onChange={e => setFilterAdaptation(e.target.value)}
+                            options={[
+                                {value: '', label: 'Все'},
+                                {value: 'yes', label: 'Допущен'},
+                                {value: 'no', label: 'Нет допуска'},
+                            ]}
+                            size="sm"
+                        />
                         {hasActiveFilters && (
-                            <button
+                            <Button
                                 onClick={resetFilters}
-                                className="self-end mb-1 flex items-center gap-1 text-sm text-gray-500 hover:text-red-500 transition-colors"
+                                className="self-end mb-1 flex items-center gap-1 text-sm text-gray-500  transition-colors"
                             >
                                 <X size={14}/>
                                 Сбросить фильтры
-                            </button>
+                            </Button>
                         )}
                     </div>
                 )
@@ -223,8 +257,9 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                 data={pageData}
                 keyField="id"
                 emptyText="Пользователи не найдены"
-                buttonEdit
-                buttonDel={hasFeature(rid, 'usersTableMentor')}
+                buttonEdit={hasFeature(rid, 'usersTableEditUserButton')}
+                buttonDel={hasFeature(rid, 'usersTableDellUserButton')}
+                buttonDetail={hasFeature(rid, 'usersTableDetailUserButton')}
                 onEdit={onEdit}
                 onDelete={onDelete}
             />
@@ -295,6 +330,8 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                         <Checkbox label="Наставник" name="mentor_name" checked={colVisibility.mentor_name}
                                   onChange={toggleCol} variant="switch"/>
                     }
+                    <Checkbox label="ID в CRM" name="crm_id" checked={colVisibility.crm_id} onChange={toggleCol} variant="switch"/>
+                    <Checkbox label="Адаптация" name="adaptation_access" checked={colVisibility.adaptation_access} onChange={toggleCol} variant="switch"/>
 
                     <div className="pt-3 border-t border-gray-100 flex flex-col gap-3">
                         <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Показывать</p>
