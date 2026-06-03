@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Menu, Search, MessageSquare, Bell, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/store/userStore';
+import { useUserStore, useNotificationsStore  } from '@/store';
 import {Avatar} from "@/components";
 
 const messages = [
@@ -14,15 +14,6 @@ const messages = [
     { msg: 'Meeting with the design team...', time: '2 hours ago' },
     { msg: 'Reviewed the project documents...', time: 'Yesterday' },
     { msg: 'Finalized the project timeline...', time: '2 days ago' },
-];
-
-const notifications = [
-    { msg: 'Dr Smith uploaded a new report', time: '10 December 2023 - 08:15 AM' },
-    { msg: 'New Appointment Scheduled', time: '10 December 2023 - 09:45 AM' },
-    { msg: 'Patient checked in at reception', time: '10 December 2023 - 10:20 AM' },
-    { msg: 'Dr Alice shared a prescription', time: '10 December 2023 - 11:00 AM' },
-    { msg: 'Emergency Alert: Critical Patient', time: '10 December 2023 - 11:30 AM' },
-    { msg: 'Next Appointment Reminder', time: '10 December 2023 - 12:00 PM' },
 ];
 
 type HeaderProps = {
@@ -40,6 +31,13 @@ export default function Header({ sidebarOpen, setSidebarOpen, mobileMenuOpen, se
     const router = useRouter();
     const logout = useUserStore(state => state.logout);
     const { user, fetchUser } = useUserStore();
+    const { notifications, unreadCount, fetch: fetchNotifications, markRead, markAllRead } = useNotificationsStore();
+
+    useEffect(() => {
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 60_000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
@@ -63,6 +61,14 @@ export default function Header({ sidebarOpen, setSidebarOpen, mobileMenuOpen, se
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    function formatTime(dateStr: string) {
+        const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+        if (diff < 60) return 'только что';
+        if (diff < 3600) return `${Math.floor(diff / 60)} мин назад`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} ч назад`;
+        return new Date(dateStr).toLocaleDateString('ru-RU');
+    }
+
     return (
         <header ref={ref} className="bg-white shadow-sm px-4 h-16 flex items-center justify-between sticky top-0 z-30">
             <div className="flex items-center gap-3">
@@ -80,33 +86,34 @@ export default function Header({ sidebarOpen, setSidebarOpen, mobileMenuOpen, se
 
             <div className="flex items-center gap-1">
                 {/* Messages */}
-                <div className="relative">
-                    <button
-                        onClick={() => { setMessagesOpen(!messagesOpen); setNotificationsOpen(false); setProfileOpen(false); }}
-                        className="p-2 text-gray-500 hover:text-gray-800"
-                    >
-                        <MessageSquare size={22} />
-                    </button>
-                    {messagesOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border z-50">
-                            <div className="p-3 h-72 overflow-y-auto space-y-3">
-                                {messages.map((m, i) => (
-                                    <div key={i} className="flex gap-3 items-start">
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-800">{m.msg}</p>
-                                            <p className="text-xs text-gray-400 mt-0.5">{m.time}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <a href="#" className="block text-center text-sm text-blue-600 py-2 border-t hover:bg-gray-50 rounded-b-xl">
-                                See all messages →
-                            </a>
-                        </div>
-                    )}
-                </div>
+                {/*<div className="relative">*/}
+                {/*    <button*/}
+                {/*        onClick={() => { setMessagesOpen(!messagesOpen); setNotificationsOpen(false); setProfileOpen(false); }}*/}
+                {/*        className="p-2 text-gray-500 hover:text-gray-800"*/}
+                {/*    >*/}
+                {/*        <MessageSquare size={22} />*/}
+                {/*    </button>*/}
+                {/*    {messagesOpen && (*/}
+                {/*        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border z-50">*/}
+                {/*            <div className="p-3 h-72 overflow-y-auto space-y-3">*/}
+                {/*                {messages.map((m, i) => (*/}
+                {/*                    <div key={i} className="flex gap-3 items-start">*/}
+                {/*                        <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />*/}
+                {/*                        <div>*/}
+                {/*                            <p className="text-sm font-medium text-gray-800">{m.msg}</p>*/}
+                {/*                            <p className="text-xs text-gray-400 mt-0.5">{m.time}</p>*/}
+                {/*                        </div>*/}
+                {/*                    </div>*/}
+                {/*                ))}*/}
+                {/*            </div>*/}
+                {/*            <a href="#" className="block text-center text-sm text-blue-600 py-2 border-t hover:bg-gray-50 rounded-b-xl">*/}
+                {/*                See all messages →*/}
+                {/*            </a>*/}
+                {/*        </div>*/}
+                {/*    )}*/}
+                {/*</div>*/}
 
+                {/* Notifications */}
                 {/* Notifications */}
                 <div className="relative">
                     <button
@@ -114,26 +121,42 @@ export default function Header({ sidebarOpen, setSidebarOpen, mobileMenuOpen, se
                         className="p-2 text-gray-500 hover:text-gray-800 relative"
                     >
                         <Bell size={22} />
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+                        {unreadCount > 0 && (
+                            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-0.5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center">
+                {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+                        )}
                     </button>
                     {notificationsOpen && (
                         <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border z-50">
-                            <div className="p-3 h-72 overflow-y-auto space-y-3">
-                                {notifications.map((n, i) => (
-                                    <div key={i} className="flex gap-3 items-start">
-                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center">
-                                            <Bell size={16} className="text-blue-600" />
+                            <div className="flex items-center justify-between px-4 py-2 border-b">
+                                <span className="text-sm font-semibold text-gray-700">Уведомления</span>
+                                {unreadCount > 0 && (
+                                    <button onClick={markAllRead} className="text-xs text-blue-600 hover:underline">
+                                        Прочитать все
+                                    </button>
+                                )}
+                            </div>
+                            <div className="h-72 overflow-y-auto divide-y divide-gray-50">
+                                {notifications.length === 0 ? (
+                                    <p className="text-sm text-gray-400 text-center py-10">Нет уведомлений</p>
+                                ) : notifications.map(n => (
+                                    <div
+                                        key={n.id}
+                                        onClick={() => n.status === 'unread' && markRead(n.id)}
+                                        className={`flex gap-3 items-start px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${n.status === 'unread' ? 'bg-blue-50' : ''}`}
+                                    >
+                                        <div className="w-9 h-9 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-lg">
+                                            {n.icon}
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-800">{n.msg}</p>
-                                            <p className="text-xs text-gray-400 mt-0.5">{n.time}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm text-gray-800 leading-snug">{n.text}</p>
+                                            <p className="text-xs text-gray-400 mt-0.5">{formatTime(n.created_at)}</p>
                                         </div>
+                                        {n.status === 'unread' && <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5" />}
                                     </div>
                                 ))}
                             </div>
-                            <a href="#" className="block text-center text-sm text-blue-600 py-2 border-t hover:bg-gray-50 rounded-b-xl">
-                                See all notifications →
-                            </a>
                         </div>
                     )}
                 </div>

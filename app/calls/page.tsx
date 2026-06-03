@@ -53,6 +53,7 @@ const columns: Column<CallRecord>[] = [
     {
         key: 'duration',
         header: 'Длительность',
+        className: 'max-w-5',
         render: row => <span className="text-gray-500">{fmtDuration(row.duration)}</span>,
     },
 ];

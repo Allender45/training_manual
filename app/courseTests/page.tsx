@@ -55,8 +55,8 @@ export default function TestsPage() {
                 <main className="flex-1 p-6">
                     <EntityTable
                         entityType="tests"
-                        data={tests}
-                        onEdit={(row) => router.push(`/courseTests/edit?id=${row.id}`)}
+                        data={tests} buttonEdit buttonDel
+                        onEdit={(row) => router.push(`/courseTests/new?id=${row.id}`)}
                         onDelete={(row) => { setTestToDelete(row as TestRow); setDeleteError(null); }}
                     />
                 </main>

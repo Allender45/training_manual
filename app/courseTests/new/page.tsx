@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/store/userStore';
+import {useRouter, useSearchParams} from 'next/navigation';
+import { useUserStore, useNotificationsStore, useCoursesStore, useAchievementsStore } from '@/store';
 import { Header, Sidebar } from '@/containers';
 import { Input, Button, Checkbox, Select } from '@/components';
 import { Plus, Trash2, X } from 'lucide-react';
@@ -20,10 +20,15 @@ type NewTestForm = {
     shuffle_questions: boolean;
     shuffle_answers: boolean;
     is_active: boolean;
+    achievement_id: string;
+    notify_trainee: string;
+    notify_mentor: string;
 };
 
 const emptyForm: NewTestForm = {
-    title: '', time_limit: '', course_id: '', shuffle_questions: true, shuffle_answers: true, is_active: true,
+    title: '', time_limit: '', course_id: '',
+    shuffle_questions: true, shuffle_answers: true, is_active: true,
+    achievement_id: '', notify_trainee: '', notify_mentor: '',
 };
 
 function emptyQuestion(): QuestionDraft {
@@ -35,20 +40,53 @@ export default function NewTestPage() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
     const { fetchUser } = useUserStore();
+    const push = useNotificationsStore(s => s.push);
+    const searchParams = useSearchParams();
+    const editId = searchParams.get('id');
+    const isEdit = !!editId;
 
     const [form, setForm] = useState<NewTestForm>(emptyForm);
     const [questions, setQuestions] = useState<QuestionDraft[]>([emptyQuestion()]);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
-    const [courseOptions, setCourseOptions] = useState<{ value: string; label: string }[]>([]);
+    const { courses, fetch: fetchCourses } = useCoursesStore();
+    const { achievements, fetch: fetchAchievements } = useAchievementsStore();
+
+    const courseOptions = courses.map(c => ({ value: String(c.id), label: c.title }));
+    const achievementOptions = achievements.map(a => ({ value: String(a.id), label: a.title }));
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
-        fetch('/api/courses').then(r => r.json())
-            .then(d => setCourseOptions(
-                (d.courses ?? []).map((c: { id: number; title: string }) => ({ value: String(c.id), label: c.title }))
-            )).catch(() => {});
-    }, []);
+        fetchCourses();
+        fetchAchievements();
+        if (editId) {
+            fetch(`/api/courseTests/${editId}`)
+                .then(r => r.json())
+                .then(d => {
+                    const t = d.test;
+                    setForm({
+                        title:             t.title ?? '',
+                        time_limit:        t.time_limit ? String(t.time_limit) : '',
+                        course_id:         t.course_id ? String(t.course_id) : '',
+                        shuffle_questions: t.shuffle_questions ?? true,
+                        shuffle_answers:   t.shuffle_answers ?? true,
+                        is_active:         t.is_active ?? true,
+                        achievement_id:    t.achievement_id ? String(t.achievement_id) : '',
+                        notify_trainee:    t.notify_trainee ?? '',
+                        notify_mentor:     t.notify_mentor ?? '',
+                    });
+                    setQuestions((d.questions ?? []).length > 0
+                        ? d.questions.map((q: any) => ({
+                            id: q.id,
+                            question: q.question,
+                            correct_answer: q.correct_answer,
+                            wrong_answers: q.wrong_answers ?? [''],
+                        }))
+                        : [emptyQuestion()]
+                    );
+                });
+        }
+    }, [editId]);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
         const { name, value } = e.target;
@@ -107,8 +145,10 @@ export default function NewTestPage() {
         setSaving(true);
         setSaveError(null);
         try {
-            const res = await fetch('/api/courseTests', {
-                method: 'POST',
+            const res = await fetch(
+                isEdit ? `/api/courseTests/${editId}` : '/api/courseTests',
+                {
+                    method: isEdit ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title:             form.title.trim(),
@@ -117,6 +157,9 @@ export default function NewTestPage() {
                     shuffle_questions: form.shuffle_questions,
                     shuffle_answers:   form.shuffle_answers,
                     is_active:         form.is_active,
+                    achievement_id:    form.achievement_id || null,
+                    notify_trainee:    form.notify_trainee.trim() || null,
+                    notify_mentor:     form.notify_mentor.trim() || null,
                     questions: questions.map((q, i) => ({
                         question:       q.question.trim(),
                         correct_answer: q.correct_answer.trim(),
@@ -143,7 +186,9 @@ export default function NewTestPage() {
                         mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
                 <main className="flex-1 p-6 max-w-3xl">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-semibold text-gray-800">Новый тест</h3>
+                        <h3 className="text-xl font-semibold text-gray-800">
+                            {isEdit ? 'Редактирование теста' : 'Новый тест'}
+                        </h3>
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -174,6 +219,41 @@ export default function NewTestPage() {
                                               checked={form.shuffle_answers} onChange={handleChange} variant="switch" />
                                     <Checkbox label="Активен" name="is_active"
                                               checked={form.is_active} onChange={handleChange} variant="switch" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-2xl shadow-sm p-6">
+                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Достижение и уведомления</h4>
+                            <div className="flex flex-col gap-4">
+                                <Select
+                                    label="Достижение за прохождение"
+                                    name="achievement_id"
+                                    value={form.achievement_id}
+                                    onChange={handleChange}
+                                    options={[{ value: '', label: 'Не привязано' }, ...achievementOptions]}
+                                />
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-sm text-gray-500">Уведомление стажёру</label>
+                                    <textarea
+                                        name="notify_trainee"
+                                        value={form.notify_trainee}
+                                        onChange={e => setForm(p => ({ ...p, notify_trainee: e.target.value }))}
+                                        rows={2}
+                                        placeholder="Текст уведомления при успешном прохождении теста"
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-sm text-gray-500">Уведомление наставнику</label>
+                                    <textarea
+                                        name="notify_mentor"
+                                        value={form.notify_mentor}
+                                        onChange={e => setForm(p => ({ ...p, notify_mentor: e.target.value }))}
+                                        rows={2}
+                                        placeholder="Текст уведомления наставнику при прохождении теста стажёром"
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                    />
                                 </div>
                             </div>
                         </div>

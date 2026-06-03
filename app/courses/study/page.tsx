@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useUserStore } from '@/store/userStore';
+import { useUserStore, useNotificationsStore } from '@/store';
 import { Header, Sidebar, Modal } from '@/containers';
 import { Button } from '@/components';
 import { Clock, BookOpen, Video, Music, FileText, ClipboardList, CheckCircle, XCircle } from 'lucide-react';
@@ -34,6 +34,8 @@ type CourseTest = {
     time_limit: number | null;
     shuffle_questions: boolean;
     shuffle_answers: boolean;
+    notify_trainee: string | null;
+    achievement_id: number | null;
 };
 
 type TestQuestion = {
@@ -84,6 +86,7 @@ export default function CourseStudyPage() {
     const searchParams = useSearchParams();
     const courseId = searchParams.get('id');
     const { fetchUser } = useUserStore();
+    const push = useNotificationsStore(s => s.push);
 
     const [course, setCourse] = useState<Course | null>(null);
     const [manuals, setManuals] = useState<Manual[]>([]);
@@ -175,6 +178,10 @@ export default function CourseStudyPage() {
             : 0;
 
         setTestPhase('result');
+
+        if (courseTest?.notify_trainee) {
+            push({ text: courseTest.notify_trainee, icon: '📋' });
+        }
 
         if (course?.id) {
             fetch('/api/user-progress', {

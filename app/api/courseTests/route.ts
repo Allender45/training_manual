@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
     try {
         const result = await pool.query(
             `SELECT t.id, t.title, t.time_limit, t.shuffle_questions, t.shuffle_answers,
-                    t.course_id, c.title AS course_title, t.is_active, t.created_at
+                    t.course_id, c.title AS course_title, t.is_active, t.created_at,
+                    t.achievement_id, t.notify_trainee, t.notify_mentor
              FROM tests t
                       LEFT JOIN courses c ON c.id = t.course_id
              ORDER BY t.created_at DESC`
@@ -27,7 +28,8 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
 
     try {
-        const { title, time_limit, shuffle_questions, shuffle_answers, is_active, course_id, questions } = await req.json();
+        const { title, time_limit, shuffle_questions, shuffle_answers, is_active, course_id, questions,
+            achievement_id, notify_trainee, notify_mentor } = await req.json();
 
         if (!title?.trim()) {
             return NextResponse.json({ error: 'Заполните название теста' }, { status: 400 });
@@ -38,10 +40,13 @@ export async function POST(req: NextRequest) {
             await client.query('BEGIN');
 
             const testResult = await client.query(
-                `INSERT INTO tests (title, time_limit, shuffle_questions, shuffle_answers, is_active, course_id, created_by, updated_by)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
+                `INSERT INTO tests (title, time_limit, shuffle_questions, shuffle_answers, is_active, course_id,
+                                    created_by, updated_by, achievement_id, notify_trainee, notify_mentor)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $8, $9, $10)
                  RETURNING id, title`,
-                [title.trim(), time_limit ?? null, shuffle_questions ?? true, shuffle_answers ?? true, is_active ?? true, course_id || null, userId]
+                [title.trim(), time_limit ?? null, shuffle_questions ?? true, shuffle_answers ?? true,
+                    is_active ?? true, course_id || null, userId,
+                    achievement_id || null, notify_trainee || null, notify_mentor || null]
             );
             const testId = testResult.rows[0].id;
 

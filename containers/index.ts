@@ -6,4 +6,4 @@ export type { UserRow } from './UsersTable/UsersTable';
 export { default as CoursesTable } from './CoursesTable/CoursesTable';
 export type { CourseRow } from './CoursesTable/CoursesTable';
 export { default as EntityTable } from './EntityTable/EntityTable';
-export type { EntityRow, EntityType, ManualRow, TrainingRow, TestRow, AdaptationPlanRow } from './EntityTable/EntityTable';
+export type { EntityRow, EntityType, ManualRow, TrainingRow, TestRow, AdaptationPlanRow, AchievementRow  } from './EntityTable/EntityTable';

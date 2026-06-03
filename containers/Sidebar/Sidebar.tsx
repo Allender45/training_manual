@@ -80,6 +80,8 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                         <>
                             <SidebarButton href="/users" icon={Users} label="Пользователи"
                                            sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
+                            <SidebarButton href="/achievements" icon={Trophy} label="Достижения"
+                                           sidebarOpen={sidebarOpen} active={pathname.startsWith('/achievements')}/>
                         </>
                     }
 
@@ -124,9 +126,8 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                                    active={pathname.startsWith('/departments')}/>
                                     <SidebarButton href="/roles" icon={Shield} label="Роли" sidebarOpen={sidebarOpen}
                                                    active={pathname.startsWith('/roles')}/>
-                                    <SidebarButton href="/achievements" icon={Trophy} label="Награды"
-                                                   sidebarOpen={sidebarOpen}
-                                                   active={pathname.startsWith('/achivments')}/>
+                                    <SidebarButton href="/achievements" icon={Trophy} label="Достижения"
+                                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/achievements')}/>
                                     <SidebarButton href="/reports" icon={BarChart2} label="Отчёты"
                                                    sidebarOpen={sidebarOpen}
                                                    active={pathname.startsWith('/reports')}/>

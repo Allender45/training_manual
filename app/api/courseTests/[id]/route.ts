@@ -9,7 +9,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     try {
         const testResult = await pool.query(
             `SELECT t.id, t.title, t.time_limit, t.shuffle_questions, t.shuffle_answers,
-                    t.course_id, c.title AS course_title, t.is_active, t.created_at
+                    t.course_id, c.title AS course_title, t.is_active, t.created_at,
+                    t.achievement_id, t.notify_trainee, t.notify_mentor
              FROM tests t
                       LEFT JOIN courses c ON c.id = t.course_id
              WHERE t.id = $1`,
@@ -36,7 +37,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
 
     try {
-        const { title, time_limit, shuffle_questions, shuffle_answers, is_active, course_id, questions } = await req.json();
+        const { title, time_limit, shuffle_questions, shuffle_answers, is_active, course_id, questions,
+            achievement_id, notify_trainee, notify_mentor } = await req.json();
 
         if (!title?.trim()) {
             return NextResponse.json({ error: 'Заполните название теста' }, { status: 400 });
@@ -54,9 +56,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                                   shuffle_answers   = $4,
                                   is_active         = $5,
                                   course_id         = $6,
-                                  updated_by        = $7
-                 WHERE id = $8 RETURNING id`,
-                [title.trim(), time_limit ?? null, shuffle_questions ?? true, shuffle_answers ?? true, is_active ?? true, course_id || null, userId, params.id]
+                                  updated_by        = $7,
+                                  achievement_id    = $8,
+                                  notify_trainee    = $9,
+                                  notify_mentor     = $10
+                 WHERE id = $11 RETURNING id`,
+                [title.trim(), time_limit ?? null, shuffle_questions ?? true, shuffle_answers ?? true,
+                    is_active ?? true, course_id || null, userId,
+                    achievement_id || null, notify_trainee || null, notify_mentor || null,
+                    params.id]
             );
             if (!result.rows[0]) {
                 await client.query('ROLLBACK');

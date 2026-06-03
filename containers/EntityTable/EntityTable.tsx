@@ -64,8 +64,15 @@ export type TestRow = {
     created_at: string;
 };
 
-export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow;
-export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans';
+export type AchievementRow = {
+    id: number;
+    icon: string;
+    title: string;
+    description: string | null;
+};
+
+export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow | AchievementRow;
+export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans' | 'achievements';
 
 type ColVisibility = Record<string, boolean>;
 
@@ -78,6 +85,7 @@ type EntityConfig = {
     colLabels: Record<string, string>;
     searchFields: (row: any) => (string | null | undefined)[];
     addButtonFeature: string;
+    hasActiveFilter?: boolean;
 };
 
 function StatusBadge({active}: { active: boolean }) {
@@ -311,6 +319,38 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         ],
         addButtonFeature: 'adaptationTableAddButtons',
     },
+    achievements: {
+        title: 'Достижения',
+        addHref: '/achievements',
+        emptyText: 'Достижения не найдены',
+        searchFields: (row: AchievementRow) => [row.title, row.description],
+        colVisibilityDefaults: { description: true },
+        colLabels: { description: 'Описание' },
+        hasActiveFilter: false,
+        columns: [
+            {
+                key: 'title',
+                header: 'Достижение',
+                render: (row: AchievementRow) => (
+                    <div className="flex items-center gap-3">
+                        {row.icon
+                            ? <img src={row.icon} alt={row.title} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                            : <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0" />
+                        }
+                        <span className="font-medium text-gray-800">{row.title}</span>
+                    </div>
+                ),
+            },
+            {
+                key: 'description',
+                header: 'Описание',
+                render: (row: AchievementRow) => row.description
+                    ? <span className="text-sm text-gray-600">{row.description}</span>
+                    : <span className="text-gray-400 text-sm">—</span>,
+            },
+        ],
+        addButtonFeature: 'achievementsTableAddButtons',
+    },
 };
 
 function getPageNumbers(current: number, total: number): (number | '...')[] {
@@ -358,8 +398,8 @@ export default function EntityTable({entityType, data, onEdit, onDelete, buttonE
         const q = searchQuery.toLowerCase().trim();
         return data.filter(row => {
             if (q && !config.searchFields(row).some(f => f?.toLowerCase().includes(q))) return false;
-            if (filterActive === 'active' && !row.is_active) return false;
-            if (filterActive === 'inactive' && row.is_active) return false;
+            if (filterActive === 'active' && config.hasActiveFilter !== false && !(row as any).is_active) return false;
+            if (filterActive === 'inactive' && config.hasActiveFilter !== false && (row as any).is_active) return false;
             return true;
         });
     }, [data, searchQuery, filterActive, config]);
