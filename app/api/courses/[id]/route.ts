@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const result = await pool.query(
         `SELECT c.id, c.title, c.icon, c.description, c.comment,
                 c.prerequisite_course_id, c.study_time_minutes,
-                c.achievement_id, c.is_active
+                c.achievement_id, c.trainer_id, c.is_active
          FROM courses c
          WHERE c.id = $1`,
         [params.id]
@@ -36,6 +36,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const achievement_id         = (formData.get('achievement_id')         as string) || null;
         const is_active              = (formData.get('is_active')              as string) === 'true';
         const iconFile               = formData.get('icon') as File | null;
+        const trainer_id = (formData.get('trainer_id') as string) || null;
 
         if (!title || !description) {
             return NextResponse.json({ error: 'Заполните обязательные поля: название, описание' }, { status: 400 });
@@ -53,16 +54,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
         const result = await pool.query(
             `UPDATE courses SET
-                title                  = $1,
-                description            = $2,
-                comment                = $3,
-                prerequisite_course_id = $4,
-                study_time_minutes     = $5,
-                achievement_id         = $6,
-                is_active              = $7,
-                icon                   = COALESCE($8, icon),
-                updated_by             = $9
-             WHERE id = $10
+                                title                  = $1,
+                                description            = $2,
+                                comment                = $3,
+                                prerequisite_course_id = $4,
+                                study_time_minutes     = $5,
+                                achievement_id         = $6,
+                                is_active              = $7,
+                                trainer_id             = $8,
+                                icon                   = COALESCE($9, icon),
+                                updated_by             = $10
+             WHERE id = $11
              RETURNING id`,
             [
                 title, description, comment,
@@ -70,6 +72,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 study_time_minutes ? Number(study_time_minutes) : null,
                 achievement_id || null,
                 is_active,
+                trainer_id || null,
                 iconPath,
                 userId,
                 params.id,
@@ -79,7 +82,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         if (!result.rows[0]) return NextResponse.json({ error: 'Не найден' }, { status: 404 });
         return NextResponse.json({ ok: true });
     } catch (error: any) {
-        console.error('[PATCH /api/courses/[id]]', error);
+        console.error('[PATCH /api/courses/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
@@ -96,7 +99,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         if (!result.rows[0]) return NextResponse.json({ error: 'Не найден' }, { status: 404 });
         return NextResponse.json({ ok: true });
     } catch (error: any) {
-        console.error('[DELETE /api/courses/[id]]', error);
+        console.error('[DELETE /api/courses/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }

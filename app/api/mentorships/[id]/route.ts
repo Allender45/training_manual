@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             return NextResponse.json({ error: 'Запись не найдена' }, { status: 404 });
         return NextResponse.json({ success: true });
     } catch (error: any) {
-        console.error('[PATCH /api/mentorships/[id]]', error);
+        console.error('[PATCH /api/mentorships/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
@@ -29,7 +29,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         await pool.query('DELETE FROM mentorships WHERE id=$1', [params.id]);
         return NextResponse.json({ success: true });
     } catch (error: any) {
-        console.error('[DELETE /api/mentorships/[id]]', error);
+        console.error('[DELETE /api/mentorships/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }

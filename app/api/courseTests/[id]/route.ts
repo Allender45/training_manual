@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
         return NextResponse.json({ test: testResult.rows[0], questions: questionsResult.rows });
     } catch (error: any) {
-        console.error('[GET /api/courseTests/[id]]', error);
+        console.error('[GET /api/courseTests/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
@@ -92,7 +92,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             client.release();
         }
     } catch (error: any) {
-        console.error('[PATCH /api/courseTests/[id]]', error);
+        console.error('[PATCH /api/courseTests/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
@@ -109,7 +109,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         if (!result.rows[0]) return NextResponse.json({ error: 'Не найден' }, { status: 404 });
         return NextResponse.json({ ok: true });
     } catch (error: any) {
-        console.error('[DELETE /api/tests/[id]]', error);
+        console.error('[DELETE /api/tests/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }

@@ -9,3 +9,5 @@ export { default as AdaptationCalendar } from './AdaptationCalendar/AdaptationCa
 import dynamic from 'next/dynamic';
 export const CKEditorField = dynamic(() => import('./CKEditorField/CKEditorField'), { ssr: false });
 export { default as StatCard } from './StatCard/StatCard';
+export { default as CallCardTrainer } from './trainers/CallCardTrainer/CallCardTrainer';
+export type { CallCardResult } from './trainers/CallCardTrainer/CallCardTrainer';

@@ -60,7 +60,7 @@ export default function CoursesPage() {
                         buttonEdit={hasFeature(rid, 'coursesTableButtons')}
                         buttonDel={hasFeature(rid, 'coursesTableButtons')}
                         data={courses}
-                        onEdit={(row) => router.push(`/courses/edit?id=${row.id}`)}
+                        onEdit={(row) => router.push(`/courses/new?id=${row.id}`)}
                         onDelete={(row) => { setCourseToDelete(row); setDeleteError(null); }}
                     />
                 </main>

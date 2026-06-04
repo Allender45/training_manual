@@ -6,17 +6,14 @@ export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
     if (!unsignSession(raw)) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
 
-    try {
-        const { searchParams } = new URL(req.url);
-        const courseId = searchParams.get('course_id');
+    const courseId = req.nextUrl.searchParams.get('course_id');
 
+    try {
         const result = await pool.query(
             `SELECT m.id, m.title, m.icon, m.type, m.description, m.content,
-                    m.course_id, c.title AS course_title,
                     m.prerequisite_id, m.comment, m.is_active, m.created_at
              FROM manuals m
-                      LEFT JOIN courses c ON c.id = m.course_id
-             ${courseId ? 'WHERE m.course_id = $1' : ''}
+                 ${courseId ? 'JOIN course_manuals cm ON cm.manual_id = m.id WHERE cm.course_id = $1' : ''}
              ORDER BY m.created_at ASC`,
             courseId ? [courseId] : []
         );
@@ -38,7 +35,6 @@ export async function POST(req: NextRequest) {
         const type            = (formData.get('type')            as string) || 'text';
         const description     = (formData.get('description')     as string)?.trim();
         const contentText     = (formData.get('content')         as string)?.trim() || null;
-        const course_id       = (formData.get('course_id')       as string) || null;
         const prerequisite_id = (formData.get('prerequisite_id') as string) || null;
         const comment         = (formData.get('comment')         as string)?.trim() || null;
         const is_active       = (formData.get('is_active')       as string) === 'true';
@@ -77,10 +73,10 @@ export async function POST(req: NextRequest) {
         }
 
         const result = await pool.query(
-            `INSERT INTO manuals (title, icon, type, description, content, course_id, prerequisite_id, comment, is_active, created_by, updated_by)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10)
+            `INSERT INTO manuals (title, icon, type, description, content, prerequisite_id, comment, is_active, created_by, updated_by)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9)
              RETURNING id, title`,
-            [title, iconPath, type, description, contentValue, course_id || null, prerequisite_id || null, comment, is_active, userId]
+            [title, iconPath, type, description, contentValue, prerequisite_id || null, comment, is_active, userId]
         );
         return NextResponse.json({ manual: result.rows[0] }, { status: 201 });
     } catch (error: any) {

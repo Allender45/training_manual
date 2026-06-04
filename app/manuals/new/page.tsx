@@ -12,15 +12,13 @@ type NewManualForm = {
     title: string;
     type: ManualType;
     description: string;
-    course_id: string;
     prerequisite_id: string;
     comment: string;
     is_active: boolean;
 };
 
 const emptyForm: NewManualForm = {
-    title: '', type: 'text', description: '',
-    course_id: '', prerequisite_id: '', comment: '', is_active: true,
+    title: '', type: 'text', description: '', prerequisite_id: '', comment: '', is_active: true,
 };
 
 export default function NewManualPage() {
@@ -40,7 +38,6 @@ export default function NewManualPage() {
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
-    const [courseOptions, setCourseOptions] = useState<{ value: string; label: string }[]>([]);
     const [manualOptions, setManualOptions] = useState<{ value: string; label: string }[]>([]);
     const [contentFile, setContentFile] = useState<File | null>(null);
     const [contentPreview, setContentPreview] = useState<string | null>(null);
@@ -48,10 +45,6 @@ export default function NewManualPage() {
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
-        fetch('/api/courses').then(r => r.json())
-            .then(d => setCourseOptions(
-                (d.courses ?? []).map((c: { id: number; title: string }) => ({ value: String(c.id), label: c.title }))
-            )).catch(() => {});
         fetch('/api/manuals').then(r => r.json())
             .then(d => setManualOptions(
                 (d.manuals ?? [])
@@ -70,7 +63,6 @@ export default function NewManualPage() {
                         title:           m.title          ?? '',
                         type:            m.type           ?? 'text',
                         description:     m.description    ?? '',
-                        course_id:       m.course_id      ? String(m.course_id)      : '',
                         prerequisite_id: m.prerequisite_id ? String(m.prerequisite_id) : '',
                         comment:         m.comment        ?? '',
                         is_active:       m.is_active      ?? true,
@@ -134,7 +126,6 @@ export default function NewManualPage() {
             fd.append('type',            form.type);
             fd.append('description',     form.description.trim());
             fd.append('content',         content.trim());
-            fd.append('course_id',       form.course_id);
             fd.append('prerequisite_id', form.prerequisite_id);
             fd.append('comment',         form.comment.trim());
             fd.append('is_active',       String(form.is_active));
@@ -208,13 +199,6 @@ export default function NewManualPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <Select
-                                        label="Курс"
-                                        name="course_id"
-                                        value={form.course_id}
-                                        onChange={handleChange}
-                                        options={[{ value: '', label: 'Не привязан' }, ...courseOptions]}
-                                    />
                                     <Select
                                         label="Предварительный материал"
                                         name="prerequisite_id"

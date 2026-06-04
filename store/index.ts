@@ -10,3 +10,7 @@ export { useCoursesStore } from './coursesStore';
 export type { Course } from './coursesStore';
 export { useAchievementsStore } from './achievementsStore';
 export type { AchievementOption } from './achievementsStore';
+export { useManualsStore } from './manualsStore';
+export type { Manual } from './manualsStore';
+export { useTrainersStore } from './trainersStore';
+export type { Trainer } from './trainersStore';

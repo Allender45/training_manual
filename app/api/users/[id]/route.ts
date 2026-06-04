@@ -94,7 +94,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         if (!result.rows[0]) return NextResponse.json({ error: 'Не найден' }, { status: 404 });
         return NextResponse.json({ ok: true });
     } catch (error: any) {
-        console.error('[PATCH /api/users/[id]]', error);
+        console.error('[PATCH /api/users/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
@@ -111,7 +111,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         if (!result.rows[0]) return NextResponse.json({ error: 'Не найден' }, { status: 404 });
         return NextResponse.json({ ok: true });
     } catch (error: any) {
-        console.error('[DELETE /api/users/[id]]', error);
+        console.error('[DELETE /api/users/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }

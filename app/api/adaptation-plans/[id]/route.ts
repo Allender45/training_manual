@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         );
         return NextResponse.json({ ok: true });
     } catch (error) {
-        console.error('[PATCH /api/adaptation-plans/[id]]', error);
+        console.error('[PATCH /api/adaptation-plans/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
@@ -43,7 +43,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         await pool.query('DELETE FROM adaptation_plans WHERE id=$1', [params.id]);
         return NextResponse.json({ ok: true });
     } catch (error) {
-        console.error('[DELETE /api/adaptation-plans/[id]]', error);
+        console.error('[DELETE /api/adaptation-plans/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }

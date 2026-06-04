@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/store/userStore';
-import { Header, Sidebar } from '@/containers';
-import { Input, Button, Select, Checkbox } from '@/components';
+import {useState, useEffect} from 'react';
+import {useRouter, useSearchParams} from 'next/navigation';
+import {useUserStore, useCoursesStore, useManualsStore, useAchievementsStore, useTrainersStore} from '@/store';
+import {Header, Sidebar} from '@/containers';
+import {Input, Button, Select, Checkbox} from '@/components';
 
-type NewCourseForm = {
+type CourseForm = {
     title: string;
     description: string;
     comment: string;
@@ -14,46 +14,78 @@ type NewCourseForm = {
     study_time_minutes: string;
     achievement_id: string;
     is_active: boolean;
+    trainer_id: string;
 };
 
-const emptyForm: NewCourseForm = {
+const emptyForm: CourseForm = {
     title: '', description: '', comment: '',
     prerequisite_course_id: '', study_time_minutes: '', achievement_id: '',
-    is_active: true,
+    is_active: true, trainer_id: '',
 };
 
 export default function NewCoursePage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
-    const { fetchUser } = useUserStore();
+    const searchParams = useSearchParams();
+    const courseId = searchParams.get('id');
+    const isEditMode = !!courseId;
+    const {fetchUser} = useUserStore();
+    const {courses, fetch: fetchCourses} = useCoursesStore();
+    const {manuals: allManuals, fetch: fetchManuals} = useManualsStore();
+    const {achievements, fetch: fetchAchievements} = useAchievementsStore();
+    const {trainers, fetch: fetchTrainers} = useTrainersStore();
 
-    const [form, setForm] = useState<NewCourseForm>(emptyForm);
+    const [form, setForm] = useState<CourseForm>(emptyForm);
+    const [currentIcon, setCurrentIcon] = useState<string | null>(null);
     const [iconFile, setIconFile] = useState<File | null>(null);
     const [iconPreview, setIconPreview] = useState<string | null>(null);
+    const [loading, setLoading] = useState(isEditMode);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
-    const [courseOptions, setCourseOptions] = useState<{ value: string; label: string }[]>([]);
-    const [achievementOptions, setAchievementOptions] = useState<{ value: string; label: string }[]>([]);
+    const [manualRows, setManualRows] = useState<string[]>(['']);
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
-        fetch('/api/courses').then(r => r.json())
-            .then(d => setCourseOptions(
-                (d.courses ?? [])
-                    .map((c: any) => ({ value: String(c.id), label: c.title }))
-            ));
-        fetch('/api/achievements').then(r => r.json())
-            .then(d => setAchievementOptions((d.achievements ?? []).map((a: { id: number; title: string }) => ({ value: String(a.id), label: a.title }))))
-            .catch(() => {});
-    }, []);
+        fetchCourses();
+        fetchManuals();
+        fetchAchievements();
+        fetchTrainers();
+
+        if (isEditMode) {
+            fetch(`/api/manuals?course_id=${courseId}`)
+                .then(r => r.json())
+                .then(d => {
+                    const ids = (d.manuals ?? []).map((m: any) => String(m.id));
+                    setManualRows(ids.length > 0 ? ids : ['']);
+                });
+
+            fetch(`/api/courses/${courseId}`)
+                .then(r => r.json())
+                .then(d => {
+                    const c = d.course;
+                    setForm({
+                        title: c.title ?? '',
+                        description: c.description ?? '',
+                        comment: c.comment ?? '',
+                        prerequisite_course_id: c.prerequisite_course_id ? String(c.prerequisite_course_id) : '',
+                        study_time_minutes: c.study_time_minutes ? String(c.study_time_minutes) : '',
+                        achievement_id: c.achievement_id ? String(c.achievement_id) : '',
+                        is_active: c.is_active ?? true,
+                        trainer_id: c.trainer_id ? String(c.trainer_id) : '',
+                    });
+                    setCurrentIcon(c.icon ?? null);
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [courseId]);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-        const { name, value, type } = e.target;
+        const {name, value, type} = e.target;
         if (type === 'checkbox') {
-            setForm(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+            setForm(prev => ({...prev, [name]: (e.target as HTMLInputElement).checked}));
         } else {
-            setForm(prev => ({ ...prev, [name]: value }));
+            setForm(prev => ({...prev, [name]: value}));
         }
     }
 
@@ -69,7 +101,7 @@ export default function NewCoursePage() {
             setSaveError('Заполните обязательные поля: название, описание');
             return;
         }
-        if (!iconFile) {
+        if (!isEditMode && !iconFile) {
             setSaveError('Выберите иконку курса');
             return;
         }
@@ -77,7 +109,6 @@ export default function NewCoursePage() {
         setSaveError(null);
         try {
             const fd = new FormData();
-            fd.append('icon', iconFile);
             fd.append('title', form.title.trim());
             fd.append('description', form.description.trim());
             fd.append('comment', form.comment.trim());
@@ -85,11 +116,28 @@ export default function NewCoursePage() {
             fd.append('study_time_minutes', form.study_time_minutes);
             fd.append('achievement_id', form.achievement_id);
             fd.append('is_active', String(form.is_active));
+            fd.append('trainer_id', form.trainer_id);
+            if (iconFile) fd.append('icon', iconFile);
 
-            const res = await fetch('/api/courses', { method: 'POST', body: fd });
+            const res = isEditMode
+                ? await fetch(`/api/courses/${courseId}`, {method: 'PATCH', body: fd})
+                : await fetch('/api/courses', {method: 'POST', body: fd});
+
             const data = await res.json();
-            if (!res.ok) { setSaveError(data.error ?? 'Ошибка'); return; }
+            if (!res.ok) {
+                setSaveError(data.error ?? 'Ошибка');
+                return;
+            }
             router.push('/courses');
+
+            if (isEditMode) {
+                const ids = manualRows.filter(id => id !== '').map(Number);
+                await fetch(`/api/courses/${courseId}/manuals`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({manual_ids: ids}),
+                });
+            }
         } catch {
             setSaveError('Ошибка соединения с сервером');
         } finally {
@@ -97,15 +145,25 @@ export default function NewCoursePage() {
         }
     }
 
+    const previewSrc = iconPreview ?? (isEditMode ? currentIcon : null);
+
+    if (loading) return (
+        <div className="flex min-h-screen bg-gray-100 items-center justify-center">
+            <p className="text-gray-500">Загрузка...</p>
+        </div>
+    );
+
     return (
         <div className="flex min-h-screen bg-gray-100">
-            <Sidebar sidebarOpen={sidebarOpen} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+            <Sidebar sidebarOpen={sidebarOpen} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}/>
             <div className="flex-1 flex flex-col min-w-0">
                 <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
-                        mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+                        mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}/>
                 <main className="flex-1 p-6 max-w-3xl">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-semibold text-gray-800">Новый курс</h3>
+                        <h3 className="text-xl font-semibold text-gray-800">
+                            {isEditMode ? 'Редактирование курса' : 'Новый курс'}
+                        </h3>
                     </div>
 
                     <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -113,17 +171,19 @@ export default function NewCoursePage() {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="sm:col-span-2">
-                                    <Input label="Название *" name="title" value={form.title} onChange={handleChange} />
+                                    <Input label="Название *" name="title" value={form.title} onChange={handleChange}/>
                                 </div>
 
                                 <div>
                                     <div className="flex items-end gap-3">
-                                        {iconPreview ? (
-                                            <img src={iconPreview} alt="preview"
-                                                 className="w-10 h-10 rounded-xl object-cover flex-shrink-0 border border-gray-200" />
+                                        {previewSrc ? (
+                                            <img src={previewSrc} alt="preview"
+                                                 className="w-10 h-10 rounded-xl object-cover flex-shrink-0 border border-gray-200"/>
                                         ) : (
-                                            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 border border-dashed border-gray-300">
-                                                <span className="text-gray-400 text-xs text-center leading-tight">нет<br/>фото</span>
+                                            <div
+                                                className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 border border-dashed border-gray-300">
+                                                <span
+                                                    className="text-gray-400 text-xs text-center leading-tight">нет<br/>фото</span>
                                             </div>
                                         )}
                                         <Input
@@ -162,7 +222,12 @@ export default function NewCoursePage() {
                                     name="prerequisite_course_id"
                                     value={form.prerequisite_course_id}
                                     onChange={handleChange}
-                                    options={[{ value: '', label: 'Не требуется' }, ...courseOptions]}
+                                    options={[
+                                        {value: '', label: 'Не требуется'},
+                                        ...courses
+                                            .filter(c => !isEditMode || String(c.id) !== courseId)
+                                            .map(c => ({value: String(c.id), label: c.title}))
+                                    ]}
                                     size="sm"
                                 />
                                 <Select
@@ -170,7 +235,11 @@ export default function NewCoursePage() {
                                     name="achievement_id"
                                     value={form.achievement_id}
                                     onChange={handleChange}
-                                    options={[{ value: '', label: 'Не выбрано' }, ...achievementOptions]}
+                                    options={[
+                                        {value: '', label: 'Не требуется'},
+                                        ...achievements
+                                            .map(c => ({value: String(c.id), label: c.title}))
+                                    ]}
                                     size="sm"
                                 />
                             </div>
@@ -187,7 +256,66 @@ export default function NewCoursePage() {
                             </div>
 
                             <Checkbox label="Активен" name="is_active" checked={form.is_active}
-                                      onChange={handleChange} variant="switch" />
+                                      onChange={handleChange} variant="switch"/>
+
+                            {isEditMode && (
+                                <div>
+                                    <label className="block text-gray-500 text-sm mb-2">Содержимое</label>
+                                    <div className="flex flex-col gap-2">
+                                        {manualRows.map((val, idx) => (
+                                            <div key={idx} className="flex gap-2 items-center">
+                                                <div className="flex-1">
+                                                    <Select
+                                                        label=""
+                                                        name={`manual_${idx}`}
+                                                        value={val}
+                                                        onChange={e => {
+                                                            const next = [...manualRows];
+                                                            next[idx] = e.target.value;
+                                                            setManualRows(next);
+                                                        }}
+                                                        options={[
+                                                            {value: '', label: '— выберите материал —'},
+                                                            ...allManuals.map(m => ({
+                                                                value: String(m.id),
+                                                                label: m.title
+                                                            }))
+                                                        ]}
+                                                    />
+                                                </div>
+                                                {manualRows.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setManualRows(manualRows.filter((_, i) => i !== idx))}
+                                                        className="text-gray-400 hover:text-red-500 transition"
+                                                    >✕</button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => setManualRows([...manualRows, ''])}
+                                            className="self-start text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-1"
+                                        >
+                                            <span className="font-bold text-base">+ Добавить материал</span>
+                                        </button>
+                                    </div>
+
+                                    <div className="mt-5">
+                                        <Select
+                                            label="Тренажёр"
+                                            name="trainer_id"
+                                            value={form.trainer_id}
+                                            onChange={handleChange}
+                                            options={[
+                                                {value: '', label: '— не выбран —'},
+                                                ...trainers.map(t => ({value: String(t.id), label: t.name}))
+                                            ]}
+                                            size="sm"
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             {saveError && <p className="text-red-500 text-sm">{saveError}</p>}
 

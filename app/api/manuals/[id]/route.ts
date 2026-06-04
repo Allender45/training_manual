@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const result = await pool.query(
         `SELECT id, title, icon, type, description, content,
-                course_id, prerequisite_id, comment, is_active
+                prerequisite_id, comment, is_active
          FROM manuals WHERE id = $1`,
         [params.id]
     );
@@ -29,7 +29,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const type            = (formData.get('type')            as string) || 'text';
         const description     = (formData.get('description')     as string)?.trim();
         const contentText     = (formData.get('content')         as string)?.trim() ?? '';
-        const course_id       = (formData.get('course_id')       as string) || null;
         const prerequisite_id = (formData.get('prerequisite_id') as string) || null;
         const comment         = (formData.get('comment')         as string)?.trim() || null;
         const is_active       = (formData.get('is_active')       as string) === 'true';
@@ -67,25 +66,24 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
         const result = await pool.query(
             `UPDATE manuals SET
-                title           = $1,
-                type            = $2,
-                description     = $3,
-                content         = COALESCE($4::text, content),
-                course_id       = $5,
-                prerequisite_id = $6,
-                comment         = $7,
-                is_active       = $8,
-                icon            = COALESCE($9, icon),
-                updated_by      = $10
-             WHERE id = $11
+                                title           = $1,
+                                type            = $2,
+                                description     = $3,
+                                content         = COALESCE($4::text, content),
+                                prerequisite_id = $5,
+                                comment         = $6,
+                                is_active       = $7,
+                                icon            = COALESCE($8, icon),
+                                updated_by      = $9
+             WHERE id = $10
              RETURNING id`,
-            [title, type, description, contentUpdate, course_id || null,
+            [title, type, description, contentUpdate,
                 prerequisite_id || null, comment, is_active, iconPath, userId, params.id]
         );
         if (!result.rows[0]) return NextResponse.json({ error: 'Не найден' }, { status: 404 });
         return NextResponse.json({ ok: true });
     } catch (error: any) {
-        console.error('[PATCH /api/manuals/[id]]', error);
+        console.error('[PATCH /api/manuals/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
@@ -102,7 +100,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         if (!result.rows[0]) return NextResponse.json({ error: 'Не найден' }, { status: 404 });
         return NextResponse.json({ ok: true });
     } catch (error: any) {
-        console.error('[DELETE /api/manuals/[id]]', error);
+        console.error('[DELETE /api/manuals/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }

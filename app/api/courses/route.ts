@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
         const achievement_id         = (formData.get('achievement_id')         as string) || null;
         const is_active              = (formData.get('is_active')              as string) === 'true';
         const iconFile               = formData.get('icon') as File | null;
+        const trainer_id = (formData.get('trainer_id') as string) || null;
 
         if (!title || !description) {
             return NextResponse.json({ error: 'Заполните обязательные поля: название, описание' }, { status: 400 });
@@ -72,14 +73,15 @@ export async function POST(req: NextRequest) {
         const result = await pool.query(
             `INSERT INTO courses
              (title, icon, description, comment, prerequisite_course_id,
-              study_time_minutes, achievement_id, is_active, created_by, updated_by)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9)
+              study_time_minutes, achievement_id, trainer_id, is_active, created_by, updated_by)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10)
              RETURNING id, title`,
             [
                 title, iconPath, description, comment,
                 prerequisite_course_id || null,
                 study_time_minutes ? Number(study_time_minutes) : null,
                 achievement_id || null,
+                trainer_id || null,
                 is_active,
                 userId,
             ]

@@ -206,6 +206,8 @@ export default function CourseStudyPage() {
 
     const score = testQuestions.filter((q, i) => selectedAnswers[i] === q.correct_answer).length;
 
+
+    console.log(manuals)
     return (
         <div className="flex min-h-screen bg-gray-100">
             <Sidebar sidebarOpen={sidebarOpen} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
                     t.achievement_id, t.notify_trainee, t.notify_mentor
              FROM tests t
                       LEFT JOIN courses c ON c.id = t.course_id
-             ORDER BY t.created_at DESC`
+             ORDER BY t.created_at DESC`,
         );
         return NextResponse.json({ tests: result.rows });
     } catch (error: any) {
