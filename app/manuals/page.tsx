@@ -56,7 +56,9 @@ export default function ManualsPage() {
                     <EntityTable
                         entityType="manuals"
                         data={manuals}
-                        onEdit={(row) => router.push(`/manuals/edit?id=${row.id}`)}
+                        buttonEdit
+                        buttonDel
+                        onEdit={(row) => router.push(`/manuals/new?id=${row.id}`)}
                         onDelete={(row) => { setManualToDelete(row as ManualRow); setDeleteError(null); }}
                     />
                 </main>
