@@ -2,7 +2,7 @@
 
 import {useState, useEffect} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
-import {useUserStore, useCoursesStore, useManualsStore, useAchievementsStore, useTrainersStore} from '@/store';
+import {useUserStore, useCoursesStore, useManualsStore, useAchievementsStore, useTrainersStore, useTestsStore } from '@/store';
 import {Header, Sidebar} from '@/containers';
 import {Input, Button, Select, Checkbox} from '@/components';
 
@@ -15,12 +15,13 @@ type CourseForm = {
     achievement_id: string;
     is_active: boolean;
     trainer_id: string;
+    test_id: string;
 };
 
 const emptyForm: CourseForm = {
     title: '', description: '', comment: '',
     prerequisite_course_id: '', study_time_minutes: '', achievement_id: '',
-    is_active: true, trainer_id: '',
+    is_active: true, trainer_id: '', test_id: '',
 };
 
 export default function NewCoursePage() {
@@ -35,6 +36,7 @@ export default function NewCoursePage() {
     const {manuals: allManuals, fetch: fetchManuals} = useManualsStore();
     const {achievements, fetch: fetchAchievements} = useAchievementsStore();
     const {trainers, fetch: fetchTrainers} = useTrainersStore();
+    const { tests, fetch: fetchTests } = useTestsStore();
 
     const [form, setForm] = useState<CourseForm>(emptyForm);
     const [currentIcon, setCurrentIcon] = useState<string | null>(null);
@@ -51,6 +53,7 @@ export default function NewCoursePage() {
         fetchManuals();
         fetchAchievements();
         fetchTrainers();
+        fetchTests();
 
         if (isEditMode) {
             fetch(`/api/manuals?course_id=${courseId}`)
@@ -73,6 +76,7 @@ export default function NewCoursePage() {
                         achievement_id: c.achievement_id ? String(c.achievement_id) : '',
                         is_active: c.is_active ?? true,
                         trainer_id: c.trainer_id ? String(c.trainer_id) : '',
+                        test_id: c.test_id ? String(c.test_id) : '',
                     });
                     setCurrentIcon(c.icon ?? null);
                 })
@@ -117,6 +121,7 @@ export default function NewCoursePage() {
             fd.append('achievement_id', form.achievement_id);
             fd.append('is_active', String(form.is_active));
             fd.append('trainer_id', form.trainer_id);
+            fd.append('test_id', form.test_id);
             if (iconFile) fd.append('icon', iconFile);
 
             const res = isEditMode
@@ -310,6 +315,20 @@ export default function NewCoursePage() {
                                             options={[
                                                 {value: '', label: '— не выбран —'},
                                                 ...trainers.map(t => ({value: String(t.id), label: t.name}))
+                                            ]}
+                                            size="sm"
+                                        />
+                                    </div>
+
+                                    <div className="mt-5">
+                                        <Select
+                                            label="Тест"
+                                            name="test_id"
+                                            value={form.test_id}
+                                            onChange={handleChange}
+                                            options={[
+                                                { value: '', label: '— не выбран —' },
+                                                ...tests.map(t => ({ value: String(t.id), label: t.title }))
                                             ]}
                                             size="sm"
                                         />

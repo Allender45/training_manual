@@ -11,8 +11,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const result = await pool.query(
         `SELECT c.id, c.title, c.icon, c.description, c.comment,
                 c.prerequisite_course_id, c.study_time_minutes,
-                c.achievement_id, c.trainer_id, c.is_active
+                c.achievement_id, c.trainer_id, c.is_active, c.test_id,
+                t.name AS trainer_name, t.component AS trainer_component
          FROM courses c
+                  LEFT JOIN trainers t ON t.id = c.trainer_id
          WHERE c.id = $1`,
         [params.id]
     );
@@ -37,6 +39,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const is_active              = (formData.get('is_active')              as string) === 'true';
         const iconFile               = formData.get('icon') as File | null;
         const trainer_id = (formData.get('trainer_id') as string) || null;
+        const test_id = (formData.get('test_id') as string) || null;
 
         if (!title || !description) {
             return NextResponse.json({ error: 'Заполните обязательные поля: название, описание' }, { status: 400 });
@@ -62,9 +65,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                                 achievement_id         = $6,
                                 is_active              = $7,
                                 trainer_id             = $8,
-                                icon                   = COALESCE($9, icon),
-                                updated_by             = $10
-             WHERE id = $11
+                                test_id                = $9,
+                                icon                   = COALESCE($10, icon),
+                                updated_by             = $11
+             WHERE id = $12
              RETURNING id`,
             [
                 title, description, comment,
@@ -73,6 +77,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 achievement_id || null,
                 is_active,
                 trainer_id || null,
+                test_id || null,
                 iconPath,
                 userId,
                 params.id,

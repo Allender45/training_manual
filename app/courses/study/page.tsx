@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUserStore, useNotificationsStore } from '@/store';
 import { Header, Sidebar, Modal } from '@/containers';
 import { Button } from '@/components';
 import { Clock, BookOpen, Video, Music, FileText, ClipboardList, CheckCircle, XCircle } from 'lucide-react';
+import CallCardTrainer from '@/components/trainers/CallCardTrainer/CallCardTrainer';
+import type { CallCardResult } from '@/components/trainers/CallCardTrainer/CallCardTrainer';
 
 type Course = {
     id: number;
@@ -15,6 +17,9 @@ type Course = {
     comment: string | null;
     study_time_minutes: number | null;
     is_active: boolean;
+    trainer_id: number | null;
+    trainer_name: string | null;
+    trainer_component: string | null;
 };
 
 type Manual = {
@@ -79,6 +84,10 @@ const TYPE_CONFIG = {
     audio: { label: 'Аудио', icon: Music,    color: 'bg-amber-50 text-amber-700'   },
 } as const;
 
+const TRAINER_COMPONENTS: Record<string, React.ComponentType<{ onComplete?: (r: CallCardResult) => void }>> = {
+    CallCardTrainer,
+};
+
 export default function CourseStudyPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -98,6 +107,8 @@ export default function CourseStudyPage() {
     const [testQuestions, setTestQuestions] = useState<TestQuestion[]>([]);
     const [testLoading, setTestLoading] = useState(false);
     const [testPhase, setTestPhase] = useState<'intro' | 'test' | 'result'>('intro');
+    const [trainerModalOpen, setTrainerModalOpen] = useState(false);
+    const [trainerCompleted, setTrainerCompleted] = useState(false);
     const [currentQ, setCurrentQ] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -206,8 +217,13 @@ export default function CourseStudyPage() {
 
     const score = testQuestions.filter((q, i) => selectedAnswers[i] === q.correct_answer).length;
 
+    function handleTrainerComplete(result: CallCardResult) {
+        if (result.success) {
+            setTrainerCompleted(true);
+            setTrainerModalOpen(false);
+        }
+    }
 
-    console.log(manuals)
     return (
         <div className="flex min-h-screen bg-gray-100">
             <Sidebar sidebarOpen={sidebarOpen} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
@@ -307,8 +323,33 @@ export default function CourseStudyPage() {
                                 </div>
                             )}
 
-                            {courseTest && (
+                            {course?.trainer_id && course.trainer_component && (
                                 <div className="mt-6 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                            {trainerCompleted
+                                                ? <CheckCircle size={22} className="text-green-600" />
+                                                : <BookOpen size={22} className="text-amber-600" />}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-800">{course.trainer_name}</p>
+                                            <p className="text-sm text-gray-400">
+                                                {trainerCompleted ? 'Тренажёр пройден' : 'Практический тренажёр'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant={trainerCompleted ? 'outline' : 'primary'}
+                                        onClick={() => setTrainerModalOpen(true)}
+                                    >
+                                        {trainerCompleted ? 'Повторить' : 'Начать'}
+                                    </Button>
+                                </div>
+                            )}
+
+                            {courseTest && (
+                                <div className={`mt-6 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4
+        ${course?.trainer_id && !trainerCompleted ? 'opacity-60' : ''}`}>
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center flex-shrink-0">
                                             <ClipboardList size={22} className="text-indigo-600" />
@@ -316,11 +357,17 @@ export default function CourseStudyPage() {
                                         <div>
                                             <p className="font-semibold text-gray-800">{courseTest.title}</p>
                                             <p className="text-sm text-gray-400">
-                                                {courseTest.time_limit ? `${courseTest.time_limit} мин · ` : ''}Тест по курсу
+                                                {courseTest.time_limit ? `${courseTest.time_limit} мин · ` : ''}
+                                                {course?.trainer_id && !trainerCompleted ? 'Сначала пройдите тренажёр' : 'Тест по курсу'}
                                             </p>
                                         </div>
                                     </div>
-                                    <Button onClick={openTestModal}>Пройти тест</Button>
+                                    <Button
+                                        onClick={openTestModal}
+                                        disabled={!!(course?.trainer_id && !trainerCompleted)}
+                                    >
+                                        Пройти тест
+                                    </Button>
                                 </div>
                             )}
                         </>
@@ -435,6 +482,19 @@ export default function CourseStudyPage() {
                         </div>
                     </div>
                 ) : null}
+            </Modal>
+
+            <Modal
+                isOpen={trainerModalOpen}
+                onClose={() => setTrainerModalOpen(false)}
+                title={course?.trainer_name ?? 'Тренажёр'}
+                className="max-w-fit"
+            >
+                {course?.trainer_component && TRAINER_COMPONENTS[course.trainer_component] && (
+                    React.createElement(TRAINER_COMPONENTS[course.trainer_component], {
+                        onComplete: handleTrainerComplete,
+                    })
+                )}
             </Modal>
         </div>
     );
