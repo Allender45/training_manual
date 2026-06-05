@@ -1,32 +1,8 @@
 'use client';
 
 import { Header, Sidebar } from "@/containers";
-import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { TrainerRegistry } from "@/components/trainers/registry";
-import { CallCardResult } from "@/components";
-
-function WorkplaceContent() {
-    const params = useSearchParams();
-    const component = params.get('component') ?? '';
-    const [result, setResult] = useState<CallCardResult | null>(null);
-
-    const Trainer = TrainerRegistry[component];
-
-    return (
-        <main className="flex-1 p-6 flex flex-col gap-4">
-            {Trainer
-                ? <Trainer onComplete={(r: CallCardResult) => setResult(r)} />
-                : <p className="text-gray-400 text-sm">Тренажёр не найден: <code>{component}</code></p>
-            }
-            {result && (
-                <pre className="text-xs bg-white border rounded-xl p-3 text-gray-600">
-                    {JSON.stringify(result, null, 2)}
-                </pre>
-            )}
-        </main>
-    );
-}
+import { useState } from "react";
+import CaseQuizTrainer from "@/components/trainers/CaseQuizTrainer/CaseQuizTrainer";
 
 export default function WorkplacePage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -38,9 +14,9 @@ export default function WorkplacePage() {
             <div className="flex-1 flex flex-col min-w-0">
                 <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
                         mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
-                <Suspense>
-                    <WorkplaceContent />
-                </Suspense>
+                <main className="flex-1 p-6 flex flex-col gap-4">
+                    <CaseQuizTrainer />
+                </main>
             </div>
         </div>
     );
