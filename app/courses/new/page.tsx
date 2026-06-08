@@ -2,7 +2,14 @@
 
 import {useState, useEffect} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
-import {useUserStore, useCoursesStore, useManualsStore, useAchievementsStore, useTrainersStore, useTestsStore } from '@/store';
+import {
+    useUserStore,
+    useCoursesStore,
+    useManualsStore,
+    useAchievementsStore,
+    useTrainersStore,
+    useTestsStore
+} from '@/store';
 import {Header, Sidebar} from '@/containers';
 import {Input, Button, Select, Checkbox} from '@/components';
 
@@ -14,14 +21,13 @@ type CourseForm = {
     study_time_minutes: string;
     achievement_id: string;
     is_active: boolean;
-    trainer_id: string;
     test_id: string;
 };
 
 const emptyForm: CourseForm = {
     title: '', description: '', comment: '',
     prerequisite_course_id: '', study_time_minutes: '', achievement_id: '',
-    is_active: true, trainer_id: '', test_id: '',
+    is_active: true, test_id: '',
 };
 
 export default function NewCoursePage() {
@@ -36,7 +42,7 @@ export default function NewCoursePage() {
     const {manuals: allManuals, fetch: fetchManuals} = useManualsStore();
     const {achievements, fetch: fetchAchievements} = useAchievementsStore();
     const {trainers, fetch: fetchTrainers} = useTrainersStore();
-    const { tests, fetch: fetchTests } = useTestsStore();
+    const {tests, fetch: fetchTests} = useTestsStore();
 
     const [form, setForm] = useState<CourseForm>(emptyForm);
     const [currentIcon, setCurrentIcon] = useState<string | null>(null);
@@ -46,6 +52,7 @@ export default function NewCoursePage() {
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [manualRows, setManualRows] = useState<string[]>(['']);
+    const [trainerRows, setTrainerRows] = useState<string[]>(['']);
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
@@ -63,6 +70,13 @@ export default function NewCoursePage() {
                     setManualRows(ids.length > 0 ? ids : ['']);
                 });
 
+            fetch(`/api/courses/${courseId}/trainers`)
+                .then(r => r.json())
+                .then(d => {
+                    const ids = (d.trainers ?? []).map((t: any) => String(t.id));
+                    setTrainerRows(ids.length > 0 ? ids : ['']);
+                });
+
             fetch(`/api/courses/${courseId}`)
                 .then(r => r.json())
                 .then(d => {
@@ -75,7 +89,6 @@ export default function NewCoursePage() {
                         study_time_minutes: c.study_time_minutes ? String(c.study_time_minutes) : '',
                         achievement_id: c.achievement_id ? String(c.achievement_id) : '',
                         is_active: c.is_active ?? true,
-                        trainer_id: c.trainer_id ? String(c.trainer_id) : '',
                         test_id: c.test_id ? String(c.test_id) : '',
                     });
                     setCurrentIcon(c.icon ?? null);
@@ -120,7 +133,6 @@ export default function NewCoursePage() {
             fd.append('study_time_minutes', form.study_time_minutes);
             fd.append('achievement_id', form.achievement_id);
             fd.append('is_active', String(form.is_active));
-            fd.append('trainer_id', form.trainer_id);
             fd.append('test_id', form.test_id);
             if (iconFile) fd.append('icon', iconFile);
 
@@ -133,16 +145,25 @@ export default function NewCoursePage() {
                 setSaveError(data.error ?? 'Ошибка');
                 return;
             }
+
+            const savedId = isEditMode ? courseId : String(data.course.id);
+
+            const ids = manualRows.filter(id => id !== '').map(Number);
+            await fetch(`/api/courses/${savedId}/manuals`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({manual_ids: ids}),
+            });
+
+            const trainerIds = trainerRows.filter(id => id !== '').map(Number);
+            await fetch(`/api/courses/${savedId}/trainers`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({trainer_ids: trainerIds}),
+            });
+
             router.push('/courses');
 
-            if (isEditMode) {
-                const ids = manualRows.filter(id => id !== '').map(Number);
-                await fetch(`/api/courses/${courseId}/manuals`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({manual_ids: ids}),
-                });
-            }
         } catch {
             setSaveError('Ошибка соединения с сервером');
         } finally {
@@ -263,35 +284,74 @@ export default function NewCoursePage() {
                             <Checkbox label="Активен" name="is_active" checked={form.is_active}
                                       onChange={handleChange} variant="switch"/>
 
-                            {isEditMode && (
-                                <div>
-                                    <label className="block text-gray-500 text-sm mb-2">Содержимое</label>
+                            <div>
+                                <label className="block text-gray-500 text-sm mb-2">Содержимое</label>
+                                <div className="flex flex-col gap-2">
+                                    {manualRows.map((val, idx) => (
+                                        <div key={idx} className="flex gap-2 items-center">
+                                            <div className="flex-1">
+                                                <Select
+                                                    label=""
+                                                    name={`manual_${idx}`}
+                                                    value={val}
+                                                    onChange={e => {
+                                                        const next = [...manualRows];
+                                                        next[idx] = e.target.value;
+                                                        setManualRows(next);
+                                                    }}
+                                                    options={[
+                                                        {value: '', label: '— выберите материал —'},
+                                                        ...allManuals.map(m => ({
+                                                            value: String(m.id),
+                                                            label: m.title
+                                                        }))
+                                                    ]}
+                                                />
+                                            </div>
+                                            {manualRows.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setManualRows(manualRows.filter((_, i) => i !== idx))}
+                                                    className="text-gray-400 hover:text-red-500 transition"
+                                                >✕</button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => setManualRows([...manualRows, ''])}
+                                        className="self-start text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-1"
+                                    >
+                                        <span className="font-bold text-base">+ Добавить материал</span>
+                                    </button>
+                                </div>
+
+                                <div className="mt-5">
+                                    <label className="block text-gray-500 text-sm mb-2">Тренажёры</label>
                                     <div className="flex flex-col gap-2">
-                                        {manualRows.map((val, idx) => (
+                                        {trainerRows.map((val, idx) => (
                                             <div key={idx} className="flex gap-2 items-center">
                                                 <div className="flex-1">
                                                     <Select
                                                         label=""
-                                                        name={`manual_${idx}`}
+                                                        name={`trainer_${idx}`}
                                                         value={val}
                                                         onChange={e => {
-                                                            const next = [...manualRows];
+                                                            const next = [...trainerRows];
                                                             next[idx] = e.target.value;
-                                                            setManualRows(next);
+                                                            setTrainerRows(next);
                                                         }}
                                                         options={[
-                                                            {value: '', label: '— выберите материал —'},
-                                                            ...allManuals.map(m => ({
-                                                                value: String(m.id),
-                                                                label: m.title
-                                                            }))
+                                                            {value: '', label: '— не выбран —'},
+                                                            ...trainers.map(t => ({value: String(t.id), label: t.name}))
                                                         ]}
+                                                        size="sm"
                                                     />
                                                 </div>
-                                                {manualRows.length > 1 && (
+                                                {trainerRows.length > 1 && (
                                                     <button
                                                         type="button"
-                                                        onClick={() => setManualRows(manualRows.filter((_, i) => i !== idx))}
+                                                        onClick={() => setTrainerRows(trainerRows.filter((_, i) => i !== idx))}
                                                         className="text-gray-400 hover:text-red-500 transition"
                                                     >✕</button>
                                                 )}
@@ -299,42 +359,28 @@ export default function NewCoursePage() {
                                         ))}
                                         <button
                                             type="button"
-                                            onClick={() => setManualRows([...manualRows, ''])}
+                                            onClick={() => setTrainerRows([...trainerRows, ''])}
                                             className="self-start text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-1"
                                         >
-                                            <span className="font-bold text-base">+ Добавить материал</span>
+                                            <span className="font-bold text-base">+ Добавить тренажёр</span>
                                         </button>
                                     </div>
-
-                                    <div className="mt-5">
-                                        <Select
-                                            label="Тренажёр"
-                                            name="trainer_id"
-                                            value={form.trainer_id}
-                                            onChange={handleChange}
-                                            options={[
-                                                {value: '', label: '— не выбран —'},
-                                                ...trainers.map(t => ({value: String(t.id), label: t.name}))
-                                            ]}
-                                            size="sm"
-                                        />
-                                    </div>
-
-                                    <div className="mt-5">
-                                        <Select
-                                            label="Тест"
-                                            name="test_id"
-                                            value={form.test_id}
-                                            onChange={handleChange}
-                                            options={[
-                                                { value: '', label: '— не выбран —' },
-                                                ...tests.map(t => ({ value: String(t.id), label: t.title }))
-                                            ]}
-                                            size="sm"
-                                        />
-                                    </div>
                                 </div>
-                            )}
+
+                                <div className="mt-5">
+                                    <Select
+                                        label="Тест"
+                                        name="test_id"
+                                        value={form.test_id}
+                                        onChange={handleChange}
+                                        options={[
+                                            {value: '', label: '— не выбран —'},
+                                            ...tests.map(t => ({value: String(t.id), label: t.title}))
+                                        ]}
+                                        size="sm"
+                                    />
+                                </div>
+                            </div>
 
                             {saveError && <p className="text-red-500 text-sm">{saveError}</p>}
 

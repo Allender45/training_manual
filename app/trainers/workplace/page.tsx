@@ -2,7 +2,7 @@
 
 import { Header, Sidebar } from "@/containers";
 import { useState } from "react";
-import { CallCardTrainer, CallCardResult } from "@/components";
+import { CallCardResult, PricingQuizTrainer } from "@/components";
 
 export default function WorkplacePage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -16,7 +16,7 @@ export default function WorkplacePage() {
                 <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
                         mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
                 <main className="flex-1 p-6 flex flex-col gap-4">
-                    <CallCardTrainer onComplete={(r) => setResult(r)} />
+                    <PricingQuizTrainer />
                     {result && (
                         <pre className="text-xs bg-white border rounded-xl p-3 text-gray-600">
                             {JSON.stringify(result, null, 2)}

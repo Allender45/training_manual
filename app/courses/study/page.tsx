@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useUserStore, useNotificationsStore } from '@/store';
-import { Header, Sidebar, Modal } from '@/containers';
-import { Button } from '@/components';
-import { Clock, BookOpen, Video, Music, FileText, ClipboardList, CheckCircle, XCircle } from 'lucide-react';
-import { CallCardTrainer, CaseQuizTrainer } from '@/components';
-import type { CallCardResult } from '@/components/trainers/CallCardTrainer/CallCardTrainer';
+import React, {useState, useEffect} from 'react';
+import {useRouter, useSearchParams} from 'next/navigation';
+import {useUserStore, useNotificationsStore} from '@/store';
+import {Header, Sidebar, Modal} from '@/containers';
+import {Button} from '@/components';
+import {Clock, BookOpen, Video, Music, FileText, ClipboardList, CheckCircle, XCircle} from 'lucide-react';
+import {CallCardTrainer, CaseQuizTrainer, PricingQuizTrainer} from '@/components';
 
 type Course = {
     id: number;
@@ -17,9 +16,12 @@ type Course = {
     comment: string | null;
     study_time_minutes: number | null;
     is_active: boolean;
-    trainer_id: number | null;
-    trainer_name: string | null;
-    trainer_component: string | null;
+};
+
+type CourseTrainer = {
+    id: number;
+    name: string;
+    component: string;
 };
 
 type Manual = {
@@ -79,14 +81,15 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 const TYPE_CONFIG = {
-    text:  { label: 'Текст', icon: FileText, color: 'bg-blue-50 text-blue-700'    },
-    video: { label: 'Видео', icon: Video,    color: 'bg-purple-50 text-purple-700' },
-    audio: { label: 'Аудио', icon: Music,    color: 'bg-amber-50 text-amber-700'   },
+    text:  {label: 'Текст', icon: FileText, color: 'bg-blue-50 text-blue-700'},
+    video: {label: 'Видео', icon: Video,    color: 'bg-purple-50 text-purple-700'},
+    audio: {label: 'Аудио', icon: Music,    color: 'bg-amber-50 text-amber-700'},
 } as const;
 
 const TRAINER_COMPONENTS: Record<string, React.ComponentType<any>> = {
     CallCardTrainer,
     CaseQuizTrainer,
+    PricingQuizTrainer,
 };
 
 export default function CourseStudyPage() {
@@ -95,11 +98,12 @@ export default function CourseStudyPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const courseId = searchParams.get('id');
-    const { fetchUser } = useUserStore();
+    const {fetchUser} = useUserStore();
     const push = useNotificationsStore(s => s.push);
 
     const [course, setCourse] = useState<Course | null>(null);
     const [manuals, setManuals] = useState<Manual[]>([]);
+    const [trainers, setTrainers] = useState<CourseTrainer[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -108,18 +112,23 @@ export default function CourseStudyPage() {
     const [testQuestions, setTestQuestions] = useState<TestQuestion[]>([]);
     const [testLoading, setTestLoading] = useState(false);
     const [testPhase, setTestPhase] = useState<'intro' | 'test' | 'result'>('intro');
-    const [trainerModalOpen, setTrainerModalOpen] = useState(false);
-    const [trainerCompleted, setTrainerCompleted] = useState(false);
+    const [completedTrainers, setCompletedTrainers] = useState<Set<number>>(new Set());
+    const [openTrainerId, setOpenTrainerId] = useState<number | null>(null);
     const [currentQ, setCurrentQ] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
-        if (!courseId) { setError('ID курса не указан'); setLoading(false); return; }
+        if (!courseId) {
+            setError('ID курса не указан');
+            setLoading(false);
+            return;
+        }
 
         setCourse(null);
         setManuals([]);
+        setTrainers([]);
         setCourseTest(null);
         setLoading(true);
         setError(null);
@@ -128,19 +137,27 @@ export default function CourseStudyPage() {
             fetch(`/api/courses/${courseId}`).then(r => r.json()),
             fetch(`/api/manuals?course_id=${courseId}`).then(r => r.json()),
             fetch(`/api/courseTests?course_id=${courseId}`).then(r => r.json()),
-        ]).then(([courseData, manualsData, testsData]) => {
-            if (courseData.error) { setError(courseData.error); return; }
+            fetch(`/api/courses/${courseId}/trainers`).then(r => r.json()),
+        ]).then(([courseData, manualsData, testsData, trainersData]) => {
+            if (courseData.error) {
+                setError(courseData.error);
+                return;
+            }
             setCourse(courseData.course);
             setManuals((manualsData.manuals ?? []).filter((m: Manual) => m.is_active));
             const tests = (testsData.tests ?? []).filter((t: any) => t.is_active);
             if (tests.length > 0) setCourseTest(tests[0]);
+            setTrainers(trainersData.trainers ?? []);
         }).catch(() => setError('Ошибка загрузки данных'))
             .finally(() => setLoading(false));
     }, [courseId]);
 
     useEffect(() => {
         if (testPhase !== 'test' || timeLeft === null) return;
-        if (timeLeft <= 0) { finishTest(); return; }
+        if (timeLeft <= 0) {
+            finishTest();
+            return;
+        }
         const id = setTimeout(() => setTimeLeft(t => (t ?? 1) - 1), 1000);
         return () => clearTimeout(id);
     }, [testPhase, timeLeft]);
@@ -159,10 +176,10 @@ export default function CourseStudyPage() {
             const qs: any[] = data.questions ?? [];
             const shuffledQs = courseTest.shuffle_questions ? shuffle(qs) : qs;
             setTestQuestions(shuffledQs.map(q => ({
-                id:             q.id,
-                question:       q.question,
+                id: q.id,
+                question: q.question,
                 correct_answer: q.correct_answer,
-                options:        courseTest.shuffle_answers
+                options: courseTest.shuffle_answers
                     ? shuffle([q.correct_answer, ...q.wrong_answers])
                     : [q.correct_answer, ...q.wrong_answers],
             })));
@@ -178,7 +195,7 @@ export default function CourseStudyPage() {
 
     function selectAnswer(answer: string) {
         if (selectedAnswers[currentQ] !== undefined) return;
-        setSelectedAnswers(prev => ({ ...prev, [currentQ]: answer }));
+        setSelectedAnswers(prev => ({...prev, [currentQ]: answer}));
     }
 
     function nextQuestion() {
@@ -198,13 +215,13 @@ export default function CourseStudyPage() {
         setTestPhase('result');
 
         if (courseTest?.notify_trainee) {
-            push({ text: courseTest.notify_trainee, icon: '📋' });
+            push({text: courseTest.notify_trainee, icon: '📋'});
         }
 
         if (course?.id) {
             fetch('/api/user-progress', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     content_type: 'course',
                     content_id: course.id,
@@ -222,23 +239,20 @@ export default function CourseStudyPage() {
         setTimeLeft(null);
     }
 
-    const score = testQuestions.filter((q, i) => selectedAnswers[i] === q.correct_answer).length;
-
-    function handleTrainerComplete(result: CallCardResult) {
-        if (result.success) {
-            setTrainerCompleted(true);
-            setTrainerModalOpen(false);
-        }
+    function handleTrainerComplete(trainerId: number) {
+        setCompletedTrainers(prev => new Set([...prev, trainerId]));
+        setOpenTrainerId(null);
     }
 
-    console.log(courseTest)
+    const score = testQuestions.filter((q, i) => selectedAnswers[i] === q.correct_answer).length;
+    const allTrainersCompleted = trainers.length === 0 || trainers.every(t => completedTrainers.has(t.id));
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-            <Sidebar sidebarOpen={sidebarOpen} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+            <Sidebar sidebarOpen={sidebarOpen} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}/>
             <div className="flex-1 flex flex-col min-w-0">
                 <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
-                        mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+                        mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}/>
                 <main className="flex-1 p-6 max-w-4xl">
 
                     {loading && (
@@ -254,7 +268,7 @@ export default function CourseStudyPage() {
                             <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
                                 <div className="flex items-start gap-5">
                                     <img src={course.icon} alt={course.title}
-                                         className="w-20 h-20 rounded-2xl object-cover flex-shrink-0 border border-gray-100" />
+                                         className="w-20 h-20 rounded-2xl object-cover flex-shrink-0 border border-gray-100"/>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3 flex-wrap mb-1">
                                             <h1 className="text-2xl font-bold text-gray-900">{course.title}</h1>
@@ -266,11 +280,11 @@ export default function CourseStudyPage() {
                                         <div className="flex items-center gap-5 text-sm text-gray-400">
                                             {course.study_time_minutes && (
                                                 <span className="flex items-center gap-1.5">
-                                                    <Clock size={14} />{formatStudyTime(course.study_time_minutes)}
+                                                    <Clock size={14}/>{formatStudyTime(course.study_time_minutes)}
                                                 </span>
                                             )}
                                             <span className="flex items-center gap-1.5">
-                                                <BookOpen size={14} />{manuals.length} {pluralManuals(manuals.length)}
+                                                <BookOpen size={14}/>{manuals.length} {pluralManuals(manuals.length)}
                                             </span>
                                         </div>
                                     </div>
@@ -300,12 +314,12 @@ export default function CourseStudyPage() {
                                                         {index + 1}
                                                     </div>
                                                     <img src={manual.icon} alt={manual.title}
-                                                         className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
+                                                         className="w-10 h-10 rounded-xl object-cover flex-shrink-0"/>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 flex-wrap">
                                                             <span className="font-semibold text-gray-800">{manual.title}</span>
                                                             <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${cfg.color}`}>
-                                                                <TypeIcon size={11} />{cfg.label}
+                                                                <TypeIcon size={11}/>{cfg.label}
                                                             </span>
                                                         </div>
                                                         {manual.description && (
@@ -316,12 +330,12 @@ export default function CourseStudyPage() {
                                                 <div className="p-5">
                                                     {manual.type === 'text' && manual.content ? (
                                                         <div className="text-sm text-gray-700 leading-relaxed"
-                                                             dangerouslySetInnerHTML={{ __html: manual.content }} />
+                                                             dangerouslySetInnerHTML={{__html: manual.content}}/>
                                                     ) : manual.type === 'video' && manual.content ? (
                                                         <video src={manual.content} controls
-                                                               className="w-full rounded-xl bg-black max-h-96" />
+                                                               className="w-full rounded-xl bg-black max-h-96"/>
                                                     ) : manual.type === 'audio' && manual.content ? (
-                                                        <audio src={manual.content} controls className="w-full" />
+                                                        <audio src={manual.content} controls className="w-full"/>
                                                     ) : (
                                                         <p className="text-sm text-gray-400 italic">Содержимое не добавлено</p>
                                                     )}
@@ -332,49 +346,52 @@ export default function CourseStudyPage() {
                                 </div>
                             )}
 
-                            {course?.trainer_id && course.trainer_component && (
-                                <div className="mt-6 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                                            {trainerCompleted
-                                                ? <CheckCircle size={22} className="text-green-600" />
-                                                : <BookOpen size={22} className="text-amber-600" />}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-800">{course.trainer_name}</p>
-                                            <p className="text-sm text-gray-400">
-                                                {trainerCompleted ? 'Тренажёр пройден' : 'Практический тренажёр'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        variant={trainerCompleted ? 'outline' : 'primary'}
-                                        onClick={() => setTrainerModalOpen(true)}
-                                    >
-                                        {trainerCompleted ? 'Повторить' : 'Начать'}
-                                    </Button>
+                            {trainers.length > 0 && (
+                                <div className="mt-6 flex flex-col gap-3">
+                                    {trainers.map(trainer => {
+                                        const completed = completedTrainers.has(trainer.id);
+                                        return (
+                                            <div key={trainer.id} className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                                        {completed
+                                                            ? <CheckCircle size={22} className="text-green-600"/>
+                                                            : <BookOpen size={22} className="text-amber-600"/>}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-gray-800">{trainer.name}</p>
+                                                        <p className="text-sm text-gray-400">
+                                                            {completed ? 'Тренажёр пройден' : 'Практический тренажёр'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    variant={completed ? 'outline' : 'primary'}
+                                                    onClick={() => setOpenTrainerId(trainer.id)}
+                                                >
+                                                    {completed ? 'Повторить' : 'Начать'}
+                                                </Button>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
 
                             {courseTest && (
-                                <div className={`mt-6 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4
-        ${course?.trainer_id && !trainerCompleted ? 'opacity-60' : ''}`}>
+                                <div className={`mt-6 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4 ${!allTrainersCompleted ? 'opacity-60' : ''}`}>
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                                            <ClipboardList size={22} className="text-indigo-600" />
+                                            <ClipboardList size={22} className="text-indigo-600"/>
                                         </div>
                                         <div>
                                             <p className="font-semibold text-gray-800">{courseTest.title}</p>
                                             <p className="text-sm text-gray-400">
                                                 {courseTest.time_limit ? `${courseTest.time_limit} мин · ` : ''}
-                                                {course?.trainer_id && !trainerCompleted ? 'Сначала пройдите тренажёр' : 'Тест по курсу'}
+                                                {!allTrainersCompleted ? 'Сначала пройдите тренажёры' : 'Тест по курсу'}
                                             </p>
                                         </div>
                                     </div>
-                                    <Button
-                                        onClick={openTestModal}
-                                        disabled={!!(course?.trainer_id && !trainerCompleted)}
-                                    >
+                                    <Button onClick={openTestModal} disabled={!allTrainersCompleted}>
                                         Пройти тест
                                     </Button>
                                 </div>
@@ -418,7 +435,7 @@ export default function CourseStudyPage() {
                             </div>
                             <div className="w-full bg-gray-100 rounded-full h-1.5">
                                 <div className="bg-indigo-500 h-1.5 rounded-full transition-all"
-                                     style={{ width: `${((currentQ + 1) / testQuestions.length) * 100}%` }} />
+                                     style={{width: `${((currentQ + 1) / testQuestions.length) * 100}%`}}/>
                             </div>
                             <p className="font-medium text-gray-800 text-sm leading-relaxed">{q.question}</p>
                             <div className="flex flex-col gap-2">
@@ -469,8 +486,8 @@ export default function CourseStudyPage() {
                                     <div key={i} className={`rounded-xl p-3 text-sm ${correct ? 'bg-green-50' : 'bg-red-50'}`}>
                                         <div className="flex items-start gap-2">
                                             {correct
-                                                ? <CheckCircle size={15} className="text-green-500 flex-shrink-0 mt-0.5" />
-                                                : <XCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />}
+                                                ? <CheckCircle size={15} className="text-green-500 flex-shrink-0 mt-0.5"/>
+                                                : <XCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5"/>}
                                             <div>
                                                 <p className="text-gray-700 font-medium">{q.question}</p>
                                                 {!correct && selectedAnswers[i] && (
@@ -493,18 +510,23 @@ export default function CourseStudyPage() {
                 ) : null}
             </Modal>
 
-            <Modal
-                isOpen={trainerModalOpen}
-                onClose={() => setTrainerModalOpen(false)}
-                title={course?.trainer_name ?? 'Тренажёр'}
-                className="max-w-fit"
-            >
-                {course?.trainer_component && TRAINER_COMPONENTS[course.trainer_component] && (
-                    React.createElement(TRAINER_COMPONENTS[course.trainer_component], {
-                        onComplete: handleTrainerComplete,
-                    })
-                )}
-            </Modal>
+            {openTrainerId !== null && (() => {
+                const trainer = trainers.find(t => t.id === openTrainerId);
+                if (!trainer) return null;
+                const Component = TRAINER_COMPONENTS[trainer.component];
+                return (
+                    <Modal
+                        isOpen={true}
+                        onClose={() => setOpenTrainerId(null)}
+                        title={trainer.name}
+                        className="max-w-2xl"
+                    >
+                        {Component && (
+                            <Component onComplete={() => handleTrainerComplete(trainer.id)}/>
+                        )}
+                    </Modal>
+                );
+            })()}
         </div>
     );
 }
