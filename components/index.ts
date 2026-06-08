@@ -11,3 +11,4 @@ export const CKEditorField = dynamic(() => import('./CKEditorField/CKEditorField
 export { default as StatCard } from './StatCard/StatCard';
 export { default as CallCardTrainer } from './trainers/CallCardTrainer/CallCardTrainer';
 export type { CallCardResult } from './trainers/CallCardTrainer/CallCardTrainer';
+export { default as CaseQuizTrainer } from './trainers/CaseQuizTrainer/CaseQuizTrainer';

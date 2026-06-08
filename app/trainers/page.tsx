@@ -47,7 +47,7 @@ export default function TrainersPage() {
                                     <td className="px-4 py-3 text-xs text-gray-400 font-mono">{t.component}</td>
                                     <td className="px-4 py-3 text-right">
                                         <button
-                                            onClick={() => router.push(`/trainers/workplace?component=${t.component}`)}
+                                            onClick={() => router.push(`/trainers/test?component=${t.component}`)}
                                             className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                                         >
                                             Тестировать

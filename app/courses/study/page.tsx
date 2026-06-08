@@ -6,7 +6,7 @@ import { useUserStore, useNotificationsStore } from '@/store';
 import { Header, Sidebar, Modal } from '@/containers';
 import { Button } from '@/components';
 import { Clock, BookOpen, Video, Music, FileText, ClipboardList, CheckCircle, XCircle } from 'lucide-react';
-import CallCardTrainer from '@/components/trainers/CallCardTrainer/CallCardTrainer';
+import { CallCardTrainer, CaseQuizTrainer } from '@/components';
 import type { CallCardResult } from '@/components/trainers/CallCardTrainer/CallCardTrainer';
 
 type Course = {
@@ -84,8 +84,9 @@ const TYPE_CONFIG = {
     audio: { label: 'Аудио', icon: Music,    color: 'bg-amber-50 text-amber-700'   },
 } as const;
 
-const TRAINER_COMPONENTS: Record<string, React.ComponentType<{ onComplete?: (r: CallCardResult) => void }>> = {
+const TRAINER_COMPONENTS: Record<string, React.ComponentType<any>> = {
     CallCardTrainer,
+    CaseQuizTrainer,
 };
 
 export default function CourseStudyPage() {
@@ -116,6 +117,12 @@ export default function CourseStudyPage() {
     useEffect(() => {
         fetchUser(() => router.push('/login'));
         if (!courseId) { setError('ID курса не указан'); setLoading(false); return; }
+
+        setCourse(null);
+        setManuals([]);
+        setCourseTest(null);
+        setLoading(true);
+        setError(null);
 
         Promise.all([
             fetch(`/api/courses/${courseId}`).then(r => r.json()),
@@ -223,6 +230,8 @@ export default function CourseStudyPage() {
             setTrainerModalOpen(false);
         }
     }
+
+    console.log(courseTest)
 
     return (
         <div className="flex min-h-screen bg-gray-100">

@@ -2,11 +2,15 @@
 
 import { Header, Sidebar } from "@/containers";
 import { useState } from "react";
-import CaseQuizTrainer from "@/components/trainers/CaseQuizTrainer/CaseQuizTrainer";
+import { useSearchParams } from "next/navigation";
+import { TrainerRegistry } from "@/components/trainers/registry";
 
-export default function WorkplacePage() {
+export default function TestPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const searchParams = useSearchParams();
+    const componentName = searchParams.get('component');
+    const TrainerComponent = componentName ? TrainerRegistry[componentName] : null;
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -15,7 +19,13 @@ export default function WorkplacePage() {
                 <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
                         mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
                 <main className="flex-1 p-6 flex flex-col gap-4">
-                    <CaseQuizTrainer />
+                    {TrainerComponent ? (
+                        <TrainerComponent />
+                    ) : (
+                        <div className="text-gray-400 text-sm">
+                            {componentName ? `Тренажёр «${componentName}» не найден` : 'Компонент не указан'}
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

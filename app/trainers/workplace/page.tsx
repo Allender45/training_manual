@@ -4,7 +4,7 @@ import { Header, Sidebar } from "@/containers";
 import { useState } from "react";
 import { CallCardTrainer, CallCardResult } from "@/components";
 
-export default function TrainerPage() {
+export default function WorkplacePage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [result, setResult] = useState<CallCardResult | null>(null);
