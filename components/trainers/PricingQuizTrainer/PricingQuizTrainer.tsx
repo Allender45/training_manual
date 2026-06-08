@@ -22,7 +22,7 @@ type PricingQuestion = {
 const questions: PricingQuestion[] = [
     {
         id: 1,
-        description: "Клиент просит помочь перевезти линолеум. Стоимость 1 часа грузчика в Перми на момент звонка - 500₽. Газели - 1000₽.",
+        description: "Клиент просит помочь перевезти линолеум. Минимальная стоимость 1 часа грузчика в Перми на момент звонка - 500₽. Газели - 1000₽.",
         task: "Указать общую цену за работу.",
         audio1: "/records/trainers/prising/1-1.mp3",
         audio2: "/records/trainers/prising/1-2.mp3",
@@ -144,7 +144,7 @@ function PricingQuiz({ onComplete }: { onComplete?: () => void }) {
                     )}
                     <div className="flex gap-3">
                         <div className="flex flex-col gap-1 flex-1">
-                            <label className="text-xs font-medium text-gray-500">Стоимость грузчиков (₽)</label>
+                            <label className="text-xs font-medium text-gray-500">Стоимость одного часа грузчика (₽)</label>
                             <input
                                 type="number"
                                 value={inputLoaders}
@@ -158,7 +158,7 @@ function PricingQuiz({ onComplete }: { onComplete?: () => void }) {
                             />
                         </div>
                         <div className="flex flex-col gap-1 flex-1">
-                            <label className="text-xs font-medium text-gray-500">Стоимость транспорта (₽)</label>
+                            <label className="text-xs font-medium text-gray-500">Стоимость одного часа транспорта (₽)</label>
                             <input
                                 type="number"
                                 value={inputTransport}
