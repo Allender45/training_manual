@@ -13,3 +13,4 @@ export { default as CallCardTrainer } from './trainers/CallCardTrainer/CallCardT
 export type { CallCardResult } from './trainers/CallCardTrainer/CallCardTrainer';
 export { default as CaseQuizTrainer } from './trainers/CaseQuizTrainer/CaseQuizTrainer';
 export { default as PricingQuizTrainer } from './trainers/PricingQuizTrainer/PricingQuizTrainer';
+export { default as NewOrderTrainer } from './trainers/NewOrderTrainer/NewOrderTrainer';

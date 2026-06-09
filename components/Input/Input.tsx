@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { Calendar, X } from 'lucide-react';
+
 function formatPhone(raw: string): string {
     const digits = raw.replace(/\D/g, '');
     if (digits.length === 0) return '';
@@ -16,10 +18,15 @@ function formatPhone(raw: string): string {
     return formatted;
 }
 
+function formatDateTimeLocal(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 type InputProps = {
     label: string;
     name?: string;
-    type?: 'text' | 'email' | 'tel' | 'password' | 'fileUpload' | 'number';
+    type?: 'text' | 'email' | 'tel' | 'password' | 'fileUpload' | 'number' | 'datetime';
     value?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     required?: boolean;
@@ -90,6 +97,70 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
             onChange?.({target: {name: e.target.name, value: '+7'}} as React.ChangeEvent<HTMLInputElement>);
         }
         onFocus?.(e);
+    }
+
+    const datetimeInputRef = React.useRef<HTMLInputElement>(null);
+    const [nearestTime, setNearestTime] = React.useState(false);
+
+    if (type === 'datetime') {
+        return (
+            <div className="relative">
+                <label htmlFor={name} className="block text-gray-500 text-sm mb-2">
+                    {label}
+                </label>
+                <div className={`flex rounded-lg overflow-hidden border transition-colors focus-within:ring-2 focus-within:border-transparent ${
+                    error ? 'border-red-300 focus-within:ring-red-500' : 'border-gray-300 focus-within:ring-blue-500'
+                }`}>
+                    <button
+                        type="button"
+                        onClick={() => datetimeInputRef.current?.showPicker?.()}
+                        className="flex items-center justify-center px-3 bg-blue-100 text-blue-600 border-r border-gray-300 hover:bg-blue-200 transition-colors flex-shrink-0"
+                    >
+                        <Calendar size={15} />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setNearestTime(false);
+                            onChange?.({target: {name: name ?? '', value: ''}} as React.ChangeEvent<HTMLInputElement>);
+                        }}
+                        className="flex items-center justify-center px-3 bg-gray-100 text-gray-400 border-l border-gray-300 hover:bg-gray-200 hover:text-gray-600 transition-colors flex-shrink-0"
+                    >
+                        <X size={13} />
+                    </button>
+                    <input
+                        ref={(el) => {
+                            (datetimeInputRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
+                            if (typeof ref === 'function') ref(el);
+                            else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = el;
+                        }}
+                        id={name}
+                        name={name}
+                        type="datetime-local"
+                        value={value ?? ''}
+                        onChange={onChange}
+                        onBlur={onBlur}
+                        disabled={disabled}
+                        placeholder={placeholder}
+                        className="flex-1 px-3 py-2 text-sm focus:outline-none bg-white text-gray-700 min-w-0 disabled:bg-gray-50 disabled:text-gray-400 [&::-webkit-calendar-picker-indicator]:hidden"
+                    />
+                </div>
+                <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                    <input
+                        type="checkbox"
+                        checked={nearestTime}
+                        onChange={e => {
+                            const checked = e.target.checked;
+                            setNearestTime(checked);
+                            onChange?.({target: {name: name ?? '', value: checked ? formatDateTimeLocal(new Date()) : ''}} as React.ChangeEvent<HTMLInputElement>);
+                        }}
+                        className="w-4 h-4 rounded accent-blue-600"
+                    />
+                    <span className="text-sm text-gray-700">В ближайшее время</span>
+                </label>
+                {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+            </div>
+        );
     }
 
     return (
