@@ -5,7 +5,7 @@ import {useRouter, useSearchParams} from 'next/navigation';
 import {useUserStore, useNotificationsStore} from '@/store';
 import {Header, Sidebar, Modal} from '@/containers';
 import {Clock, BookOpen, Video, Music, FileText, ClipboardList, CheckCircle, XCircle} from 'lucide-react';
-import {CallCardTrainer, CaseQuizTrainer, PricingQuizTrainer, NewOrderTrainer, Button} from '@/components';
+import {CallCardTrainer, CaseQuizTrainer, PricingQuizTrainer, NewOrderTrainer, Button, FullOrderCreate} from '@/components';
 
 type Course = {
     id: number;
@@ -90,6 +90,7 @@ const TRAINER_COMPONENTS: Record<string, React.ComponentType<any>> = {
     CaseQuizTrainer,
     PricingQuizTrainer,
     NewOrderTrainer,
+    FullOrderCreate,
 };
 
 export default function CourseStudyPage() {
