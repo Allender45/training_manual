@@ -26,7 +26,8 @@ function formatDateTimeLocal(date: Date): string {
 type InputProps = {
     label: string;
     name?: string;
-    type?: 'text' | 'email' | 'tel' | 'password' | 'fileUpload' | 'number' | 'datetime';
+    type?: 'text' | 'email' | 'tel' | 'password' | 'fileUpload' | 'number' | 'datetime' | 'textarea';
+    rows?: number;
     value?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     required?: boolean;
@@ -78,7 +79,7 @@ const icons = {
 const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
     {
         label, name, type = 'text', value, onChange, required, placeholder,
-        maxLength, minLength, icon, error, onFocus, onBlur, accept, className, disabled
+        maxLength, minLength, icon, error, onFocus, onBlur, accept, className, disabled, rows
     },
     ref
 ) {
@@ -158,6 +159,32 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
                     />
                     <span className="text-sm text-gray-700">В ближайшее время</span>
                 </label>
+                {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+            </div>
+        );
+    }
+
+    if (type === 'textarea') {
+        return (
+            <div className="relative">
+                <label htmlFor={name} className="block text-gray-500 text-sm mb-2">
+                    {label}
+                </label>
+                <textarea
+                    id={name}
+                    name={name}
+                    value={value ?? ''}
+                    onChange={e => onChange?.(e as unknown as React.ChangeEvent<HTMLInputElement>)}
+                    onBlur={onBlur as unknown as React.FocusEventHandler<HTMLTextAreaElement>}
+                    required={required}
+                    placeholder={placeholder}
+                    maxLength={maxLength}
+                    rows={rows ?? 3}
+                    disabled={disabled}
+                    className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-colors resize-none ${
+                        error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                    }`}
+                />
                 {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
             </div>
         );

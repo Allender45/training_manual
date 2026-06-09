@@ -18,6 +18,7 @@ type SelectProps = {
     error?: string;
     size?: 'sm' | 'md' | 'lg';
     multiple?: boolean;
+    className?: string;
 };
 
 const sizes = {
@@ -28,7 +29,7 @@ const sizes = {
 
 export default function Select({
                                    label, name, value, onChange, onMultiChange, options, placeholder,
-                                   required, disabled, error, size = 'md', multiple = false,
+                                   required, disabled, error, size = 'md', multiple = false, className,
                                }: SelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +60,7 @@ export default function Select({
         }
 
         return (
-            <div className="relative" ref={containerRef}>
+            <div className={`relative ${className}`} ref={containerRef}>
                 <label htmlFor={name} className="block text-gray-500 text-sm mb-2">
                     {label}
                 </label>
@@ -123,7 +124,7 @@ export default function Select({
     }
 
     return (
-        <div className="relative">
+        <div className={`relative ${className}`}>
             <label htmlFor={name} className="block text-gray-500 text-sm mb-2">
                 {label}
             </label>

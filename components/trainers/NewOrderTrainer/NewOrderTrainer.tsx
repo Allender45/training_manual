@@ -17,6 +17,7 @@ type OrderForm = {
     dateTime: string;
     nearestTime: boolean;
     payment: PaymentType;
+    workDescription: string;
 };
 
 type Review = {
@@ -80,6 +81,7 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
         dateTime: '',
         nearestTime: false,
         payment: 'cash',
+        workDescription: '',
     });
 
     const [reviewing, setReviewing] = useState(false);
@@ -103,9 +105,8 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                 apartment: form.apartment || '',
                 dateTime: form.dateTime,
                 payment: PAYMENT_OPTIONS.find(o => o.value === form.payment)?.label ?? form.payment,
+                workDescription: form.workDescription,
             };
-
-            console.log(formData)
 
             const res = await fetch('/api/trainers/review-order', {
                 method: 'POST',
@@ -127,14 +128,12 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
     }
 
     function handleReset() {
-        setForm({ city: '', street: '', apartment: '', dateTime: '', nearestTime: false, payment: 'cash' });
+        setForm({ city: '', street: '', apartment: '', dateTime: '', nearestTime: false, payment: 'cash', workDescription: '' });
         setReview(null);
         setReviewError(null);
     }
 
-    const isValid = !!(form.city.trim() && form.street.trim() && (form.nearestTime || form.dateTime));
-
-    console.log(review)
+    const isValid = !!(form.city.trim() && form.street.trim() && form.workDescription.trim() && (form.nearestTime || form.dateTime));
 
     return (
         <div className="flex flex-col gap-4">
@@ -168,6 +167,16 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                     Клиент
                 </div>
             </div>
+
+            <Input
+                label="Что делать? (Характер работ) ГЛАГОЛ + продолжительность работ!!!"
+                name="workDescription"
+                value={form.workDescription}
+                onChange={e => handleChange('workDescription', e.target.value)}
+                placeholder="Например: грузить коробки 8 часов"
+                required
+                type="textarea"
+            />
 
             <Input
                 label="Адрес"

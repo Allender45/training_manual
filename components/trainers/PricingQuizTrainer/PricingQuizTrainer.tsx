@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Button from "@/components/Button/Button";
+import {Checkbox, Select} from "@/components";
 
 export interface PricingQuizTrainerProps {
     onComplete?: () => void;
@@ -13,8 +14,9 @@ type PricingQuestion = {
     task: string;
     audio1: string;
     audio2: string;
-    correctAnswerLoaders: number;
-    correctAnswerTransport: number;
+    correctPriceForClient: number;
+    correctWorkersNumber: number;
+    correctTransportSize: string;
     successMsg: string;
     errorMsg: string;
 };
@@ -22,30 +24,37 @@ type PricingQuestion = {
 const questions: PricingQuestion[] = [
     {
         id: 1,
-        description: "Клиент просит помочь перевезти линолеум. Минимальная стоимость 1 часа грузчика в Перми на момент звонка - 500₽. Газели - 1000₽.",
-        task: "Указать общую цену за работу.",
-        audio1: "/records/trainers/prising/1-1.mp3",
-        audio2: "/records/trainers/prising/1-2.mp3",
-        correctAnswerLoaders: 650,
-        correctAnswerTransport: 1000,
-        successMsg: "Всё верно, отлично. Прослушай продолжение разговора.",
+        description: "Клиенту нужно поднять шкаф. Да, просто поднять шкаф. Минимальная стоимость 1 часа рабочего в Альметьевске на момент звонка - 550₽.",
+        task: "Нужно указать стоимость человеко-часа для клиента, для рабочего и количество рабочих.",
+        audio1: "/records/trainers/prising/2-1.mp3",
+        audio2: "/records/trainers/prising/2-2.mp3",
+        correctPriceForClient: 475,
+        correctWorkersNumber: 2,
+        correctTransportSize: '',
+        successMsg: "Всё верно, отлично. Прослушай полный разговор.",
         errorMsg: "Неверно. Посмотри критерии поднятия цен.",
     },
 ];
 
 function PricingQuiz({ onComplete }: { onComplete?: () => void }) {
     const [currentQ, setCurrentQ] = useState(0);
-    const [inputLoaders, setInputLoaders] = useState('');
-    const [inputTransport, setInputTransport] = useState('');
+    const [priceForClient, setPriceForClient] = useState('');
+    const [workerPayment, setWorkerPayment] = useState('');
+    const [workersNumber, setWorkersNumber] = useState('');
     const [phase, setPhase] = useState<'answering' | 'correct' | 'wrong'>('answering');
     const [finished, setFinished] = useState(false);
+    const [needsTransport, setNeedsTransport] = useState(false);
+    const [transportType, setTransportType] = useState('');
+    const [transportParam, setTransportParam] = useState('');
+    const [transportSize, setTransportSize] = useState('');
 
     const question = questions[currentQ];
 
     function handleSubmit() {
-        const loadersOk = parseInt(inputLoaders, 10) === question.correctAnswerLoaders;
-        const transportOk = parseInt(inputTransport, 10) === question.correctAnswerTransport;
-        if (loadersOk && transportOk) {
+        const clientOk  = parseInt(priceForClient, 10) === question.correctPriceForClient;
+        const numbersOk = parseInt(workersNumber,  10) === question.correctWorkersNumber;
+        const transportOk = !question.correctTransportSize || transportSize === question.correctTransportSize;
+        if (clientOk && numbersOk && transportOk) {
             setPhase('correct');
         } else {
             setPhase('wrong');
@@ -55,8 +64,9 @@ function PricingQuiz({ onComplete }: { onComplete?: () => void }) {
     function handleNext() {
         if (currentQ + 1 < questions.length) {
             setCurrentQ(prev => prev + 1);
-            setInputLoaders('');
-            setInputTransport('');
+            setPriceForClient('');
+            setWorkerPayment('');
+            setWorkersNumber('');
             setPhase('answering');
         } else {
             setFinished(true);
@@ -66,8 +76,9 @@ function PricingQuiz({ onComplete }: { onComplete?: () => void }) {
 
     function handleReset() {
         setCurrentQ(0);
-        setInputLoaders('');
-        setInputTransport('');
+        setPriceForClient('');
+        setWorkerPayment('');
+        setWorkersNumber('');
         setPhase('answering');
         setFinished(false);
     }
@@ -144,36 +155,113 @@ function PricingQuiz({ onComplete }: { onComplete?: () => void }) {
                     )}
                     <div className="flex gap-3">
                         <div className="flex flex-col gap-1 flex-1">
-                            <label className="text-xs font-medium text-gray-500">Стоимость одного часа грузчика (₽)</label>
+                            <label className="text-xs font-medium text-gray-500">Цена человеко часа</label>
                             <input
                                 type="number"
-                                value={inputLoaders}
-                                onChange={e => setInputLoaders(e.target.value)}
-                                placeholder="Введите сумму"
+                                value={priceForClient}
+                                onChange={e => {
+                                    setPriceForClient(e.target.value);
+                                    const val = parseInt(e.target.value || '0', 10);
+                                    setWorkerPayment(val > 0 ? String(Math.round(val * 0.7)) : '');
+                                }}
+                                placeholder="Введите сумму ₽"
                                 className={`border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:border-transparent transition ${
-                                    phase === 'wrong' && parseInt(inputLoaders, 10) !== question.correctAnswerLoaders
+                                    phase === 'wrong' && parseInt(priceForClient, 10) !== question.correctPriceForClient
                                         ? 'border-red-300 focus:ring-red-400'
                                         : 'border-gray-300 focus:ring-blue-500'
                                 }`}
                             />
                         </div>
                         <div className="flex flex-col gap-1 flex-1">
-                            <label className="text-xs font-medium text-gray-500">Стоимость одного часа транспорта (₽)</label>
+                            <label className="text-xs font-medium text-gray-500">Оплата исполнителю</label>
                             <input
                                 type="number"
-                                value={inputTransport}
-                                onChange={e => setInputTransport(e.target.value)}
-                                placeholder="Введите сумму"
+                                value={workerPayment}
+                                placeholder="Введите сумму ₽"
+                                className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <div className="flex flex-col gap-1 flex-1">
+                            <label className="text-xs font-medium text-gray-500">Кол-во человек</label>
+                            <input
+                                type="number"
+                                value={workersNumber}
+                                onChange={e => setWorkersNumber(e.target.value)}
                                 className={`border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:border-transparent transition ${
-                                    phase === 'wrong' && parseInt(inputTransport, 10) !== question.correctAnswerTransport
+                                    phase === 'wrong' && parseInt(workersNumber, 10) !== question.correctWorkersNumber
                                         ? 'border-red-300 focus:ring-red-400'
                                         : 'border-gray-300 focus:ring-blue-500'
                                 }`}
                             />
                         </div>
                     </div>
+
+                    <Checkbox
+                        label="Нужен транспорт/техника"
+                        name="needsTransport"
+                        checked={needsTransport}
+                        onChange={e => setNeedsTransport(e.target.checked)}
+                    />
+
+                    {needsTransport && (
+                        <div className="flex gap-3 flex-wrap">
+                            <Select
+                                label="Тип техники"
+                                name="transportType"
+                                value={transportType}
+                                onChange={e => {
+                                    setTransportType(e.target.value);
+                                    setTransportParam('');
+                                    setTransportSize('');
+                                }}
+                                placeholder="Выберите..."
+                                options={[
+                                    { value: 'gazel', label: 'Газель' },
+                                    { value: 'truck', label: 'Грузовой автомобиль' },
+                                    { value: 'crane', label: 'Автовышка' },
+                                    { value: 'tank',  label: 'Автоцистерна' },
+                                ]}
+                                className="flex-1"
+                            />
+
+                            <Select
+                                label="Параметр"
+                                name="transportParam"
+                                value={transportParam}
+                                onChange={e => {
+                                    setTransportParam(e.target.value);
+                                    setTransportSize('');
+                                }}
+                                placeholder="Выберите..."
+                                options={[
+                                    { value: 'length', label: 'Длина газели' },
+                                ]}
+                                className="flex-1"
+                                disabled={transportType !== 'gazel'}
+                            />
+
+                            <Select
+                                label="Размер"
+                                name="transportSize"
+                                value={transportSize}
+                                onChange={e => setTransportSize(e.target.value)}
+                                placeholder="Выберите..."
+                                options={[
+                                    { value: '3',   label: '3 м' },
+                                    { value: '4.2', label: '4,2 м' },
+                                    { value: '5',   label: '5 м' },
+                                ]}
+                                className="flex-1"
+                                disabled={transportParam !== 'length'}
+                            />
+                        </div>
+                    )}
+
                     <div className="flex justify-end">
-                        <Button onClick={handleSubmit} disabled={!inputLoaders || !inputTransport}>Ответить</Button>
+                        <Button onClick={handleSubmit} disabled={!priceForClient || !workersNumber}>Ответить</Button>
                     </div>
                 </div>
             )}

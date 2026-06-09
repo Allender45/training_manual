@@ -10,23 +10,28 @@ export async function POST(req: NextRequest) {
 
     const { form, transcript } = await req.json();
 
-    const now = new Date().toLocaleString('ru-RU', {
-        timeZone: 'Asia/Yekaterinburg',
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit'
-    });
+    const now = new Date();
+
+    function formatRu(date: Date): string {
+        const h  = date.getHours().toString().padStart(2, '0');
+        const m  = date.getMinutes().toString().padStart(2, '0');
+        const d  = date.getDate().toString().padStart(2, '0');
+        const mo = (date.getMonth() + 1).toString().padStart(2, '0');
+        return `${d}.${mo}.${date.getFullYear()} в ${h}:${m}`;
+    }
 
     const formDateTime = form.dateTime ? new Date(form.dateTime) : null;
-    const diffMinutes = formDateTime
+    const diffMinutes  = formDateTime
         ? Math.abs((Date.now() - formDateTime.getTime()) / 60000)
         : null;
 
     const timeNote = diffMinutes !== null && diffMinutes <= 30
-        ? `сейчас (ближайшее время)`
-        : form.dateTime || 'не указано';
+        ? 'сейчас (ближайшее время)'
+        : formDateTime ? formatRu(formDateTime) : 'не указано';
 
     const prompt = `Забудь прошлые запросы. Сравни данные транскрибации и данные из формы. В answers верни что не соответствует и почему.
-Дата и время: ${timeNote}.
+Текущее время: ${formatRu(now)}.
+Учти: «три часа», «в три», «в 15:00», «15 часов» — это одно и то же время.
 Транскрипция звонка:
 """
 ${transcript}
@@ -38,6 +43,7 @@ ${transcript}
 Квартира/офис: ${form.apartment || 'не указано'}
 Дата и время: ${timeNote}
 Вид оплаты: ${form.payment}
+Характер работ: ${form.workDescription || 'не указано'}
 
 Верни ответ строго в JSON без markdown-обёртки:
 {
