@@ -25,13 +25,14 @@ export async function POST(req: NextRequest) {
         ? Math.abs((Date.now() - formDateTime.getTime()) / 60000)
         : null;
 
-    const timeNote = diffMinutes !== null && diffMinutes <= 30
+    const timeNote = !formDateTime || (diffMinutes !== null && diffMinutes <= 60)
         ? 'сейчас (ближайшее время)'
-        : formDateTime ? formatRu(formDateTime) : 'не указано';
+        : formatRu(formDateTime);
 
     const prompt = `Забудь прошлые запросы. Сравни данные транскрибации и данные из формы. В answers верни что не соответствует и почему.
 Текущее время: ${formatRu(now)}.
 Учти: «три часа», «в три», «в 15:00», «15 часов» — это одно и то же время.
+Если расхождение между временем в транскрипции и временем в заявке составляет менее 15 минут — считай это погрешностью, не ошибкой. И не выводи рекомендаций для исправления.
 Транскрипция звонка:
 """
 ${transcript}

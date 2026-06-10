@@ -117,7 +117,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
                 render: (row: CourseRow) => (
                     <div className="flex items-center gap-3">
                         <img src={row.icon} alt={row.title}
-                             className="w-10 h-10 rounded-lg object-cover flex-shrink-0"/>
+                             className="w-10 h-10 rounded-lg object-contain flex-shrink-0"/>
                         <Link
                             href={`/courses/study?id=${row.id}`}
                             onClick={e => e.stopPropagation()}
@@ -161,7 +161,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
                 render: (row: ManualRow) => (
                     <div className="flex items-center gap-3">
                         <img src={row.icon} alt={row.title}
-                             className="w-10 h-10 rounded-lg object-cover flex-shrink-0"/>
+                             className="w-10 h-10 rounded-lg object-contain flex-shrink-0"/>
                         <span className="font-medium text-gray-800">{row.title}</span>
                     </div>
                 ),
@@ -334,7 +334,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
                 render: (row: AchievementRow) => (
                     <div className="flex items-center gap-3">
                         {row.icon
-                            ? <img src={row.icon} alt={row.title} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                            ? <img src={row.icon} alt={row.title} className="w-10 h-10 rounded-lg object-contain flex-shrink-0" />
                             : <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0" />
                         }
                         <span className="font-medium text-gray-800">{row.title}</span>
@@ -432,7 +432,7 @@ export default function EntityTable({entityType, data, onEdit, onDelete, buttonE
                 render: (row: CourseRow) => row.is_locked ? (
                     <div className="flex items-center gap-3">
                         <img src={row.icon} alt={row.title}
-                             className="w-10 h-10 rounded-lg object-cover flex-shrink-0 opacity-40 grayscale"/>
+                             className="w-10 h-10 rounded-lg object-contain flex-shrink-0 opacity-40 grayscale"/>
                         <span className="font-medium text-gray-400 flex items-center gap-1.5">
                         🔒 {row.title}
                     </span>
@@ -440,7 +440,7 @@ export default function EntityTable({entityType, data, onEdit, onDelete, buttonE
                 ) : (
                     <div className="flex items-center gap-3">
                         <img src={row.icon} alt={row.title}
-                             className="w-10 h-10 rounded-lg object-cover flex-shrink-0"/>
+                             className="w-10 h-10 rounded-lg object-contain flex-shrink-0"/>
                         <Link href={`/courses/study?id=${row.id}`} onClick={e => e.stopPropagation()}
                               className="font-medium text-gray-800 hover:text-[#41A141] hover:underline transition-colors">
                             {row.title}

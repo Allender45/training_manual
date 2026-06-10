@@ -45,96 +45,76 @@ const PAYMENT_OPTIONS: { value: PaymentType; label: string }[] = [
     { value: 'invoice', label: 'Безнал'   },
 ];
 
-const CORRECT_FORM = {
-    correctPriceForClient: 575,
-    correctWorkersNumber: 2,
-    correctTransportSize: '3',
-} as const;
+type CaseData = {
+    id: number;
+    audioSrc: string;
+    company: string;
+    client: string;
+    city: string;
+    transcript: string;
+    workerPrice: number;
+    correctPriceForClient: number;
+    correctWorkersNumber: number;
+    correctTransportSize: string;
+};
 
-const TRANSCRIPT = `
-Спикер 1: 
-00:00:01 - Здравствуйте. Пропущенный был от вас. Чем могу помочь?
-Спикер 2: 
-00:00:05 - Здравствуйте. У вас грузчики с Газелью есть?
-Спикер 1: 
-00:00:08 - Да, есть что-то надо сделать.
-Спикер 2: 
-00:00:10 - Надо перевезти с Конева в черте города кладбища Судима, там есть мебель в этом диван и шкаф в разобранном виде уже всё.
-Спикер 1: 
-00:00:27 - Так, хорошо. А по какому городу? Мы просто по всей области работаем.
-Спикер 2: 
-00:00:32 - Вологда.
-Спикер 1: 
-00:00:35 - Да-да-да, по-по всей области говорю же, поэтому уточняю. Откуда, куда? Ещё раз подскажите, пожалуйста, чтобы я по стоимости точно сказал.
-Спикер 2: 
-00:00:44 - С Конёва, Конёва, улица Конёва, садим около кладбища. Маршала, которое-да-да, Маршал Конев.
-Спикер 1: 
-00:00:54 - Ну. Всё. До какого кладбища?
-Спикер 2: 
-00:00:57 - А вы у пешеходского кольца, там пешеходское кладбище.
-Спикер 1: 
-00:01:00 - А, я понял, на пешеходском кольце. Так. По стоимости сейчас сориентирую вас. Вам с грузчиками надо будет?
-Спикер 2: 
-00:01:10 - Ну да, надо было хоть.
-Спикер 1: 
-00:01:12 - Да, ага. С какого этажа надо будет спустить и на какой этаж поднять там?
-Спикер 2: 
-00:01:18 - Там на этаж не надо, там дом. А тут с восьмого этажа спустись.
-Спикер 1: 
-00:01:23 - По лифту.
-Спикер 2: 
-00:01:25 - Да, есть, есть. Только не грузовое пассажирское.
-Спикер 1: 
-00:01:27 - Ага. Так, ладно, сейчас подскажу.
-Спикер 2: 
-00:01:32 - Ага, грузчику. Сначала грузчики приедут, а потом...
-Спикер 1: 
-00:01:37 - Ну, я думаю, можем машину на минут 20 попозже отправить, они пока спустят, там как раз. Ну, они за час уложатся, всё сделают.
-Спикер 2: 
-00:01:46 - Да хорошо, если уложишься.
-Спикер 1: 
-00:01:48 - А когда надо?
-Спикер 2: 
-00:01:50 - А сегодня был.
-Спикер 1: 
-00:01:51 - Сегодня часов в 15:00 удобно будет?
-Спикер 2: 
-00:01:55 - Удобно. Я думаю, если дождь сильно летний мой.
-Спикер 1: 
-00:01:59 - А какой дом на Конева?
-Спикер 2: 
-00:02:01 - Двадцать два.
-Спикер 1: 
-00:02:02 - Двадцать второй. А там на кладбище куда конкретней?
-Спикер 2: 
-00:02:07 - Там не доезжая кладбище направо. Тут есть этот СНТ.
-Спикер 1: 
-00:02:19 - Так, хорошо. Ну, водителю там поточнее скажете?
-Спикер 2: 
-00:02:22 - Ну да, так я буду с ними.
-Спикер 1: 
-00:02:24 - Всё, ладно. Ну там у водителя, если что, места-то в машине не будет, грузчики с ним поедут, вы на своей?
-Спикер 2: 
-00:02:30 - У меня есть машина есть.
-Спикер 1: 
-00:02:31 - А, ну всё, ладненько. А как обращаться к вам могу?
-Спикер 2: 
-00:02:34 - Юрий.
-Спикер 1: 
-00:02:35 - Юрий, меня Никита зовут. Очень приятно. А по окончании работы переводом получится рассчитаться?
-Спикер 2: 
-00:02:42 - А не, наличка у меня.
-Спикер 1: 
-00:02:44 - Наличкой. Хорошо, тогда вся оплата через водителя будет. К трём часам подъедут. Хорошо. Всё, договорились.
-Спикер 2: 
-00:02:52 - Угу.
-`;
+const CASES: CaseData[] = [
+    {
+        id: 1,
+        audioSrc: '/records/trainers/full_order_create/1-1.mp3',
+        company: 'Гриффиндор',
+        client: 'Др. Франкенштейн',
+        city: '',
+        transcript: `
+        Город: Вологда.
+        Адрес: Конева 22.
+        Работы: Перевезти мебель, диван и шкаф. Спустить с 8 этажа.
+        Вид оплаты: Наличными.
+        Время: 15:00.`,
+        workerPrice: 500,
+        correctPriceForClient: 575,
+        correctWorkersNumber: 2,
+        correctTransportSize: '3',
+    },
+    {
+        id: 2,
+        audioSrc: '/records/trainers/full_order_create/2-1.mp3',
+        company: 'Пуффинхуй',
+        client: 'Хагри',
+        city: '',
+        transcript: `
+        Город: Орск.
+        Адрес: Шпалорезная 38.
+        Работы: Разобрать стенку, вынести мусор.
+        Вид оплаты: на карту.
+        Время: сейчас.`,
+        workerPrice: 450,
+        correctPriceForClient: 525,
+        correctWorkersNumber: 1,
+        correctTransportSize: '',
+    },
+    {
+        id: 3,
+        audioSrc: '/records/trainers/full_order_create/2-1.mp3',
+        company: 'Слизермин',
+        client: 'Вовка без морды',
+        city: 'Кострома',
+        transcript: `
+        Город: Кострома.
+        Адрес: Волжская 12.
+        Работы: Разгрузить фуру. Коробки по 40 кг.
+        Вид оплаты: на карту.
+        Время: сейчас.`,
+        workerPrice: 400,
+        correctPriceForClient: 475,
+        correctWorkersNumber: 6,
+        correctTransportSize: '',
+    },
+];
 
-const INIT_ORDER: OrderForm = { city: '', street: '', apartment: '', dateTime: '', nearestTime: false, payment: 'cash', workDescription: '' };
 const INIT_PRICING: PricingForm = { priceForClient: '', workerPayment: '', workersNumber: '', needsTransport: false, transportType: '', transportParam: '', transportSize: '' };
 
 export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
-    const [order, setOrder] = useState<OrderForm>(INIT_ORDER);
     const [pricing, setPricing] = useState<PricingForm>(INIT_PRICING);
     const [reviewing, setReviewing] = useState(false);
     const [review, setReview] = useState<Review | null>(null);
@@ -142,6 +122,21 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
     const [pricingError, setPricingError] = useState(false);
     const [priceForClient, setPriceForClient] = useState('');
     const [workerPayment, setWorkerPayment] = useState('');
+    const [currentCase, setCurrentCase] = useState(0);
+    const caseData = CASES[currentCase];
+    const [order, setOrder] = useState<OrderForm>(getInitOrder(CASES[0]));
+
+    function getInitOrder(c: CaseData): OrderForm {
+        return {
+            city: c.city,
+            street: '',
+            apartment: '',
+            dateTime: '',
+            nearestTime: false,
+            payment: 'cash',
+            workDescription: '',
+        };
+    }
 
     function handleOrderChange(field: keyof OrderForm, value: string) {
         setOrder(prev => ({ ...prev, [field]: value }));
@@ -155,10 +150,24 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
     const pricingValid = !!(pricing.priceForClient &&  pricing.workersNumber);
     const isValid = orderValid && pricingValid;
 
+    function handleNext() {
+        if (currentCase + 1 < CASES.length) {
+            const nextIdx = currentCase + 1;
+            setCurrentCase(nextIdx);
+            setOrder(getInitOrder(CASES[nextIdx]));
+            setPricing(INIT_PRICING);
+            setReview(null);
+            setReviewError(null);
+            setPricingError(false);
+        } else {
+            onComplete?.();
+        }
+    }
+
     async function handleSubmit() {
-        const clientOk    = parseInt(pricing.priceForClient, 10) === CORRECT_FORM.correctPriceForClient;
-        const numbersOk   = parseInt(pricing.workersNumber,  10) === CORRECT_FORM.correctWorkersNumber;
-        const transportOk = !CORRECT_FORM.correctTransportSize || pricing.transportSize === CORRECT_FORM.correctTransportSize;
+        const clientOk    = parseInt(pricing.priceForClient, 10) === caseData.correctPriceForClient;
+        const numbersOk   = parseInt(pricing.workersNumber,  10) === caseData.correctWorkersNumber;
+        const transportOk = !caseData.correctTransportSize || pricing.transportSize === caseData.correctTransportSize;
 
         if (!clientOk || !numbersOk || !transportOk) {
             setPricingError(true);
@@ -171,9 +180,9 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
         setReviewError(null);
         try {
             const formData = {
-                company: 'Гриффиндор',
+                company: caseData.company,
                 city: order.city,
-                client: 'Клиент',
+                client: caseData.client,
                 address: order.street,
                 apartment: order.apartment || '',
                 dateTime: order.dateTime,
@@ -186,10 +195,13 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                 transportType: pricing.transportType,
                 transportSize: pricing.transportSize,
             };
+            console.log(formData)
+            console.log(caseData.transcript)
+
             const res = await fetch('/api/trainers/review-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ form: formData, transcript: TRANSCRIPT }),
+                body: JSON.stringify({ form: formData, transcript: caseData.transcript }),
             });
             const data = await res.json();
             if (!res.ok) {
@@ -197,7 +209,6 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                 return;
             }
             setReview(data);
-            if (data.passed) onComplete?.();
         } catch {
             setReviewError('Ошибка соединения с сервером');
         } finally {
@@ -206,7 +217,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
     }
 
     function handleReset() {
-        setOrder(INIT_ORDER);
+        setOrder(getInitOrder(caseData));
         setPricing(INIT_PRICING);
         setReview(null);
         setReviewError(null);
@@ -215,14 +226,18 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
 
     return (
         <div className="flex flex-col gap-4">
-            <audio controls src="/records/trainers/full_order_create/1-1.mp3" className="w-full" />
+            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                {currentCase + 1} / {CASES.length}
+            </div>
+
+            <audio controls src={caseData.audioSrc} className="w-full" />
 
             <h3 className="text-base font-semibold text-gray-800">Новая заявка</h3>
 
             <div>
                 <label className="block text-gray-500 text-sm mb-2">Компания</label>
                 <div className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-400 bg-gray-50 select-none">
-                    Гриффиндор
+                    {caseData.company}
                 </div>
             </div>
 
@@ -238,7 +253,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
             <div>
                 <label className="block text-gray-500 text-sm mb-2">Клиент</label>
                 <div className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-400 bg-gray-50 select-none">
-                    Клиент
+                    {caseData.client}
                 </div>
             </div>
 
@@ -338,6 +353,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
             </details>
 
             <div className="border-t border-gray-100 pt-4 flex flex-col gap-3">
+                <div>Базовая ставка рабочего: {caseData.workerPrice}₽</div>
                 <div className="flex gap-3">
                     <div className="flex flex-col gap-1 flex-1">
                         <label className="text-xs font-medium text-gray-500">Цена человеко-часа</label>
@@ -352,7 +368,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                             }}
                             placeholder="Введите сумму ₽"
                             className={`border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:border-transparent transition ${
-                                pricingError && parseInt(pricing.priceForClient, 10) !== CORRECT_FORM.correctPriceForClient
+                                pricingError && parseInt(pricing.priceForClient, 10) !== caseData.correctPriceForClient
                                     ? 'border-red-300 focus:ring-red-400'
                                     : 'border-gray-300 focus:ring-blue-500'
                             }`}
@@ -379,7 +395,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                             onChange={e => handlePricingChange('workersNumber', e.target.value)}
                             placeholder="Введите кол-во"
                             className={`border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:border-transparent transition ${
-                                pricingError && parseInt(pricing.workersNumber, 10) !== CORRECT_FORM.correctWorkersNumber
+                                pricingError && parseInt(pricing.workersNumber, 10) !== caseData.correctWorkersNumber
                                     ? 'border-red-300 focus:ring-red-400'
                                     : 'border-gray-300 focus:ring-blue-500'
                             }`}
@@ -440,11 +456,13 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                 )}
             </div>
 
-            <div className="flex justify-end pt-2">
-                <Button onClick={handleSubmit} disabled={!isValid || reviewing}>
-                    {reviewing ? 'Проверяю...' : 'Оформить заявку'}
-                </Button>
-            </div>
+            { !review?.passed && (
+                <div className="flex justify-end pt-2">
+                    <Button onClick={handleSubmit} disabled={!isValid || reviewing}>
+                        {reviewing ? 'Проверяю...' : 'Оформить заявку'}
+                    </Button>
+                </div>
+            )}
 
             {reviewError && (
                 <p className="text-red-500 text-sm">{reviewError}</p>
@@ -452,7 +470,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
 
             {review && (
                 <div className="space-y-3 text-sm">
-                    {review.strong_points.length > 0 && (
+                    {review.strong_points.filter(p => p.trim()).length > 0 && (
                         <div>
                             <p className="font-semibold text-green-700 mb-1">✓ Сильные стороны</p>
                             <ul className="space-y-1">
@@ -462,7 +480,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                             </ul>
                         </div>
                     )}
-                    {review.weak_points.length > 0 && (
+                    {review.weak_points.filter(p => p.trim()).length > 0 && (
                         <div>
                             <p className="font-semibold text-red-700 mb-1">✗ Слабые стороны</p>
                             <ul className="space-y-1">
@@ -472,7 +490,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                             </ul>
                         </div>
                     )}
-                    {review.recommendations.length > 0 && (
+                    {review.recommendations.filter(p => p.trim()).length > 0 && (
                         <div>
                             <p className="font-semibold text-blue-700 mb-1">💡 Рекомендации</p>
                             <ul className="space-y-1">
@@ -484,7 +502,9 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                     )}
                     <div className="flex justify-end pt-2">
                         {review.passed ? (
-                            <Button onClick={() => onComplete?.()}>Следующий вопрос →</Button>
+                            <Button onClick={handleNext}>
+                                {currentCase + 1 < CASES.length ? 'Следующий кейс →' : 'Завершить →'}
+                            </Button>
                         ) : (
                             <Button onClick={handleReset}>Заполнить повторно</Button>
                         )}
