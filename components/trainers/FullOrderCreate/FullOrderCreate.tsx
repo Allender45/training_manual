@@ -70,7 +70,7 @@ const CASES: CaseData[] = [
         client: 'Др. Франкенштейн',
         city: '',
         correctCity: 'Вологда',
-        address: 'Конева 22',
+        address: 'Маршала Конева 22',
         transcript: `Работы: Перевезти мебель, диван и шкаф. Спустить с 8 этажа.`,
         workerPrice: 500,
         correctPriceForClient: 575,
