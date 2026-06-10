@@ -10,40 +10,15 @@ export async function POST(req: NextRequest) {
 
     const { form, transcript } = await req.json();
 
-    const now = new Date();
 
-    function formatRu(date: Date): string {
-        const h  = date.getHours().toString().padStart(2, '0');
-        const m  = date.getMinutes().toString().padStart(2, '0');
-        const d  = date.getDate().toString().padStart(2, '0');
-        const mo = (date.getMonth() + 1).toString().padStart(2, '0');
-        return `${d}.${mo}.${date.getFullYear()} в ${h}:${m}`;
-    }
 
-    const formDateTime = form.dateTime ? new Date(form.dateTime) : null;
-    const diffMinutes  = formDateTime
-        ? Math.abs((Date.now() - formDateTime.getTime()) / 60000)
-        : null;
-
-    const timeNote = !formDateTime || (diffMinutes !== null && diffMinutes <= 60)
-        ? 'сейчас (ближайшее время)'
-        : formatRu(formDateTime);
-
-    const prompt = `Забудь прошлые запросы. Сравни данные транскрибации и данные из формы. В answers верни что не соответствует и почему.
-Текущее время: ${formatRu(now)}.
-Учти: «три часа», «в три», «в 15:00», «15 часов» — это одно и то же время.
-Если расхождение между временем в транскрипции и временем в заявке составляет менее 15 минут — считай это погрешностью, не ошибкой. И не выводи рекомендаций для исправления.
+    const prompt = `Ты руководишь разнорабочими. Сравни то, что в транскрипции и то, что написал стажёр.
 Транскрипция звонка:
 """
 ${transcript}
 """
 
 Заявка стажёра:
-Город: ${form.city}
-Адрес: ${form.address}
-Квартира/офис: ${form.apartment || 'не указано'}
-Дата и время: ${timeNote}
-Вид оплаты: ${form.payment}
 Характер работ: ${form.workDescription || 'не указано'}
 
 Верни ответ строго в JSON без markdown-обёртки:
@@ -52,7 +27,6 @@ ${transcript}
   "strong_points": ["..."],
   "weak_points": ["..."],
   "recommendations": ["..."]
-  "answers": ["..."]
 }`;
 
     const llmRes = await fetch('https://llm.api.cloud.yandex.net/foundationModels/v1/completion', {

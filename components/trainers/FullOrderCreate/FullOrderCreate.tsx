@@ -51,9 +51,13 @@ type CaseData = {
     company: string;
     client: string;
     city: string;
+    correctCity: string;
+    address: string;
     transcript: string;
     workerPrice: number;
     correctPriceForClient: number;
+    payment: PaymentType;
+    time: string;
     correctWorkersNumber: number;
     correctTransportSize: string;
 };
@@ -65,14 +69,13 @@ const CASES: CaseData[] = [
         company: 'Гриффиндор',
         client: 'Др. Франкенштейн',
         city: '',
-        transcript: `
-        Город: Вологда.
-        Адрес: Конева 22.
-        Работы: Перевезти мебель, диван и шкаф. Спустить с 8 этажа.
-        Вид оплаты: Наличными.
-        Время: 15:00.`,
+        correctCity: 'Вологда',
+        address: 'Конева 22',
+        transcript: `Работы: Перевезти мебель, диван и шкаф. Спустить с 8 этажа.`,
         workerPrice: 500,
         correctPriceForClient: 575,
+        payment: 'cash',
+        time: '15:00',
         correctWorkersNumber: 2,
         correctTransportSize: '3',
     },
@@ -82,31 +85,29 @@ const CASES: CaseData[] = [
         company: 'Пуффинхуй',
         client: 'Хагри',
         city: '',
-        transcript: `
-        Город: Орск.
-        Адрес: Шпалорезная 38.
-        Работы: Разобрать стенку, вынести мусор.
-        Вид оплаты: на карту.
-        Время: сейчас.`,
+        correctCity: 'Орск',
+        address: 'Шпалорезная 38',
+        transcript: `Работы: Разобрать стенку, вынести мусор.`,
         workerPrice: 450,
         correctPriceForClient: 525,
+        payment: 'card',
+        time: 'сейчас',
         correctWorkersNumber: 1,
         correctTransportSize: '',
     },
     {
         id: 3,
-        audioSrc: '/records/trainers/full_order_create/2-1.mp3',
+        audioSrc: '/records/trainers/full_order_create/3.mp3',
         company: 'Слизермин',
         client: 'Вовка без морды',
         city: 'Кострома',
-        transcript: `
-        Город: Кострома.
-        Адрес: Волжская 12.
-        Работы: Разгрузить фуру. Коробки по 40 кг.
-        Вид оплаты: на карту.
-        Время: сейчас.`,
+        correctCity: 'Кострома',
+        address: 'Волжская 12',
+        transcript: `Работы: Разгрузить фуру. Коробки по 40 кг.`,
         workerPrice: 400,
         correctPriceForClient: 475,
+        payment: 'card',
+        time: 'сейчас',
         correctWorkersNumber: 6,
         correctTransportSize: '',
     },
@@ -125,6 +126,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
     const [currentCase, setCurrentCase] = useState(0);
     const caseData = CASES[currentCase];
     const [order, setOrder] = useState<OrderForm>(getInitOrder(CASES[0]));
+    const [formError, setFormError] = useState<string | null>(null);
 
     function getInitOrder(c: CaseData): OrderForm {
         return {
@@ -159,6 +161,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
             setReview(null);
             setReviewError(null);
             setPricingError(false);
+            setFormError(null);
         } else {
             onComplete?.();
         }
@@ -168,6 +171,18 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
         const clientOk    = parseInt(pricing.priceForClient, 10) === caseData.correctPriceForClient;
         const numbersOk   = parseInt(pricing.workersNumber,  10) === caseData.correctWorkersNumber;
         const transportOk = !caseData.correctTransportSize || pricing.transportSize === caseData.correctTransportSize;
+        const cityOk    = order.city.trim().toLowerCase() === caseData.correctCity.toLowerCase();
+        const addressOk = order.street.trim().toLowerCase() === caseData.address.toLowerCase();
+        const paymentOk = order.payment === caseData.payment;
+        const timeOk    = caseData.time === 'сейчас'
+            ? order.nearestTime
+            : order.dateTime.slice(11, 16) === caseData.time;
+
+        if (!cityOk || !addressOk || !paymentOk || !timeOk) {
+            setFormError('Неверно заполнены поля заявки. Проверьте город, адрес, вид оплаты и время.');
+            return;
+        }
+        setFormError(null);
 
         if (!clientOk || !numbersOk || !transportOk) {
             setPricingError(true);
@@ -185,7 +200,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                 client: caseData.client,
                 address: order.street,
                 apartment: order.apartment || '',
-                dateTime: order.dateTime,
+                dateTime: order.nearestTime ? '' : order.dateTime,
                 workDescription: order.workDescription,
                 payment: PAYMENT_OPTIONS.find(o => o.value === order.payment)?.label ?? order.payment,
                 priceForClient: pricing.priceForClient,
@@ -195,8 +210,6 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                 transportType: pricing.transportType,
                 transportSize: pricing.transportSize,
             };
-            console.log(formData)
-            console.log(caseData.transcript)
 
             const res = await fetch('/api/trainers/review-order', {
                 method: 'POST',
@@ -222,6 +235,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
         setReview(null);
         setReviewError(null);
         setPricingError(false);
+        setFormError(null);
     }
 
     return (
@@ -290,6 +304,14 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                 type="datetime"
                 value={order.dateTime}
                 onChange={e => handleOrderChange('dateTime', e.target.value)}
+                disabled={order.nearestTime}
+            />
+
+            <Checkbox
+                label="В ближайшее время"
+                name="nearestTime"
+                checked={order.nearestTime}
+                onChange={e => setOrder(prev => ({ ...prev, nearestTime: e.target.checked, dateTime: e.target.checked ? '' : prev.dateTime }))}
             />
 
             <div className="flex flex-col gap-2">
@@ -310,6 +332,12 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                     ))}
                 </div>
             </div>
+
+            {formError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+                    ❌ {formError}
+                </div>
+            )}
 
             {pricingError && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
