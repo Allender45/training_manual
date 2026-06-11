@@ -14,6 +14,7 @@ type PricingQuestion = {
     task: string;
     audio1: string;
     audio2: string;
+    workerPrice: number;
     correctPriceForClient: number;
     correctWorkersNumber: number;
     correctTransportSize: string;
@@ -24,12 +25,52 @@ type PricingQuestion = {
 const questions: PricingQuestion[] = [
     {
         id: 1,
-        description: "Клиенту нужно поднять шкаф. Да, просто поднять шкаф. Минимальная стоимость 1 часа рабочего в Альметьевске на момент звонка - 550₽.",
-        task: "Нужно указать стоимость человеко-часа для клиента, для рабочего и количество рабочих.",
+        description: "Клиенту нужно поднять шкаф. Да, просто поднять шкаф.",
+        task: "Нужно указать стоимость человеко-часа для клиента, количество рабочих и транспорт, если нужен.",
         audio1: "/records/trainers/prising/2-1.mp3",
         audio2: "/records/trainers/prising/2-2.mp3",
+        workerPrice: 550,
         correctPriceForClient: 475,
         correctWorkersNumber: 2,
+        correctTransportSize: '',
+        successMsg: "Всё верно, отлично. Прослушай полный разговор.",
+        errorMsg: "Неверно. Посмотри критерии поднятия цен.",
+    },
+    {
+        id: 2,
+        description: "Клиенту нужны разнорабочие для работы с измельчителем веток.",
+        task: "Нужно указать стоимость человеко-часа для клиента, количество рабочих и транспорт, если нужен.",
+        audio1: "/records/trainers/prising/1-1.mp3",
+        audio2: "/records/trainers/prising/1-2.mp3",
+        workerPrice: 400,
+        correctPriceForClient: 475,
+        correctWorkersNumber: 2,
+        correctTransportSize: '',
+        successMsg: "Всё верно, отлично. Прослушай полный разговор.",
+        errorMsg: "Неверно. Посмотри критерии поднятия цен.",
+    },
+    {
+        id: 3,
+        description: "Погрузка личных вещей из квартиры и гаража.",
+        task: "Нужно указать стоимость человеко-часа для клиента, количество рабочих и транспорт, если нужен.",
+        audio1: "/records/trainers/prising/3-1.mp3",
+        audio2: "/records/trainers/prising/3-2.mp3",
+        workerPrice: 500,
+        correctPriceForClient: 500,
+        correctWorkersNumber: 1,
+        correctTransportSize: '',
+        successMsg: "Всё верно, отлично. Прослушай полный разговор.",
+        errorMsg: "Неверно. Посмотри критерии поднятия цен.",
+    },
+    {
+        id: 4,
+        description: "Перенос плит керамогранита 10-15кг 150шт. Спуск с второго этажа.",
+        task: "Нужно указать стоимость человеко-часа для клиента, количество рабочих и транспорт, если нужен.",
+        audio1: "/records/trainers/prising/4-1.mp3",
+        audio2: "/records/trainers/prising/4-2.mp3",
+        workerPrice: 500,
+        correctPriceForClient: 575,
+        correctWorkersNumber: 1,
         correctTransportSize: '',
         successMsg: "Всё верно, отлично. Прослушай полный разговор.",
         errorMsg: "Неверно. Посмотри критерии поднятия цен.",
@@ -98,8 +139,14 @@ function PricingQuiz({ onComplete }: { onComplete?: () => void }) {
                 {currentQ + 1} / {questions.length}
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 leading-relaxed">
-                {question.description}
+            <div className="text-sm text-gray-800">
+                <p><b>Описание обращения:</b> {question.description}</p>
+                <span className="font-medium"><b>Задача:</b> </span>{question.task}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-gray-500">Запись звонка</span>
+                <audio key={`audio1-${currentQ}`} controls src={question.audio1} className="w-full" />
             </div>
 
             <details className="rounded-xl border border-gray-200 overflow-hidden">
@@ -137,15 +184,6 @@ function PricingQuiz({ onComplete }: { onComplete?: () => void }) {
                 </div>
             </details>
 
-            <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-gray-500">Запись звонка</span>
-                <audio key={`audio1-${currentQ}`} controls src={question.audio1} className="w-full" />
-            </div>
-
-            <div className="text-sm text-gray-800">
-                <span className="font-medium">Задача: </span>{question.task}
-            </div>
-
             {phase !== 'correct' && (
                 <div className="flex flex-col gap-3">
                     {phase === 'wrong' && (
@@ -153,6 +191,7 @@ function PricingQuiz({ onComplete }: { onComplete?: () => void }) {
                             ❌ {question.errorMsg}
                         </div>
                     )}
+                    <div>Базовая ставка рабочего: {question.workerPrice}₽</div>
                     <div className="flex gap-3">
                         <div className="flex flex-col gap-1 flex-1">
                             <label className="text-xs font-medium text-gray-500">Цена человеко часа</label>
