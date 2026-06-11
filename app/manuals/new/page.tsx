@@ -105,8 +105,12 @@ export default function NewManualPage() {
     }
 
     async function handleSave() {
-        if (!form.title.trim() || !form.description.trim()) {
-            setSaveError('Заполните обязательные поля: название, описание');
+        // if (!form.title.trim() || !form.description.trim()) {
+        //     setSaveError('Заполните обязательные поля: название, описание');
+        //     return;
+        // }
+        if (!form.title.trim()) {
+            setSaveError('Заполните обязательные поля: название');
             return;
         }
         if (!isEditMode && !iconFile) {
@@ -175,7 +179,7 @@ export default function NewManualPage() {
                                         <div className="flex items-end gap-3">
                                             {iconDisplay ? (
                                                 <img src={iconDisplay} alt="preview"
-                                                     className="w-10 h-10 rounded-xl object-cover flex-shrink-0 border border-gray-200" />
+                                                     className="w-10 h-10 object-contain flex-shrink-0" />
                                             ) : (
                                                 <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 border border-dashed border-gray-300">
                                                     <span className="text-gray-400 text-xs text-center leading-tight">нет<br/>фото</span>
@@ -245,7 +249,7 @@ export default function NewManualPage() {
                                 )}
 
                                 <div>
-                                    <label className="block text-gray-500 text-sm mb-2">Описание *</label>
+                                    <label className="block text-gray-500 text-sm mb-2">Описание</label>
                                     <textarea
                                         name="description"
                                         value={form.description}

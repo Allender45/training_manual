@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
         const iconFile        = formData.get('icon')        as File | null;
         const contentFile     = formData.get('contentFile') as File | null;
 
-        if (!title || !description) {
-            return NextResponse.json({ error: 'Заполните обязательные поля: название, описание' }, { status: 400 });
+        if (!title) {
+            return NextResponse.json({ error: 'Заполните обязательные поля: название' }, { status: 400 });
         }
         if (!iconFile || iconFile.size === 0) {
             return NextResponse.json({ error: 'Выберите иконку материала' }, { status: 400 });

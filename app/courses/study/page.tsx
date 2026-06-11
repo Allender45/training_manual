@@ -15,6 +15,7 @@ type Course = {
     comment: string | null;
     study_time_minutes: number | null;
     is_active: boolean;
+    test_id: number | null;
 };
 
 type CourseTrainer = {
@@ -134,22 +135,29 @@ export default function CourseStudyPage() {
         setLoading(true);
         setError(null);
 
-        Promise.all([
-            fetch(`/api/courses/${courseId}`).then(r => r.json()),
-            fetch(`/api/manuals?course_id=${courseId}`).then(r => r.json()),
-            fetch(`/api/courseTests?course_id=${courseId}`).then(r => r.json()),
-            fetch(`/api/courses/${courseId}/trainers`).then(r => r.json()),
-        ]).then(([courseData, manualsData, testsData, trainersData]) => {
-            if (courseData.error) {
-                setError(courseData.error);
-                return;
-            }
-            setCourse(courseData.course);
-            setManuals((manualsData.manuals ?? []).filter((m: Manual) => m.is_active));
-            const tests = (testsData.tests ?? []).filter((t: any) => t.is_active);
-            if (tests.length > 0) setCourseTest(tests[0]);
-            setTrainers(trainersData.trainers ?? []);
-        }).catch(() => setError('Ошибка загрузки данных'))
+        fetch(`/api/courses/${courseId}`)
+            .then(r => r.json())
+            .then(courseData => {
+                if (courseData.error) { setError(courseData.error); return Promise.reject(null); }
+                setCourse(courseData.course);
+                const testId = courseData.course?.test_id;
+                return Promise.all([
+                    fetch(`/api/manuals?course_id=${courseId}`).then(r => r.json()),
+                    testId ? fetch(`/api/courseTests/${testId}`).then(r => r.json()) : Promise.resolve(null),
+                    fetch(`/api/courses/${courseId}/trainers`).then(r => r.json()),
+                ]);
+            })
+            .then(results => {
+                if (!results) return;
+                const [manualsData, testData, trainersData] = results;
+                setManuals((manualsData.manuals ?? []).filter((m: Manual) => m.is_active));
+                if (testData?.test?.is_active) {
+                    setCourseTest(testData.test);
+                    setTestQuestions(testData.questions ?? []);
+                }
+                setTrainers(trainersData.trainers ?? []);
+            })
+            .catch(e => { if (e !== null) setError('Ошибка загрузки данных'); })
             .finally(() => setLoading(false));
     }, [courseId]);
 
@@ -248,6 +256,9 @@ export default function CourseStudyPage() {
     const score = testQuestions.filter((q, i) => selectedAnswers[i] === q.correct_answer).length;
     const allTrainersCompleted = trainers.length === 0 || trainers.every(t => completedTrainers.has(t.id));
 
+    console.log(course)
+    console.log(courseTest)
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             <Sidebar sidebarOpen={sidebarOpen} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}/>
@@ -269,7 +280,7 @@ export default function CourseStudyPage() {
                             <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
                                 <div className="flex items-start gap-5">
                                     <img src={course.icon} alt={course.title}
-                                         className="w-20 h-20 rounded-2xl object-cover flex-shrink-0 border border-gray-100"/>
+                                         className="w-20 h-20 object-contain flex-shrink-0"/>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3 flex-wrap mb-1">
                                             <h1 className="text-2xl font-bold text-gray-900">{course.title}</h1>
@@ -315,7 +326,7 @@ export default function CourseStudyPage() {
                                                         {index + 1}
                                                     </div>
                                                     <img src={manual.icon} alt={manual.title}
-                                                         className="w-10 h-10 rounded-xl object-cover flex-shrink-0"/>
+                                                         className="w-10 h-10 object-contain flex-shrink-0"/>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 flex-wrap">
                                                             <span className="font-semibold text-gray-800">{manual.title}</span>

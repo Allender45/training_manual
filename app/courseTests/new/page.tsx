@@ -16,7 +16,6 @@ type QuestionDraft = {
 type NewTestForm = {
     title: string;
     time_limit: string;
-    course_id: string;
     shuffle_questions: boolean;
     shuffle_answers: boolean;
     is_active: boolean;
@@ -26,7 +25,7 @@ type NewTestForm = {
 };
 
 const emptyForm: NewTestForm = {
-    title: '', time_limit: '', course_id: '',
+    title: '', time_limit: '',
     shuffle_questions: true, shuffle_answers: true, is_active: true,
     achievement_id: '', notify_trainee: '', notify_mentor: '',
 };
@@ -67,7 +66,6 @@ export default function NewTestPage() {
                     setForm({
                         title:             t.title ?? '',
                         time_limit:        t.time_limit ? String(t.time_limit) : '',
-                        course_id:         t.course_id ? String(t.course_id) : '',
                         shuffle_questions: t.shuffle_questions ?? true,
                         shuffle_answers:   t.shuffle_answers ?? true,
                         is_active:         t.is_active ?? true,
@@ -153,7 +151,6 @@ export default function NewTestPage() {
                 body: JSON.stringify({
                     title:             form.title.trim(),
                     time_limit,
-                    course_id:         form.course_id || null,
                     shuffle_questions: form.shuffle_questions,
                     shuffle_answers:   form.shuffle_answers,
                     is_active:         form.is_active,
@@ -204,13 +201,6 @@ export default function NewTestPage() {
                                     value={form.time_limit}
                                     onChange={handleChange}
                                     placeholder="Без ограничений"
-                                />
-                                <Select
-                                    label="Курс"
-                                    name="course_id"
-                                    value={form.course_id}
-                                    onChange={handleChange}
-                                    options={[{ value: '', label: 'Не привязан' }, ...courseOptions]}
                                 />
                                 <div className="flex flex-col gap-3">
                                     <Checkbox label="Перемешивать вопросы" name="shuffle_questions"

@@ -34,7 +34,7 @@ export default function TestsPage() {
         setDeleting(true);
         setDeleteError(null);
         try {
-            const res = await fetch(`/api/courstTests/${testToDelete.id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/courseTests/${testToDelete.id}`, { method: 'DELETE' });
             const data = await res.json();
             if (!res.ok) { setDeleteError(data.error ?? 'Ошибка удаления'); return; }
             setTestToDelete(null);

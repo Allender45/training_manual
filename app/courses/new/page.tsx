@@ -204,7 +204,7 @@ export default function NewCoursePage() {
                                     <div className="flex items-end gap-3">
                                         {previewSrc ? (
                                             <img src={previewSrc} alt="preview"
-                                                 className="w-10 h-10 rounded-xl object-cover flex-shrink-0 border border-gray-200"/>
+                                                 className="w-10 h-10 object-contain flex-shrink-0"/>
                                         ) : (
                                             <div
                                                 className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 border border-dashed border-gray-300">

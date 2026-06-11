@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
                         END AS is_locked
              FROM courses c
                       LEFT JOIN achievements a ON a.id = c.achievement_id
-             ORDER BY c.created_at DESC`,
+             ORDER BY c.created_at ASC`,
             [userId]
         );
         return NextResponse.json({ courses: result.rows });
