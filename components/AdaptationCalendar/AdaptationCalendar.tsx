@@ -22,6 +22,7 @@ type Plan = {
 type Props = {
     data: DayData[];
     plan: Plan;
+    onMonthChange?: (period: string) => void;
 };
 
 function toDataDate(d: Date): string {
@@ -32,6 +33,12 @@ function toDataDate(d: Date): string {
 
 function getDayColor(day: DayData | undefined, plan: Plan): string {
     if (!day) return 'bg-gray-100 text-gray-400';
+    if (
+        day.calls         === 0 &&
+        day.conversion    === 0 &&
+        day.revenue_new   === 0 &&
+        day.revenue_total === 0
+    ) return 'bg-gray-100 text-gray-400';
     let missed = 0;
     if (plan.plan_calls        != null && day.calls         < plan.plan_calls)        missed++;
     if (plan.plan_conversion   != null && day.conversion    < plan.plan_conversion)   missed++;
@@ -44,7 +51,7 @@ function getDayColor(day: DayData | undefined, plan: Plan): string {
     return 'bg-red-100 text-red-800';
 }
 
-export default function AdaptationCalendar({ data, plan }: Props) {
+export default function AdaptationCalendar({ data, plan, onMonthChange  }: Props) {
     const today = new Date();
     const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
     const [selected, setSelected] = useState<string | null>(null);
@@ -83,18 +90,25 @@ export default function AdaptationCalendar({ data, plan }: Props) {
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь',
         'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
+    function changeMonth(delta: number) {
+        const next = new Date(year, month + delta, 1);
+        setViewDate(next);
+        const period = `${next.getFullYear()}${String(next.getMonth() + 1).padStart(2, '0')}`;
+        onMonthChange?.(period);
+    }
+
     return (
         <div className="bg-white rounded-xl shadow-sm p-4 w-full">
             {/* Шапка */}
             <div className="flex items-center justify-between mb-3">
-                <button onClick={() => setViewDate(new Date(year, month - 1, 1))}
+                <button onClick={() => changeMonth(-1)}
                         className="p-1 rounded hover:bg-gray-100">
                     <ChevronLeft size={18} />
                 </button>
                 <span className="text-sm font-semibold text-gray-700">
                     {monthNames[month]} {year}
                 </span>
-                <button onClick={() => setViewDate(new Date(year, month + 1, 1))}
+                <button onClick={() => changeMonth(+1)}
                         className="p-1 rounded hover:bg-gray-100">
                     <ChevronRight size={18} />
                 </button>

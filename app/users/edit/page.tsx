@@ -185,9 +185,6 @@ export default function EditUserPage() {
 
     if (loading) return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
 
-    console.log(mentorForm)
-    console.log(mentorOptions)
-
     return (
         <div className="flex min-h-screen bg-gray-100">
             <Sidebar sidebarOpen={sidebarOpen} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}/>

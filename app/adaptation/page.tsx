@@ -31,6 +31,39 @@ function toDataDate(d: Date): string {
     return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+// const data: DayData[] = [
+//     { date: '01.05.2026', calls: 18, conversion: 22.1, revenue_new: 4380,  revenue_total: 7050  },
+//     { date: '02.05.2026', calls: 26, conversion: 26.8, revenue_new: 5210,  revenue_total: 8640  },
+//     { date: '03.05.2026', calls: 15, conversion: 19.5, revenue_new: 3890,  revenue_total: 6300  },
+//     { date: '04.05.2026', calls: 29, conversion: 29.3, revenue_new: 5780,  revenue_total: 9410  },
+//     { date: '05.05.2026', calls: 22, conversion: 24.0, revenue_new: 4920,  revenue_total: 7880  },
+//     { date: '06.05.2026', calls: 27, conversion: 27.5, revenue_new: 5540,  revenue_total: 8970  },
+//     { date: '07.05.2026', calls: 16, conversion: 19.0, revenue_new: 3760,  revenue_total: 6100  },
+//     { date: '08.05.2026', calls: 30, conversion: 30.1, revenue_new: 6010,  revenue_total: 9750  },
+//     { date: '09.05.2026', calls: 21, conversion: 23.4, revenue_new: 4660,  revenue_total: 7520  },
+//     { date: '10.05.2026', calls: 28, conversion: 28.7, revenue_new: 5870,  revenue_total: 9180  },
+//     { date: '11.05.2026', calls: 17, conversion: 20.2, revenue_new: 4050,  revenue_total: 6480  },
+//     { date: '12.05.2026', calls: 23, conversion: 25.6, revenue_new: 5120,  revenue_total: 8230  },
+//     { date: '13.05.2026', calls: 29, conversion: 29.8, revenue_new: 5950,  revenue_total: 9600  },
+//     { date: '14.05.2026', calls: 19, conversion: 21.0, revenue_new: 4200,  revenue_total: 6750  },
+//     { date: '15.05.2026', calls: 24, conversion: 24.9, revenue_new: 4990,  revenue_total: 8010  },
+//     { date: '16.05.2026', calls: 27, conversion: 27.2, revenue_new: 5440,  revenue_total: 8780  },
+//     { date: '17.05.2026', calls: 15, conversion: 18.8, revenue_new: 3760,  revenue_total: 6010  },
+//     { date: '18.05.2026', calls: 30, conversion: 31.2, revenue_new: 6240,  revenue_total: 9980  },
+//     { date: '19.05.2026', calls: 20, conversion: 22.7, revenue_new: 4540,  revenue_total: 7270  },
+//     { date: '20.05.2026', calls: 26, conversion: 26.3, revenue_new: 5260,  revenue_total: 8490  },
+//     { date: '21.05.2026', calls: 18, conversion: 20.8, revenue_new: 4160,  revenue_total: 6660  },
+//     { date: '22.05.2026', calls: 29, conversion: 30.5, revenue_new: 6100,  revenue_total: 9830  },
+//     { date: '23.05.2026', calls: 22, conversion: 23.9, revenue_new: 4780,  revenue_total: 7660  },
+//     { date: '24.05.2026', calls: 25, conversion: 25.1, revenue_new: 5020,  revenue_total: 8050  },
+//     { date: '25.05.2026', calls: 16, conversion: 39.7, revenue_new: 3940,  revenue_total: 6310  },
+//     { date: '26.05.2026', calls: 18, conversion: 28.4, revenue_new: 5680,  revenue_total: 9090  },
+//     { date: '27.05.2026', calls: 21, conversion: 23.1, revenue_new: 4620,  revenue_total: 7400  },
+//     { date: '28.05.2026', calls: 27, conversion: 27.8, revenue_new: 5560,  revenue_total: 8920  },
+//     { date: '29.05.2026', calls: 17, conversion: 20.5, revenue_new: 4100,  revenue_total: 6570  },
+//     { date: '30.05.2026', calls: 24, conversion: 25.3, revenue_new: 5060,  revenue_total: 8110  },
+// ];
+
 type DayData = {
     date: string;
     calls: number;
@@ -39,38 +72,27 @@ type DayData = {
     revenue_total: number;
 };
 
-const data: DayData[] = [
-    { date: '01.05.2026', calls: 18, conversion: 22.1, revenue_new: 4380,  revenue_total: 7050  },
-    { date: '02.05.2026', calls: 26, conversion: 26.8, revenue_new: 5210,  revenue_total: 8640  },
-    { date: '03.05.2026', calls: 15, conversion: 19.5, revenue_new: 3890,  revenue_total: 6300  },
-    { date: '04.05.2026', calls: 29, conversion: 29.3, revenue_new: 5780,  revenue_total: 9410  },
-    { date: '05.05.2026', calls: 22, conversion: 24.0, revenue_new: 4920,  revenue_total: 7880  },
-    { date: '06.05.2026', calls: 27, conversion: 27.5, revenue_new: 5540,  revenue_total: 8970  },
-    { date: '07.05.2026', calls: 16, conversion: 19.0, revenue_new: 3760,  revenue_total: 6100  },
-    { date: '08.05.2026', calls: 30, conversion: 30.1, revenue_new: 6010,  revenue_total: 9750  },
-    { date: '09.05.2026', calls: 21, conversion: 23.4, revenue_new: 4660,  revenue_total: 7520  },
-    { date: '10.05.2026', calls: 28, conversion: 28.7, revenue_new: 5870,  revenue_total: 9180  },
-    { date: '11.05.2026', calls: 17, conversion: 20.2, revenue_new: 4050,  revenue_total: 6480  },
-    { date: '12.05.2026', calls: 23, conversion: 25.6, revenue_new: 5120,  revenue_total: 8230  },
-    { date: '13.05.2026', calls: 29, conversion: 29.8, revenue_new: 5950,  revenue_total: 9600  },
-    { date: '14.05.2026', calls: 19, conversion: 21.0, revenue_new: 4200,  revenue_total: 6750  },
-    { date: '15.05.2026', calls: 24, conversion: 24.9, revenue_new: 4990,  revenue_total: 8010  },
-    { date: '16.05.2026', calls: 27, conversion: 27.2, revenue_new: 5440,  revenue_total: 8780  },
-    { date: '17.05.2026', calls: 15, conversion: 18.8, revenue_new: 3760,  revenue_total: 6010  },
-    { date: '18.05.2026', calls: 30, conversion: 31.2, revenue_new: 6240,  revenue_total: 9980  },
-    { date: '19.05.2026', calls: 20, conversion: 22.7, revenue_new: 4540,  revenue_total: 7270  },
-    { date: '20.05.2026', calls: 26, conversion: 26.3, revenue_new: 5260,  revenue_total: 8490  },
-    { date: '21.05.2026', calls: 18, conversion: 20.8, revenue_new: 4160,  revenue_total: 6660  },
-    { date: '22.05.2026', calls: 29, conversion: 30.5, revenue_new: 6100,  revenue_total: 9830  },
-    { date: '23.05.2026', calls: 22, conversion: 23.9, revenue_new: 4780,  revenue_total: 7660  },
-    { date: '24.05.2026', calls: 25, conversion: 25.1, revenue_new: 5020,  revenue_total: 8050  },
-    { date: '25.05.2026', calls: 16, conversion: 39.7, revenue_new: 3940,  revenue_total: 6310  },
-    { date: '26.05.2026', calls: 18, conversion: 28.4, revenue_new: 5680,  revenue_total: 9090  },
-    { date: '27.05.2026', calls: 21, conversion: 23.1, revenue_new: 4620,  revenue_total: 7400  },
-    { date: '28.05.2026', calls: 27, conversion: 27.8, revenue_new: 5560,  revenue_total: 8920  },
-    { date: '29.05.2026', calls: 17, conversion: 20.5, revenue_new: 4100,  revenue_total: 6570  },
-    { date: '30.05.2026', calls: 24, conversion: 25.3, revenue_new: 5060,  revenue_total: 8110  },
-];
+type ApiDayItem = {
+    date: string;
+    calls: { total: number };
+    conversions: { newClientConversionPercent: number };
+    cash: { newClients: number; total: number };
+};
+
+function toPeriod(date: Date): string {
+    return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function mapApiDay(item: ApiDayItem): DayData {
+    const [y, m, d] = item.date.split('-');
+    return {
+        date: `${d}.${m}.${y}`,
+        calls: item.calls.total,
+        conversion: item.conversions.newClientConversionPercent,
+        revenue_new: item.cash.newClients,
+        revenue_total: item.cash.total,
+    };
+}
 
 export default function AdaptationPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -79,6 +101,9 @@ export default function AdaptationPage() {
     const [adaptation, setAdaptation] = useState<AdaptationInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const { user, fetchUser } = useUserStore();
+    const [dayData, setDayData] = useState<DayData[]>([]);
+    const [dayDataLoading, setDayDataLoading] = useState(false);
+    const [calendarPeriod, setCalendarPeriod] = useState(() => toPeriod(new Date()));
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
@@ -92,6 +117,16 @@ export default function AdaptationPage() {
             .finally(() => setLoading(false));
     }, [user?.id]);
 
+    useEffect(() => {
+        if (!user?.id) return;
+        setDayDataLoading(true);
+        fetch(`/api/adaptations/statistics?userId=${user.crm_id}&period=${calendarPeriod}`)
+            .then(r => r.json())
+            .then(json => setDayData((json.data as ApiDayItem[]).map(mapApiDay)))
+            .catch(() => setDayData([]))
+            .finally(() => setDayDataLoading(false));
+    }, [user?.id, calendarPeriod]);
+
     const endDate = adaptation ? addMonths(adaptation.started_at, 3) : null;
 
     const daysLeft = endDate
@@ -102,7 +137,7 @@ export default function AdaptationPage() {
     const yd = new Date(today); yd.setDate(today.getDate() - 1);
     const bd = new Date(today); bd.setDate(today.getDate() - 2);
 
-    const yesterday = data.find(d => d.date === toDataDate(yd)) ?? null;
+    const yesterday = dayData.find(d => d.date === toDataDate(yd)) ?? null;
 
     function calcDiff(curr: number | undefined, prev: number | undefined): number | null {
         if (curr == null || prev == null || prev === 0) return null;
@@ -119,7 +154,7 @@ export default function AdaptationPage() {
         return new Date(y, m - 1, d);
     }
 
-    const last5 = [...data]
+    const last5 = [...dayData]
         .sort((a, b) => parseDataDate(b.date).getTime() - parseDataDate(a.date).getTime())
         .filter(d => { const day = parseDataDate(d.date).getDay(); return day >= 1 && day <= 5; })
         .slice(0, 5);
@@ -175,7 +210,7 @@ export default function AdaptationPage() {
                                 color="bg-green-100 text-green-600"
                             />
 
-                            <AdaptationCalendar data={data} plan={adaptation} />
+                            <AdaptationCalendar data={dayData} plan={adaptation} onMonthChange={setCalendarPeriod} />
                             <div></div>
                         </div>
                     )}

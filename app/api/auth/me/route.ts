@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
             `SELECT u.id, u.last_name, u.first_name, u.middle_name, u.phone, u.email,
                     u.photo, u.passport_series, u.passport_number,
                     TO_CHAR(u.birthday, 'YYYY-MM-DD') AS birthday,
-                    u.comment, u.registered_at, u.role_id, r.name AS role
+                    u.comment, u.registered_at, u.role_id, r.name AS role, u.crm_id
              FROM users u
                       LEFT JOIN roles r ON r.id = u.role_id
              WHERE u.id = $1`,

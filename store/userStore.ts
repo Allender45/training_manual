@@ -15,6 +15,7 @@ export type User = {
     registered_at: string;
     role_id: number | null;
     role: string | null;
+    crm_id: number | null;
 };
 
 type UserStore = {
