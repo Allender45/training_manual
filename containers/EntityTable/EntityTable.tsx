@@ -71,8 +71,15 @@ export type AchievementRow = {
     description: string | null;
 };
 
-export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow | AchievementRow;
-export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans' | 'achievements';
+export type FunctionalRow = {
+    id: number;
+    title: string;
+    description: string;
+    href: string;
+};
+
+export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow | AchievementRow | FunctionalRow;
+export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans' | 'achievements' | 'functional';
 
 type ColVisibility = Record<string, boolean>;
 
@@ -350,6 +357,34 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
             },
         ],
         addButtonFeature: 'achievementsTableAddButtons',
+    },
+    functional: {
+        title: 'Функционал CRM',
+        addHref: '/functional',
+        emptyText: 'Разделы не найдены',
+        searchFields: (row: FunctionalRow) => [row.title, row.description],
+        colVisibilityDefaults: { description: true },
+        colLabels: { description: 'Описание' },
+        hasActiveFilter: false,
+        columns: [
+            {
+                key: 'title',
+                header: 'Раздел',
+                render: (row: FunctionalRow) => (
+                    <Link href={row.href} className="font-medium text-gray-800 hover:text-[#41A141] hover:underline transition-colors">
+                        {row.title}
+                    </Link>
+                ),
+            },
+            {
+                key: 'description',
+                header: 'Описание',
+                render: (row: FunctionalRow) => row.description
+                    ? <span className="text-sm text-gray-600">{row.description}</span>
+                    : <span className="text-gray-400 text-sm">—</span>,
+            },
+        ],
+        addButtonFeature: 'functionalTableAddButtons',
     },
 };
 

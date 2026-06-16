@@ -58,6 +58,8 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                         href="/home" icon={Home} label="Dashboard"
                         sidebarOpen={sidebarOpen} active={pathname === '/home'}
                     />
+                    <SidebarButton href="/functional" icon={FileText} label="Функционал CRM"
+                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/functional')}/>
                     <SidebarButton href="/courses" icon={FileText} label="Курсы" sidebarOpen={sidebarOpen}
                                    active={pathname.startsWith('/courses')}/>
                     <SidebarButton href="/adaptation" icon={BadgePercent} label="Адаптация"
