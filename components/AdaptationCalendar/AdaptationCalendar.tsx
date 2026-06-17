@@ -33,12 +33,7 @@ function toDataDate(d: Date): string {
 
 function getDayColor(day: DayData | undefined, plan: Plan): string {
     if (!day) return 'bg-gray-100 text-gray-400';
-    if (
-        day.calls         === 0 &&
-        day.conversion    === 0 &&
-        day.revenue_new   === 0 &&
-        day.revenue_total === 0
-    ) return 'bg-gray-100 text-gray-400';
+    if (day.calls < 5 ) return 'bg-gray-100 text-gray-400';
     let missed = 0;
     if (plan.plan_calls        != null && day.calls         < plan.plan_calls)        missed++;
     if (plan.plan_conversion   != null && day.conversion    < plan.plan_conversion)   missed++;
