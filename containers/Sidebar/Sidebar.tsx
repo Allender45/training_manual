@@ -53,7 +53,7 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
 
                 <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
 
-                    {/* Панель стажёра и доступная всем */}
+                    {/* Панель доступная всем */}
                     <SidebarButton
                         href="/home" icon={Home} label="Dashboard"
                         sidebarOpen={sidebarOpen} active={pathname === '/home'}
@@ -62,15 +62,22 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                    sidebarOpen={sidebarOpen} active={pathname.startsWith('/functional')}/>
                     <SidebarButton href="/courses" icon={FileText} label="Курсы" sidebarOpen={sidebarOpen}
                                    active={pathname.startsWith('/courses')}/>
-                    <SidebarButton href="/adaptation" icon={BadgePercent} label="Адаптация"
-                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/adaptation/')}/>
-                    <SidebarButton href="/calls" icon={Phone} label="Звонки"
-                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/calls')}/>
+
+
+                    {/*Панель стажёра*/}
+                    {hasFeature(rid, 'sidebarStudentMenu') &&
+                        <>
+                            <SidebarButton href="/adaptation" icon={BadgePercent} label="Адаптация"
+                                           sidebarOpen={sidebarOpen} active={pathname.startsWith('/adaptation/')}/>
+                            <SidebarButton href="/calls" icon={Phone} label="Звонки"
+                                           sidebarOpen={sidebarOpen} active={pathname.startsWith('/calls')}/>
+                        </>
+                    }
 
                     {/*Панель наставника*/}
                     {hasFeature(rid, 'sidebarMentorMenu') &&
                         <>
-                            <SidebarButton href="/users" icon={Users} label="Пользователи"
+                            <SidebarButton href="/users" icon={Users} label="Стажёры"
                                            sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
                             <SidebarButton href="/adaptationPlans" icon={Sheet} label="Планы адаптации"
                                            sidebarOpen={sidebarOpen} active={pathname.startsWith('/adaptationPlans')}/>

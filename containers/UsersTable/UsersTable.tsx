@@ -1,9 +1,9 @@
 'use client';
 
 import React, {useState, useEffect, useMemo} from 'react';
-import {Table, Checkbox, Button, Select} from '@/components';
+import {Table, Checkbox, Button, Select, AdaptationContent, CallsContent} from '@/components';
 import {Column} from '@/components/Table/Table';
-import {Settings, ChevronLeft, ChevronRight, Plus, Search, X, CheckCircle2, XCircle, Check} from 'lucide-react';
+import {Settings, ChevronLeft, ChevronRight, Plus, Search, X, BadgePercent, Phone} from 'lucide-react';
 import Modal from '../Modal/Modal';
 import {useRouter} from 'next/navigation';
 import {hasFeature} from "@/lib/permissions";
@@ -54,6 +54,8 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
     const [filterActive, setFilterActive] = useState('');
     const [pageSize, setPageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
+    const [adaptationUser, setAdaptationUser] = useState<UserRow | null>(null);
+    const [callsUser, setCallsUser] = useState<UserRow | null>(null);
     const router = useRouter();
     const user = useUserStore(s => s.user);
     const rid = user?.role_id ?? null;
@@ -262,6 +264,24 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                 buttonDetail={hasFeature(rid, 'usersTableDetailUserButton')}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                extraActions={row => (
+                    <>
+                        <button
+                            className="p-1.5 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
+                            title="Адаптация"
+                            onClick={() => setAdaptationUser(row)}
+                        >
+                            <BadgePercent size={14} />
+                        </button>
+                        <button
+                            className="p-1.5 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200"
+                            title="Звонки"
+                            onClick={() => setCallsUser(row)}
+                        >
+                            <Phone size={14} />
+                        </button>
+                    </>
+                )}
             />
 
             {showPagination && (
@@ -358,6 +378,24 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                         />
                     </div>
                 </div>
+            </Modal>
+
+            <Modal
+                isOpen={!!adaptationUser}
+                onClose={() => setAdaptationUser(null)}
+                title={adaptationUser ? `Адаптация — ${adaptationUser.name}` : ''}
+            >
+                {adaptationUser && (
+                    <AdaptationContent userId={adaptationUser.id} crmUserId={adaptationUser.crm_id} />
+                )}
+            </Modal>
+
+            <Modal
+                isOpen={!!callsUser}
+                onClose={() => setCallsUser(null)}
+                title={callsUser ? `Звонки — ${callsUser.name}` : ''}
+            >
+                {callsUser && <CallsContent userId={callsUser.id} />}
             </Modal>
         </div>
     );

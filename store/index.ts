@@ -16,3 +16,4 @@ export { useTrainersStore } from './trainersStore';
 export type { Trainer } from './trainersStore';
 export { useTestsStore } from './testsStore';
 export type { Test } from './testsStore';
+export { useAdaptationStore } from './adaptationStore';

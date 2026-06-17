@@ -28,6 +28,7 @@ type TableProps<T extends Record<string, any>> = {
     hasAnalysis?: (row: T) => boolean;
     onEdit?: (row: T) => void;
     onDelete?: (row: T) => void;
+    extraActions?: (row: T) => React.ReactNode;
 };
 
 export default function Table<T extends Record<string, any>>({
@@ -35,7 +36,7 @@ export default function Table<T extends Record<string, any>>({
                                                                  buttonEdit, buttonDel, buttonDetail, onEdit, onDelete,
                                                                  buttonPlay, buttonAnalyze, buttonViewAnalysis,
                                                                  onPlay, onAnalyze, onViewAnalysis,
-                                                                 isAnalysing, hasAnalysis,
+                                                                 isAnalysing, hasAnalysis, extraActions,
                                                              }: TableProps<T>) {
     return (
         <div className="overflow-x-auto rounded-xl border border-gray-100">
@@ -48,7 +49,7 @@ export default function Table<T extends Record<string, any>>({
                             {col.header}
                         </th>
                     ))}
-                    {(buttonEdit || buttonDel || buttonPlay || buttonAnalyze || buttonViewAnalysis) && <th className="px-4 py-3"/>}
+                    {(buttonEdit || buttonDel || buttonPlay || buttonAnalyze || buttonViewAnalysis || extraActions) && <th className="px-4 py-3"/>}
                 </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -113,6 +114,9 @@ export default function Table<T extends Record<string, any>>({
                                                         onClick={() => onViewAnalysis?.(row)} title="Просмотр анализа">
                                                     <Eye size={14} />
                                                 </button>
+                                            )}
+                                            {extraActions && (
+                                                <>{extraActions(row)}</>
                                             )}
                                         </div>
                                     </td>

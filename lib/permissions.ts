@@ -10,6 +10,7 @@ export type Feature =
     | 'achievements'
     | 'sidebarAdminMenu'
     | 'sidebarMentorMenu'
+    | 'sidebarStudentMenu'
     | 'sidebarHrMenu'
     | 'usersTableCreateButton'
     | 'usersTableFilters'
@@ -33,7 +34,8 @@ type RolePermissions = Feature[] | '*';
 export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
     6: [
         'dashboard',
-        'courses'
+        'courses',
+        'sidebarStudentMenu',
     ],   // Стажёр
     4: [
         'sidebarMentorMenu',

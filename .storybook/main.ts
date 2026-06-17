@@ -37,6 +37,15 @@ const config: StorybookConfig = {
                 '@ckeditor/ckeditor5-react',
             ],
         };
+        config.server = {
+            ...config.server,
+            proxy: {
+                '/api': {
+                    target: 'http://localhost:3000',
+                    changeOrigin: true,
+                },
+            },
+        };
         return config;
     },
 };

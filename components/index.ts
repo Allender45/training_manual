@@ -15,3 +15,5 @@ export { default as CaseQuizTrainer } from './trainers/CaseQuizTrainer/CaseQuizT
 export { default as PricingQuizTrainer } from './trainers/PricingQuizTrainer/PricingQuizTrainer';
 export { default as NewOrderTrainer } from './trainers/NewOrderTrainer/NewOrderTrainer';
 export { default as FullOrderCreate } from './trainers/FullOrderCreate/FullOrderCreate';
+export { default as AdaptationContent } from './AdaptationContent/AdaptationContent';
+export { default as CallsContent } from './CallsContent/CallsContent';
