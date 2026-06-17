@@ -141,32 +141,37 @@ export default function AdaptationCalendar({ data, plan, onMonthChange  }: Props
             {selected && selectedDay && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-500 mb-3">{selected}</p>
-                    <div className="flex flex-wrap gap-3">
-                        <StatCard label="Звонки" icon={PhoneCall} color="bg-purple-100 text-purple-600"
-                                  value={String(selectedDay.calls)}
-                                  sub={fmtDiff(selectedDay.calls, plan.plan_calls) + ' от плана'}
-                                  subClass={diffClass(selectedDay.calls, plan.plan_calls)}
-                                  bgColor={diffColor(selectedDay.calls, plan.plan_calls)}
-                        />
-                        <StatCard label="Конверсия" icon={Percent} color="bg-yellow-100 text-yellow-600"
-                                  value={`${selectedDay.conversion}%`}
-                                  sub={fmtDiff(selectedDay.conversion, plan.plan_conversion) + ' от плана'}
-                                  subClass={diffClass(selectedDay.conversion, plan.plan_conversion)}
-                                  bgColor={diffColor(selectedDay.conversion, plan.plan_conversion)}
-                        />
-                        <StatCard label="Касса (новые)" icon={UserPlus} color="bg-blue-100 text-blue-600"
-                                  value={`${selectedDay.revenue_new.toLocaleString('ru-RU')} ₽`}
-                                  sub={fmtDiff(selectedDay.revenue_new, plan.plan_revenue_new) + ' от плана'}
-                                  subClass={diffClass(selectedDay.revenue_new, plan.plan_revenue_new)}
-                                  bgColor={diffColor(selectedDay.revenue_new, plan.plan_revenue_new)}
-                        />
-                        <StatCard label="Касса общая" icon={Wallet} color="bg-green-100 text-green-600"
-                                  value={`${selectedDay.revenue_total.toLocaleString('ru-RU')} ₽`}
-                                  sub={fmtDiff(selectedDay.revenue_total, plan.plan_revenue_total) + ' от плана'}
-                                  subClass={diffClass(selectedDay.revenue_total, plan.plan_revenue_total)}
-                                  bgColor={diffColor(selectedDay.revenue_total, plan.plan_revenue_total)}
-                        />
-                    </div>
+                    { selectedDay.calls > 5 ? (
+                        <div className="flex flex-wrap gap-3">
+                            <StatCard label="Звонки" icon={PhoneCall} color="bg-purple-100 text-purple-600"
+                                      value={String(selectedDay.calls)}
+                                      sub={fmtDiff(selectedDay.calls, plan.plan_calls) + ' от плана'}
+                                      subClass={diffClass(selectedDay.calls, plan.plan_calls)}
+                                      bgColor={diffColor(selectedDay.calls, plan.plan_calls)}
+                            />
+                            <StatCard label="Конверсия" icon={Percent} color="bg-yellow-100 text-yellow-600"
+                                      value={`${selectedDay.conversion}%`}
+                                      sub={fmtDiff(selectedDay.conversion, plan.plan_conversion) + ' от плана'}
+                                      subClass={diffClass(selectedDay.conversion, plan.plan_conversion)}
+                                      bgColor={diffColor(selectedDay.conversion, plan.plan_conversion)}
+                            />
+                            <StatCard label="Касса (новые)" icon={UserPlus} color="bg-blue-100 text-blue-600"
+                                      value={`${selectedDay.revenue_new.toLocaleString('ru-RU')} ₽`}
+                                      sub={fmtDiff(selectedDay.revenue_new, plan.plan_revenue_new) + ' от плана'}
+                                      subClass={diffClass(selectedDay.revenue_new, plan.plan_revenue_new)}
+                                      bgColor={diffColor(selectedDay.revenue_new, plan.plan_revenue_new)}
+                            />
+                            <StatCard label="Касса общая" icon={Wallet} color="bg-green-100 text-green-600"
+                                      value={`${selectedDay.revenue_total.toLocaleString('ru-RU')} ₽`}
+                                      sub={fmtDiff(selectedDay.revenue_total, plan.plan_revenue_total) + ' от плана'}
+                                      subClass={diffClass(selectedDay.revenue_total, plan.plan_revenue_total)}
+                                      bgColor={diffColor(selectedDay.revenue_total, plan.plan_revenue_total)}
+                            />
+                        </div>
+                    ) : (
+                        <p className="text-gray-500">Выходной день</p>
+                    )}
+
                 </div>
             )}
             {selected && !selectedDay && (

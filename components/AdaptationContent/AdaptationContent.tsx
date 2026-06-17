@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { StatCard, AdaptationCalendar } from '@/components';
-import { PhoneCall, Percent, UserPlus, Wallet } from 'lucide-react';
+import {useState, useEffect} from 'react';
+import {StatCard, AdaptationCalendar} from '@/components';
+import {PhoneCall, Percent, UserPlus, Wallet} from 'lucide-react';
 
 type AdaptationInfo = {
     id: number;
@@ -54,7 +54,7 @@ type Props = {
     crmUserId: number | null;
 };
 
-export default function AdaptationContent({ userId, crmUserId }: Props) {
+export default function AdaptationContent({userId, crmUserId}: Props) {
     const [adaptation, setAdaptation] = useState<AdaptationInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [dayData, setDayData] = useState<DayData[]>([]);
@@ -76,16 +76,15 @@ export default function AdaptationContent({ userId, crmUserId }: Props) {
             .catch(() => setDayData([]));
     }, [crmUserId, calendarPeriod]);
 
-    const today = new Date();
     const last5 = [...dayData]
         .sort((a, b) => parseDataDate(b.date).getTime() - parseDataDate(a.date).getTime())
-        .filter(d => { const day = parseDataDate(d.date).getDay(); return day >= 1 && day <= 5; })
+        .filter(d => d.calls >= 5)
         .slice(0, 5);
 
-    const callsMissed    = adaptation ? last5.filter(d => adaptation.plan_calls        != null && d.calls         < adaptation.plan_calls).length        : 0;
-    const convMissed     = adaptation ? last5.filter(d => adaptation.plan_conversion   != null && d.conversion    < adaptation.plan_conversion).length    : 0;
-    const revNewMissed   = adaptation ? last5.filter(d => adaptation.plan_revenue_new  != null && d.revenue_new   < adaptation.plan_revenue_new).length   : 0;
-    const revTotalMissed = adaptation ? last5.filter(d => adaptation.plan_revenue_total!= null && d.revenue_total < adaptation.plan_revenue_total).length : 0;
+    const callsMissed = adaptation ? last5.filter(d => adaptation.plan_calls != null && d.calls < adaptation.plan_calls).length : 0;
+    const convMissed = adaptation ? last5.filter(d => adaptation.plan_conversion != null && d.conversion < adaptation.plan_conversion).length : 0;
+    const revNewMissed = adaptation ? last5.filter(d => adaptation.plan_revenue_new != null && d.revenue_new < adaptation.plan_revenue_new).length : 0;
+    const revTotalMissed = adaptation ? last5.filter(d => adaptation.plan_revenue_total != null && d.revenue_total < adaptation.plan_revenue_total).length : 0;
 
     if (loading) return <p className="text-sm text-gray-400">Загрузка...</p>;
 
@@ -95,29 +94,40 @@ export default function AdaptationContent({ userId, crmUserId }: Props) {
         </div>
     );
 
+    console.log(dayData)
+    console.log(last5)
+
     return (
         <>
             <div className="flex flex-wrap gap-4">
-                <StatCard label="План по звонкам" value={adaptation.plan_calls ? String(adaptation.plan_calls) : '—'} icon={PhoneCall} color="bg-purple-100 text-purple-600" />
-                <StatCard label="План по конверсиям" value={adaptation.plan_conversion ? String(adaptation.plan_conversion) : '—'} icon={Percent} color="bg-yellow-100 text-yellow-600" />
-                <StatCard label="План по кассе от новых клиентов" value={adaptation.plan_revenue_new != null ? `${adaptation.plan_revenue_new.toLocaleString('ru-RU')} ₽` : '—'} icon={UserPlus} color="bg-blue-100 text-blue-600" />
-                <StatCard label="План по кассе общей" value={adaptation.plan_revenue_total != null ? `${adaptation.plan_revenue_total.toLocaleString('ru-RU')} ₽` : '—'} icon={Wallet} color="bg-green-100 text-green-600" />
-                <AdaptationCalendar data={dayData} plan={adaptation} onMonthChange={setCalendarPeriod} />
+                <StatCard label="План по звонкам" value={adaptation.plan_calls ? String(adaptation.plan_calls) : '—'}
+                          icon={PhoneCall} color="bg-purple-100 text-purple-600"/>
+                <StatCard label="План по конверсиям"
+                          value={adaptation.plan_conversion ? String(adaptation.plan_conversion) : '—'} icon={Percent}
+                          color="bg-yellow-100 text-yellow-600"/>
+                <StatCard label="План по кассе от новых клиентов"
+                          value={adaptation.plan_revenue_new != null ? `${adaptation.plan_revenue_new.toLocaleString('ru-RU')} ₽` : '—'}
+                          icon={UserPlus} color="bg-blue-100 text-blue-600"/>
+                <StatCard label="План по кассе общей"
+                          value={adaptation.plan_revenue_total != null ? `${adaptation.plan_revenue_total.toLocaleString('ru-RU')} ₽` : '—'}
+                          icon={Wallet} color="bg-green-100 text-green-600"/>
+                <AdaptationCalendar data={dayData} plan={adaptation} onMonthChange={setCalendarPeriod}/>
                 <div></div>
             </div>
 
             <div className="mt-6 bg-white rounded-xl shadow-sm p-6">
                 <h4 className="text-base font-semibold text-gray-800 mb-1">Рекомендации</h4>
-                <p className="text-xs text-gray-400 mb-5">Анализ основан на данных за последние 5 рабочих дней.</p>
+                <p className="text-xs text-gray-400 mb-5">Анализ основан на данных за последние 5 рабочих дней выбранного месяца.</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                     {[
-                        { label: 'Звонки',         count: callsMissed,    color: 'bg-purple-50 text-purple-700' },
-                        { label: 'Конверсия',       count: convMissed,     color: 'bg-yellow-50 text-yellow-700' },
-                        { label: 'Касса (новые)',   count: revNewMissed,   color: 'bg-blue-50 text-blue-700' },
-                        { label: 'Касса общая',    count: revTotalMissed, color: 'bg-green-50 text-green-700' },
-                    ].map(({ label, count, color }) => (
+                        {label: 'Звонки', count: callsMissed, color: 'bg-purple-50 text-purple-700'},
+                        {label: 'Конверсия', count: convMissed, color: 'bg-yellow-50 text-yellow-700'},
+                        {label: 'Касса (новые)', count: revNewMissed, color: 'bg-blue-50 text-blue-700'},
+                        {label: 'Касса общая', count: revTotalMissed, color: 'bg-green-50 text-green-700'},
+                    ].map(({label, count, color}) => (
                         <div key={label} className={`rounded-lg p-3 text-center ${color}`}>
-                            <p className="text-2xl font-bold">{count} <span className="text-sm font-normal">/ 5</span></p>
+                            <p className="text-2xl font-bold">{count} <span className="text-sm font-normal">/ 5</span>
+                            </p>
                             <p className="text-xs mt-1">{label}: не выполнен</p>
                         </div>
                     ))}
@@ -125,36 +135,44 @@ export default function AdaptationContent({ userId, crmUserId }: Props) {
                 <div className="space-y-3">
                     {callsMissed > 0 && (
                         <div className="flex gap-3 p-3 bg-purple-50 rounded-lg">
-                            <PhoneCall className="shrink-0 text-purple-500 mt-0.5" size={16} />
+                            <PhoneCall className="shrink-0 text-purple-500 mt-0.5" size={16}/>
                             <div>
                                 <p className="text-sm font-semibold text-purple-800">Увеличьте количество звонков</p>
-                                <p className="text-xs text-purple-600 mt-0.5">[Рыба] Попробуйте ставить себе почасовые мини-планы. Например, 5–6 звонков каждые 2 часа. Используйте утреннее время — клиенты охотнее берут трубку до 11:00.</p>
+                                <p className="text-xs text-purple-600 mt-0.5">[Рыба] Попробуйте ставить себе почасовые
+                                    мини-планы. Например, 5–6 звонков каждые 2 часа. Используйте утреннее время —
+                                    клиенты охотнее берут трубку до 11:00.</p>
                             </div>
                         </div>
                     )}
                     {convMissed > 0 && (
                         <div className="flex gap-3 p-3 bg-yellow-50 rounded-lg">
-                            <Percent className="shrink-0 text-yellow-500 mt-0.5" size={16} />
+                            <Percent className="shrink-0 text-yellow-500 mt-0.5" size={16}/>
                             <div>
                                 <p className="text-sm font-semibold text-yellow-800">Работайте над конверсией</p>
-                                <p className="text-xs text-yellow-600 mt-0.5">[Рыба] Проанализируйте возражения, с которыми сталкиваетесь чаще всего. Разберите 1–2 записи звонков вместе с наставником и скорректируйте скрипт.</p>
+                                <p className="text-xs text-yellow-600 mt-0.5">[Рыба] Проанализируйте возражения, с
+                                    которыми сталкиваетесь чаще всего. Разберите 1–2 записи звонков вместе с наставником
+                                    и скорректируйте скрипт.</p>
                             </div>
                         </div>
                     )}
                     {(revNewMissed > 0 || revTotalMissed > 0) && (
                         <div className="flex gap-3 p-3 bg-blue-50 rounded-lg">
-                            <Wallet className="shrink-0 text-blue-500 mt-0.5" size={16} />
+                            <Wallet className="shrink-0 text-blue-500 mt-0.5" size={16}/>
                             <div>
                                 <p className="text-sm font-semibold text-blue-800">Повышайте средний чек</p>
-                                <p className="text-xs text-blue-600 mt-0.5">[Рыба] Предлагайте сопутствующие услуги при каждом визите клиента. Уточняйте потребности — часто клиент готов купить больше, если предложить вовремя.</p>
+                                <p className="text-xs text-blue-600 mt-0.5">[Рыба] Предлагайте сопутствующие услуги при
+                                    каждом визите клиента. Уточняйте потребности — часто клиент готов купить больше,
+                                    если предложить вовремя.</p>
                             </div>
                         </div>
                     )}
                     {callsMissed === 0 && convMissed === 0 && revNewMissed === 0 && revTotalMissed === 0 && (
-                        <p className="text-sm text-green-600 font-medium">✓ Все показатели выполнены за последние 5 рабочих дней. Отличная работа!</p>
+                        <p className="text-sm text-green-600 font-medium">✓ Все показатели выполнены за последние 5
+                            рабочих дней. Отличная работа!</p>
                     )}
                 </div>
             </div>
+
         </>
     );
 }
