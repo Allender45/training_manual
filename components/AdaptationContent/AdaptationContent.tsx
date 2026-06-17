@@ -81,10 +81,10 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
         .filter(d => d.calls >= 5)
         .slice(0, 5);
 
-    const callsMissed = adaptation ? last5.filter(d => adaptation.plan_calls != null && d.calls < adaptation.plan_calls).length : 0;
-    const convMissed = adaptation ? last5.filter(d => adaptation.plan_conversion != null && d.conversion < adaptation.plan_conversion).length : 0;
-    const revNewMissed = adaptation ? last5.filter(d => adaptation.plan_revenue_new != null && d.revenue_new < adaptation.plan_revenue_new).length : 0;
-    const revTotalMissed = adaptation ? last5.filter(d => adaptation.plan_revenue_total != null && d.revenue_total < adaptation.plan_revenue_total).length : 0;
+    const calls = adaptation ? last5.filter(d => adaptation.plan_calls != null && d.calls >= adaptation.plan_calls).length : 0;
+    const conv = adaptation ? last5.filter(d => adaptation.plan_conversion != null && d.conversion >= adaptation.plan_conversion).length : 0;
+    const revNew = adaptation ? last5.filter(d => adaptation.plan_revenue_new != null && d.revenue_new >= adaptation.plan_revenue_new).length : 0;
+    const revTotal = adaptation ? last5.filter(d => adaptation.plan_revenue_total != null && d.revenue_total >= adaptation.plan_revenue_total).length : 0;
 
     if (loading) return <p className="text-sm text-gray-400">Загрузка...</p>;
 
@@ -93,9 +93,6 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
             Адаптация не назначена.
         </div>
     );
-
-    console.log(dayData)
-    console.log(last5)
 
     return (
         <>
@@ -119,21 +116,29 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
                 <h4 className="text-base font-semibold text-gray-800 mb-1">Рекомендации</h4>
                 <p className="text-xs text-gray-400 mb-5">Анализ основан на данных за последние 5 рабочих дней выбранного месяца.</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                    {[
-                        {label: 'Звонки', count: callsMissed, color: 'bg-purple-50 text-purple-700'},
-                        {label: 'Конверсия', count: convMissed, color: 'bg-yellow-50 text-yellow-700'},
-                        {label: 'Касса (новые)', count: revNewMissed, color: 'bg-blue-50 text-blue-700'},
-                        {label: 'Касса общая', count: revTotalMissed, color: 'bg-green-50 text-green-700'},
-                    ].map(({label, count, color}) => (
-                        <div key={label} className={`rounded-lg p-3 text-center ${color}`}>
-                            <p className="text-2xl font-bold">{count} <span className="text-sm font-normal">/ 5</span>
-                            </p>
-                            <p className="text-xs mt-1">{label}: не выполнен</p>
-                        </div>
-                    ))}
+                    <div key='Звонки' className={`rounded-lg p-3 text-center bg-purple-50 text-purple-700`}>
+                        <p className="text-2xl font-bold">{calls} <span className="text-sm font-normal">/ 5</span>
+                        </p>
+                        <p className="text-xs mt-1">{calls < 5 ? 'Звонки: не выполнено' : 'Звонки: выполнено'}</p>
+                    </div>
+                    <div key='Конверсия' className={`rounded-lg p-3 text-center bg-yellow-50 text-yellow-700`}>
+                        <p className="text-2xl font-bold">{conv} <span className="text-sm font-normal">/ 5</span>
+                        </p>
+                        <p className="text-xs mt-1">{conv < 5 ? 'Конверсия: не выполнено' : 'Конверсия: выполнено'}</p>
+                    </div>
+                    <div key='Касса (новые)' className={`rounded-lg p-3 text-center bg-blue-50 text-blue-700`}>
+                        <p className="text-2xl font-bold">{revNew} <span className="text-sm font-normal">/ 5</span>
+                        </p>
+                        <p className="text-xs mt-1">{revNew < 5 ? 'Касса (новые): не выполнено' : 'Касса (новые): выполнено'}</p>
+                    </div>
+                    <div key='Касса общая' className={`rounded-lg p-3 text-center bg-green-50 text-green-700`}>
+                        <p className="text-2xl font-bold">{revTotal} <span className="text-sm font-normal">/ 5</span>
+                        </p>
+                        <p className="text-xs mt-1">{revTotal < 5 ? 'Касса общая: не выполнено' : 'Касса общая: выполнено'}</p>
+                    </div>
                 </div>
                 <div className="space-y-3">
-                    {callsMissed > 0 && (
+                    {calls < 5 && (
                         <div className="flex gap-3 p-3 bg-purple-50 rounded-lg">
                             <PhoneCall className="shrink-0 text-purple-500 mt-0.5" size={16}/>
                             <div>
@@ -144,7 +149,7 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
                             </div>
                         </div>
                     )}
-                    {convMissed > 0 && (
+                    {conv < 5 && (
                         <div className="flex gap-3 p-3 bg-yellow-50 rounded-lg">
                             <Percent className="shrink-0 text-yellow-500 mt-0.5" size={16}/>
                             <div>
@@ -155,7 +160,7 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
                             </div>
                         </div>
                     )}
-                    {(revNewMissed > 0 || revTotalMissed > 0) && (
+                    {(revNew < 5 || revTotal < 5) && (
                         <div className="flex gap-3 p-3 bg-blue-50 rounded-lg">
                             <Wallet className="shrink-0 text-blue-500 mt-0.5" size={16}/>
                             <div>
@@ -166,7 +171,7 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
                             </div>
                         </div>
                     )}
-                    {callsMissed === 0 && convMissed === 0 && revNewMissed === 0 && revTotalMissed === 0 && (
+                    {calls === 5 && conv === 5 && revNew === 5 && revTotal === 5 && (
                         <p className="text-sm text-green-600 font-medium">✓ Все показатели выполнены за последние 5
                             рабочих дней. Отличная работа!</p>
                     )}

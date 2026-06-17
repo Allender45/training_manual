@@ -384,6 +384,7 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                 isOpen={!!adaptationUser}
                 onClose={() => setAdaptationUser(null)}
                 title={adaptationUser ? `Адаптация — ${adaptationUser.name}` : ''}
+                className={'max-w-[800px]'}
             >
                 {adaptationUser && (
                     <AdaptationContent userId={adaptationUser.id} crmUserId={adaptationUser.crm_id} />
@@ -394,6 +395,7 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                 isOpen={!!callsUser}
                 onClose={() => setCallsUser(null)}
                 title={callsUser ? `Звонки — ${callsUser.name}` : ''}
+                className={'max-w-[800px]'}
             >
                 {callsUser && <CallsContent userId={callsUser.id} />}
             </Modal>
