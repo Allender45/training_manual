@@ -117,7 +117,31 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
             ),
         },
         {key: 'email', header: 'Email'},
-        {key: 'phone', header: 'Телефон'},
+        {
+            key: 'phone', header: 'Телефон',
+            render: (row) => {
+                const digits = row.phone?.replace(/\D/g, '');
+                return (
+                    <div className="flex items-center">
+                        <span>{row.phone ?? '—'}</span>
+                        {digits && (
+                            <a
+                                href={`https://t.me/+${digits}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1 rounded text-[#2AABEE] hover:bg-blue-50 transition-colors flex-shrink-0"
+                                title="Написать в Telegram"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.932z"/>
+                                </svg>
+                            </a>
+                        )}
+                    </div>
+                );
+            },
+        },
         ...(hasFeature(rid, 'usersTableRole') ? [{
             key: 'role' as const, header: 'Роль',
             render: (row: UserRow) => (

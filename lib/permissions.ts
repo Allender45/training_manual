@@ -8,6 +8,7 @@ export type Feature =
     | 'departments'
     | 'roles'
     | 'achievements'
+    | 'mentorWidgets'
     | 'sidebarAdminMenu'
     | 'sidebarMentorMenu'
     | 'sidebarStudentMenu'
@@ -42,6 +43,7 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'usersTableDetailUserButton',
         'usersTableFilters',
         'adaptationTableAddButtons',
+        'mentorWidgets',
     ],    // Наставник
     3: [
         'sidebarHrMenu',

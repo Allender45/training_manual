@@ -3,45 +3,10 @@
 import {useState, useEffect} from 'react';
 import {StatCard, AdaptationCalendar} from '@/components';
 import {PhoneCall, Percent, UserPlus, Wallet} from 'lucide-react';
-
-type AdaptationInfo = {
-    id: number;
-    started_at: string;
-    plan_name: string | null;
-    plan_calls: number | null;
-    plan_conversion: number | null;
-    plan_revenue_new: number | null;
-    plan_revenue_total: number | null;
-};
-
-type DayData = {
-    date: string;
-    calls: number;
-    conversion: number;
-    revenue_new: number;
-    revenue_total: number;
-};
-
-type ApiDayItem = {
-    date: string;
-    calls: { total: number };
-    conversions: { newClientConversionPercent: number };
-    cash: { newClients: number; total: number };
-};
+import {useAdaptationStore} from '@/store';
 
 function toPeriod(date: Date): string {
     return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function mapApiDay(item: ApiDayItem): DayData {
-    const [y, m, d] = item.date.split('-');
-    return {
-        date: `${d}.${m}.${y}`,
-        calls: item.calls.total,
-        conversion: item.conversions.newClientConversionPercent,
-        revenue_new: item.cash.newClients,
-        revenue_total: item.cash.total,
-    };
 }
 
 function parseDataDate(s: string): Date {
@@ -55,25 +20,23 @@ type Props = {
 };
 
 export default function AdaptationContent({userId, crmUserId}: Props) {
-    const [adaptation, setAdaptation] = useState<AdaptationInfo | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [dayData, setDayData] = useState<DayData[]>([]);
     const [calendarPeriod, setCalendarPeriod] = useState(() => toPeriod(new Date()));
 
+    const adaptation    = useAdaptationStore(s => s.adaptation);
+    const loading       = useAdaptationStore(s => s.loading);
+    const dayData       = useAdaptationStore(s => s.dayData);
+    const fetchAdaptation = useAdaptationStore(s => s.fetchAdaptation);
+    const fetchDayData  = useAdaptationStore(s => s.fetchDayData);
+    const reset         = useAdaptationStore(s => s.reset);
+
     useEffect(() => {
-        setLoading(true);
-        fetch(`/api/adaptations/${userId}`)
-            .then(r => r.json())
-            .then(d => setAdaptation(d.adaptation ?? null))
-            .finally(() => setLoading(false));
+        fetchAdaptation(userId);
+        return () => reset();
     }, [userId]);
 
     useEffect(() => {
         if (!crmUserId) return;
-        fetch(`/api/adaptations/statistics?userId=${crmUserId}&period=${calendarPeriod}`)
-            .then(r => r.json())
-            .then(json => setDayData((json.data as ApiDayItem[]).map(mapApiDay)))
-            .catch(() => setDayData([]));
+        fetchDayData(crmUserId, calendarPeriod);
     }, [crmUserId, calendarPeriod]);
 
     const last5 = [...dayData]
@@ -81,9 +44,9 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
         .filter(d => d.calls >= 5)
         .slice(0, 5);
 
-    const calls = adaptation ? last5.filter(d => adaptation.plan_calls != null && d.calls >= adaptation.plan_calls).length : 0;
-    const conv = adaptation ? last5.filter(d => adaptation.plan_conversion != null && d.conversion >= adaptation.plan_conversion).length : 0;
-    const revNew = adaptation ? last5.filter(d => adaptation.plan_revenue_new != null && d.revenue_new >= adaptation.plan_revenue_new).length : 0;
+    const calls    = adaptation ? last5.filter(d => adaptation.plan_calls     != null && d.calls         >= adaptation.plan_calls).length     : 0;
+    const conv     = adaptation ? last5.filter(d => adaptation.plan_conversion != null && d.conversion    >= adaptation.plan_conversion).length : 0;
+    const revNew   = adaptation ? last5.filter(d => adaptation.plan_revenue_new  != null && d.revenue_new  >= adaptation.plan_revenue_new).length  : 0;
     const revTotal = adaptation ? last5.filter(d => adaptation.plan_revenue_total != null && d.revenue_total >= adaptation.plan_revenue_total).length : 0;
 
     if (loading) return <p className="text-sm text-gray-400">Загрузка...</p>;
@@ -117,23 +80,19 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
                 <p className="text-xs text-gray-400 mb-5">Анализ основан на данных за последние 5 рабочих дней выбранного месяца.</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                     <div key='Звонки' className={`rounded-lg p-3 text-center bg-purple-50 text-purple-700`}>
-                        <p className="text-2xl font-bold">{calls} <span className="text-sm font-normal">/ 5</span>
-                        </p>
+                        <p className="text-2xl font-bold">{calls} <span className="text-sm font-normal">/ 5</span></p>
                         <p className="text-xs mt-1">{calls < 5 ? 'Звонки: не выполнено' : 'Звонки: выполнено'}</p>
                     </div>
                     <div key='Конверсия' className={`rounded-lg p-3 text-center bg-yellow-50 text-yellow-700`}>
-                        <p className="text-2xl font-bold">{conv} <span className="text-sm font-normal">/ 5</span>
-                        </p>
+                        <p className="text-2xl font-bold">{conv} <span className="text-sm font-normal">/ 5</span></p>
                         <p className="text-xs mt-1">{conv < 5 ? 'Конверсия: не выполнено' : 'Конверсия: выполнено'}</p>
                     </div>
                     <div key='Касса (новые)' className={`rounded-lg p-3 text-center bg-blue-50 text-blue-700`}>
-                        <p className="text-2xl font-bold">{revNew} <span className="text-sm font-normal">/ 5</span>
-                        </p>
+                        <p className="text-2xl font-bold">{revNew} <span className="text-sm font-normal">/ 5</span></p>
                         <p className="text-xs mt-1">{revNew < 5 ? 'Касса (новые): не выполнено' : 'Касса (новые): выполнено'}</p>
                     </div>
                     <div key='Касса общая' className={`rounded-lg p-3 text-center bg-green-50 text-green-700`}>
-                        <p className="text-2xl font-bold">{revTotal} <span className="text-sm font-normal">/ 5</span>
-                        </p>
+                        <p className="text-2xl font-bold">{revTotal} <span className="text-sm font-normal">/ 5</span></p>
                         <p className="text-xs mt-1">{revTotal < 5 ? 'Касса общая: не выполнено' : 'Касса общая: выполнено'}</p>
                     </div>
                 </div>
@@ -177,7 +136,6 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
                     )}
                 </div>
             </div>
-
         </>
     );
 }

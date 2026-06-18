@@ -17,3 +17,7 @@ export type { Trainer } from './trainersStore';
 export { useTestsStore } from './testsStore';
 export type { Test } from './testsStore';
 export { useAdaptationStore } from './adaptationStore';
+export { useMentorWidgetStatsStore } from './mentorWidgetStatsStore';
+export type { ApiDayItem } from './mentorWidgetStatsStore';
+export { useMentorInternsPlansStore } from './mentorInternsPlansStore';
+export type { InternAdaptationInfo } from './mentorInternsPlansStore';

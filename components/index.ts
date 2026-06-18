@@ -17,3 +17,6 @@ export { default as NewOrderTrainer } from './trainers/NewOrderTrainer/NewOrderT
 export { default as FullOrderCreate } from './trainers/FullOrderCreate/FullOrderCreate';
 export { default as AdaptationContent } from './AdaptationContent/AdaptationContent';
 export { default as CallsContent } from './CallsContent/CallsContent';
+export { default as MentorChart } from './MentorChart/MentorChart';
+export { default as InternStatsWidget } from './InternStatsWidget/InternStatsWidget';
+export { default as InternProgressWidget } from './InternProgressWidget/InternProgressWidget';
