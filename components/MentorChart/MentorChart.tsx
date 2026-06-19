@@ -116,8 +116,8 @@ export default function MentorChart({testData}: { testData?: TestData }) {
                 </div>
             </div>
 
-            <div className={'flex gap-4'}>
-                <div className="flex flex-col gap-2">
+            <div className={'flex flex-col md:flex-row gap-4'}>
+                <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
                     {METRICS.map(m => (
                         <Button
                             key={m.key}

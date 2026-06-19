@@ -20,3 +20,4 @@ export { default as CallsContent } from './CallsContent/CallsContent';
 export { default as MentorChart } from './MentorChart/MentorChart';
 export { default as InternStatsWidget } from './InternStatsWidget/InternStatsWidget';
 export { default as InternProgressWidget } from './InternProgressWidget/InternProgressWidget';
+export { default as CourseProgressWidget } from './CourseProgressWidget/CourseProgressWidget';

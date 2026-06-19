@@ -3,25 +3,10 @@
 import {useState, useEffect} from 'react';
 import {useRouter} from 'next/navigation';
 import {useUserStore} from '@/store';
-import {Star, CalendarDays} from 'lucide-react';
+import {CalendarDays} from 'lucide-react';
 import {Header, Sidebar} from '@/containers';
-import {StatCard, MentorChart, InternStatsWidget, InternProgressWidget} from "@/components";
+import {StatCard, MentorChart, InternStatsWidget, InternProgressWidget, CourseProgressWidget } from "@/components";
 import {hasFeature} from "@/lib/permissions";
-
-const instructors = [
-    {initials: 'AB', color: 'bg-blue-600', name: 'Sofnio', email: 'info@softnio.com', reviews: 25},
-    {initials: 'AL', color: 'bg-cyan-500', name: 'Ashley Lawson', email: 'ashley@softnio.com', reviews: 22},
-    {initials: 'JM', color: 'bg-green-500', name: 'Jane Montgomery', email: 'jane84@example.com', reviews: 19},
-    {initials: 'LH', color: 'bg-gray-500', name: 'Larry Henry', email: 'larry108@example.com', reviews: 24},
-    {initials: 'LH', color: 'bg-gray-500', name: 'Larry Henry', email: 'larry108@example.com', reviews: 24},
-];
-
-const categories = [
-    {initials: 'DM', color: 'bg-blue-600', name: 'Digital Marketing', courses: '16+ Courses'},
-    {initials: 'WD', color: 'bg-cyan-500', name: 'Web Development', courses: '16+ Courses'},
-    {initials: 'UX', color: 'bg-green-500', name: 'UI/UX Design', courses: '16+ Courses'},
-    {initials: 'GD', color: 'bg-gray-500', name: 'Graphic Design', courses: '16+ Courses'},
-];
 
 type AdaptationInfo = {
     id: number;
@@ -98,11 +83,11 @@ export default function HomePage() {
 
                         {hasFeature(rid, 'mentorWidgets') &&
                             <>
-                                <div className="w-full lg:w-56 flex-shrink-0">
+                                <div className="w-full lg:w-56 shrink-0">
                                     <InternStatsWidget/>
                                 </div>
 
-                                <div className="w-full lg:w-72 flex-shrink-0">
+                                <div className="w-full lg:w-72 shrink-0">
                                     <InternProgressWidget/>
                                 </div>
 
@@ -112,15 +97,23 @@ export default function HomePage() {
                             </>
                         }
 
-                        {adaptation && (
-                            <StatCard
-                                label={`Стажировка с ${fmtDate(adaptation.started_at)}`}
-                                value={`${daysLeft} дней`}
-                                sub={`Дата окончания — ${fmtDate(endDate!)}`}
-                                icon={CalendarDays}
-                                color="bg-blue-100 text-blue-600"
-                            />
-                        )}
+                        {hasFeature(rid, 'studentWidgets') &&
+                            <>
+                                {adaptation && (
+                                    <StatCard
+                                        label={`Стажировка с ${fmtDate(adaptation.started_at)}`}
+                                        value={`${daysLeft} дней`}
+                                        sub={`Дата окончания — ${fmtDate(endDate!)}`}
+                                        icon={CalendarDays}
+                                        color="bg-blue-100 text-blue-600"
+                                    />
+                                )}
+                                <div className="w-full lg:w-56 shrink-0">
+                                    <CourseProgressWidget />
+                                </div>
+                            </>
+                        }
+
                     </div>
                 </main>
 
