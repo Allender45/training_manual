@@ -1,10 +1,14 @@
+import React from "react";
+
 export default function HomePage() {
   return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="mb-8">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">P</span>
+            <div className="text-center mb-4">
+              <div className="flex items-center justify-center gap-2 w-80 m-auto">
+                <a href="/"><img src="/raz_logo.png" alt="logo" /></a>
+              </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Портал адаптации</h1>
             <p className="text-gray-500">Система обучения новых сотрудников</p>

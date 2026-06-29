@@ -19,15 +19,11 @@ type NewTestForm = {
     shuffle_questions: boolean;
     shuffle_answers: boolean;
     is_active: boolean;
-    achievement_id: string;
-    notify_trainee: string;
-    notify_mentor: string;
 };
 
 const emptyForm: NewTestForm = {
     title: '', time_limit: '',
     shuffle_questions: true, shuffle_answers: true, is_active: true,
-    achievement_id: '', notify_trainee: '', notify_mentor: '',
 };
 
 function emptyQuestion(): QuestionDraft {
@@ -39,7 +35,6 @@ export default function NewTestPage() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
     const { fetchUser } = useUserStore();
-    const push = useNotificationsStore(s => s.push);
     const searchParams = useSearchParams();
     const editId = searchParams.get('id');
     const isEdit = !!editId;
@@ -51,7 +46,6 @@ export default function NewTestPage() {
     const { courses, fetch: fetchCourses } = useCoursesStore();
     const { achievements, fetch: fetchAchievements } = useAchievementsStore();
 
-    const courseOptions = courses.map(c => ({ value: String(c.id), label: c.title }));
     const achievementOptions = achievements.map(a => ({ value: String(a.id), label: a.title }));
 
     useEffect(() => {
@@ -69,9 +63,6 @@ export default function NewTestPage() {
                         shuffle_questions: t.shuffle_questions ?? true,
                         shuffle_answers:   t.shuffle_answers ?? true,
                         is_active:         t.is_active ?? true,
-                        achievement_id:    t.achievement_id ? String(t.achievement_id) : '',
-                        notify_trainee:    t.notify_trainee ?? '',
-                        notify_mentor:     t.notify_mentor ?? '',
                     });
                     setQuestions((d.questions ?? []).length > 0
                         ? d.questions.map((q: any) => ({
@@ -154,9 +145,6 @@ export default function NewTestPage() {
                     shuffle_questions: form.shuffle_questions,
                     shuffle_answers:   form.shuffle_answers,
                     is_active:         form.is_active,
-                    achievement_id:    form.achievement_id || null,
-                    notify_trainee:    form.notify_trainee.trim() || null,
-                    notify_mentor:     form.notify_mentor.trim() || null,
                     questions: questions.map((q, i) => ({
                         question:       q.question.trim(),
                         correct_answer: q.correct_answer.trim(),
@@ -209,41 +197,6 @@ export default function NewTestPage() {
                                               checked={form.shuffle_answers} onChange={handleChange} variant="switch" />
                                     <Checkbox label="Активен" name="is_active"
                                               checked={form.is_active} onChange={handleChange} variant="switch" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-2xl shadow-sm p-6">
-                            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Достижение и уведомления</h4>
-                            <div className="flex flex-col gap-4">
-                                <Select
-                                    label="Достижение за прохождение"
-                                    name="achievement_id"
-                                    value={form.achievement_id}
-                                    onChange={handleChange}
-                                    options={[{ value: '', label: 'Не привязано' }, ...achievementOptions]}
-                                />
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-sm text-gray-500">Уведомление стажёру</label>
-                                    <textarea
-                                        name="notify_trainee"
-                                        value={form.notify_trainee}
-                                        onChange={e => setForm(p => ({ ...p, notify_trainee: e.target.value }))}
-                                        rows={2}
-                                        placeholder="Текст уведомления при успешном прохождении теста"
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-sm text-gray-500">Уведомление наставнику</label>
-                                    <textarea
-                                        name="notify_mentor"
-                                        value={form.notify_mentor}
-                                        onChange={e => setForm(p => ({ ...p, notify_mentor: e.target.value }))}
-                                        rows={2}
-                                        placeholder="Текст уведомления наставнику при прохождении теста стажёром"
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                    />
                                 </div>
                             </div>
                         </div>

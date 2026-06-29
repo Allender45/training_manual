@@ -22,12 +22,15 @@ type CourseForm = {
     achievement_id: string;
     is_active: boolean;
     test_id: string;
+    notify_trainee: string;
+    notify_mentor: string;
 };
 
 const emptyForm: CourseForm = {
     title: '', description: '', comment: '',
     prerequisite_course_id: '', study_time_minutes: '', achievement_id: '',
     is_active: true, test_id: '',
+    notify_trainee: '', notify_mentor: '',
 };
 
 export default function NewCoursePage() {
@@ -90,6 +93,8 @@ export default function NewCoursePage() {
                         achievement_id: c.achievement_id ? String(c.achievement_id) : '',
                         is_active: c.is_active ?? true,
                         test_id: c.test_id ? String(c.test_id) : '',
+                        notify_trainee: c.notify_trainee ?? '',
+                        notify_mentor: c.notify_mentor ?? '',
                     });
                     setCurrentIcon(c.icon ?? null);
                 })
@@ -134,6 +139,8 @@ export default function NewCoursePage() {
             fd.append('achievement_id', form.achievement_id);
             fd.append('is_active', String(form.is_active));
             fd.append('test_id', form.test_id);
+            fd.append('notify_trainee', form.notify_trainee);
+            fd.append('notify_mentor', form.notify_mentor);
             if (iconFile) fd.append('icon', iconFile);
 
             const res = isEditMode
@@ -379,6 +386,31 @@ export default function NewCoursePage() {
                                         ]}
                                         size="sm"
                                     />
+                                </div>
+
+                                <div className="mt-5 flex flex-col gap-4">
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-sm text-gray-500">Уведомление стажёру</label>
+                                        <textarea
+                                            name="notify_trainee"
+                                            value={form.notify_trainee}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Текст уведомления при успешном прохождении теста"
+                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-sm text-gray-500">Уведомление наставнику</label>
+                                        <textarea
+                                            name="notify_mentor"
+                                            value={form.notify_mentor}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Текст уведомления наставнику при прохождении теста стажёром"
+                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 

@@ -12,6 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         `SELECT c.id, c.title, c.icon, c.description, c.comment,
                 c.prerequisite_course_id, c.study_time_minutes,
                 c.achievement_id, c.trainer_id, c.is_active, c.test_id,
+                c.notify_trainee, c.notify_mentor,
                 t.name AS trainer_name, t.component AS trainer_component
          FROM courses c
                   LEFT JOIN trainers t ON t.id = c.trainer_id
@@ -40,6 +41,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const iconFile               = formData.get('icon') as File | null;
         const trainer_id = (formData.get('trainer_id') as string) || null;
         const test_id = (formData.get('test_id') as string) || null;
+        const notify_trainee = (formData.get('notify_trainee') as string)?.trim() || null;
+        const notify_mentor  = (formData.get('notify_mentor')  as string)?.trim() || null;
 
         if (!title || !description) {
             return NextResponse.json({ error: 'Заполните обязательные поля: название, описание' }, { status: 400 });
@@ -66,9 +69,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                                 is_active              = $7,
                                 trainer_id             = $8,
                                 test_id                = $9,
-                                icon                   = COALESCE($10, icon),
-                                updated_by             = $11
-             WHERE id = $12
+                                notify_trainee         = $10,
+                                notify_mentor          = $11,
+                                icon                   = COALESCE($12, icon),
+                                updated_by             = $13
+             WHERE id = $14
              RETURNING id`,
             [
                 title, description, comment,
@@ -78,6 +83,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 is_active,
                 trainer_id || null,
                 test_id || null,
+                notify_trainee,
+                notify_mentor,
                 iconPath,
                 userId,
                 params.id,
