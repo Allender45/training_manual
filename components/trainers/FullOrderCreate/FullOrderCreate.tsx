@@ -248,13 +248,6 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
 
             <h3 className="text-base font-semibold text-gray-800">Новая заявка</h3>
 
-            <div>
-                <label className="block text-gray-500 text-sm mb-2">Компания</label>
-                <div className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-400 bg-gray-50 select-none">
-                    {caseData.company}
-                </div>
-            </div>
-
             <Input
                 label="Город"
                 name="city"
