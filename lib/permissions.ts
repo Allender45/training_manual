@@ -11,6 +11,7 @@ export type Feature =
     | 'studentWidgets'
     | 'mentorWidgets'
     | 'sidebarAdminMenu'
+    | 'sidebarAdminMenuRoles'
     | 'sidebarMentorMenu'
     | 'sidebarStudentMenu'
     | 'sidebarHrMenu'
@@ -28,6 +29,8 @@ export type Feature =
     | 'trainingsTableAddButtons'
     | 'testsTableAddButtons'
     | 'editUser'
+    | 'functionalAddButton'
+    | 'functionalEditButton'
     | 'courseTests';
 
 type RolePermissions = Feature[] | '*';
@@ -60,12 +63,15 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
     ],    // Кадровик
     2: [
         'sidebarMentorMenu',
+        'sidebarAdminMenu',
         'usersTableCreateButton',
         'usersTableFilters',
         'coursesTableButtons',
         'editUser',
         'usersTableDellUserButton',
-        'usersTableEditUserButton'
+        'usersTableEditUserButton',
+        'functionalAddButton',
+        'functionalEditButton'
     ],    // Админ
     1: '*',  // СуперПользователь
 };

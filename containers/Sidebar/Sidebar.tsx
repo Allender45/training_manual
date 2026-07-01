@@ -133,8 +133,10 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                     <SidebarButton href="/departments" icon={Building2} label="Подразделения"
                                                    sidebarOpen={sidebarOpen}
                                                    active={pathname.startsWith('/departments')}/>
-                                    <SidebarButton href="/roles" icon={Shield} label="Роли" sidebarOpen={sidebarOpen}
-                                                   active={pathname.startsWith('/roles')}/>
+                                    {hasFeature(rid, 'sidebarAdminMenuRoles') &&
+                                        <SidebarButton href="/roles" icon={Shield} label="Роли" sidebarOpen={sidebarOpen}
+                                                       active={pathname.startsWith('/roles')}/>
+                                    }
                                     <SidebarButton href="/achievements" icon={Trophy} label="Достижения"
                                                    sidebarOpen={sidebarOpen} active={pathname.startsWith('/achievements')}/>
                                     <SidebarButton href="/reports" icon={BarChart2} label="Отчёты"
