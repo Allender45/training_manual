@@ -421,7 +421,7 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                 title={callsUser ? `Звонки — ${callsUser.name}` : ''}
                 className={'max-w-[800px]'}
             >
-                {callsUser && <CallsContent userId={callsUser.id} />}
+                {callsUser && <CallsContent userId={callsUser.crm_id} />}
             </Modal>
         </div>
     );
