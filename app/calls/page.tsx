@@ -10,7 +10,7 @@ export default function CallsPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
-    const { fetchUser } = useUserStore();
+    const { fetchUser, user } = useUserStore();
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
@@ -24,7 +24,7 @@ export default function CallsPage() {
                         mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
                 <main className="flex-1 p-6">
                     <h3 className="text-xl font-semibold text-gray-800 mb-4">Анализ звонков</h3>
-                    <CallsContent />
+                    <CallsContent userId={user?.crm_id} />
                 </main>
             </div>
         </div>

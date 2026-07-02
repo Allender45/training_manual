@@ -63,30 +63,53 @@ export async function POST(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
     if (!unsignSession(raw)) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
 
-    const { id } = await req.json();
+    const { id, url } = await req.json();
     if (!id) return NextResponse.json({ error: 'id обязателен' }, { status: 400 });
 
     const cached = await pool.query('SELECT * FROM call_analyses WHERE recording_id = $1', [id]);
     if (cached.rows[0]) return NextResponse.json({ analysis: cached.rows[0] });
 
-    const filePath = path.join(process.cwd(), 'public', 'records', path.basename(id));
-    if (!fs.existsSync(filePath)) return NextResponse.json({ error: 'Файл не найден' }, { status: 404 });
+    let audioUrl: string;
 
-    const fileBuffer = fs.readFileSync(filePath);
-    const s3Key = `calls/${path.basename(id)}`;
+    if (url) {
+        const audioRes = await fetch(url);
+        if (!audioRes.ok) return NextResponse.json({ error: 'Не удалось скачать запись' }, { status: 422 });
 
-    await s3.send(new PutObjectCommand({
-        Bucket: S3_BUCKET,
-        Key: s3Key,
-        Body: fileBuffer,
-        ContentType: 'MP3',
-    }));
+        const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
+        const s3Key = `calls/${id}.mp3`;
 
-    const signedUrl = await getSignedUrl(
-        s3,
-        new GetObjectCommand({ Bucket: S3_BUCKET, Key: s3Key }),
-        { expiresIn: 3600 }
-    );
+        await s3.send(new PutObjectCommand({
+            Bucket: S3_BUCKET,
+            Key: s3Key,
+            Body: audioBuffer,
+            ContentType: 'audio/mpeg',
+        }));
+
+        audioUrl = await getSignedUrl(
+            s3,
+            new GetObjectCommand({ Bucket: S3_BUCKET, Key: s3Key }),
+            { expiresIn: 3600 }
+        );
+    } else {
+        const filePath = path.join(process.cwd(), 'public', 'records', path.basename(id));
+        if (!fs.existsSync(filePath)) return NextResponse.json({ error: 'Файл не найден' }, { status: 404 });
+
+        const fileBuffer = fs.readFileSync(filePath);
+        const s3Key = `calls/${path.basename(id)}`;
+
+        await s3.send(new PutObjectCommand({
+            Bucket: S3_BUCKET,
+            Key: s3Key,
+            Body: fileBuffer,
+            ContentType: 'MP3',
+        }));
+
+        audioUrl = await getSignedUrl(
+            s3,
+            new GetObjectCommand({ Bucket: S3_BUCKET, Key: s3Key }),
+            { expiresIn: 3600 }
+        );
+    }
 
     const sttRes = await fetch(
         'https://transcribe.api.cloud.yandex.net/speech/stt/v2/longRunningRecognize',
@@ -94,13 +117,8 @@ export async function POST(req: NextRequest) {
             method: 'POST',
             headers: { Authorization: `Api-Key ${API_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                config: {
-                    specification: {
-                        languageCode: 'ru-RU',
-                        audioEncoding: 'MP3',
-                    },
-                },
-                audio: { uri: signedUrl },
+                config: { specification: { languageCode: 'ru-RU', audioEncoding: 'MP3' } },
+                audio: { uri: audioUrl },
             }),
         }
     );

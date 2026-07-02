@@ -1,17 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useCallAnalysesStore } from '@/store';
+import {useCallAnalysesStore, useCallsStore} from '@/store';
 import { Table } from '@/components';
 import type { Column } from '@/components/Table/Table';
 
 type CallRecord = {
     id: number;
+    callId: string;
     datetime: string;
     client_name: string;
     client_phone: string;
     duration: number;
     filename: string;
+    hasRecording: boolean;
 };
 
 type Analysis = {
@@ -22,18 +24,11 @@ type Analysis = {
 };
 
 type Props = {
-    userId?: number;
+    userId?: number | null;
 };
 
-const STUB_CALLS: CallRecord[] = [
-    { id: 1, datetime: '27.05.2026 09:14', client_name: 'Иванов Сергей Павлович',   client_phone: '+7 912 345-67-89', duration: 183, filename: '1778645276.241636-2026-05-13-04_08-79064787930-.mp3' },
-    { id: 2, datetime: '27.05.2026 10:42', client_name: 'Петрова Анна Викторовна',  client_phone: '+7 905 123-45-67', duration: 97,  filename: '1778836252.287219-2026-05-15-09_11-+79218258043-s.mp3' },
-    { id: 3, datetime: '27.05.2026 11:55', client_name: 'Сидоров Алексей Юрьевич', client_phone: '+7 916 987-65-43', duration: 312, filename: '1779002188.311757-2026-05-17-07_16-+79125142675-s.mp3' },
-    { id: 4, datetime: '26.05.2026 14:30', client_name: 'Козлова Мария Андреевна',  client_phone: '+7 903 654-32-10', duration: 245, filename: '1779096114.329349-2026-05-18-09_22-+79066674807-s.mp3' },
-    { id: 5, datetime: '26.05.2026 16:08', client_name: 'Новиков Дмитрий Игоревич', client_phone: '+7 919 222-33-44', duration: 68,  filename: '1779277031.369608-2026-05-20-11_37-79092545519-.mp3' },
-];
-
 function fmtDuration(sec: number): string {
+    if (!sec) return '—';
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${m}:${String(s).padStart(2, '0')}`;
@@ -61,51 +56,79 @@ const columns: Column<CallRecord>[] = [
 ];
 
 export default function CallsContent({ userId }: Props) {
+    const [page, setPage] = useState(1);
+
     const [playingCall, setPlayingCall] = useState<CallRecord | null>(null);
+    const [playingUrl, setPlayingUrl] = useState<string | null>(null);
+    const [loadingPlay, setLoadingPlay] = useState<number | null>(null);
     const [analysing, setAnalysing] = useState<number | null>(null);
-    const { analyses: rawAnalyses, fetchAnalyses, setAnalysis } = useCallAnalysesStore();
     const [viewingAnalysis, setViewingAnalysis] = useState<number | null>(null);
+    const { analyses: rawAnalyses, fetchAnalyses, setAnalysis } = useCallAnalysesStore();
+    const { callsByPage, meta, loading, error, fetchCalls, setError, fetchRecordingUrl } = useCallsStore();
+    const calls = callsByPage[page] ?? [];
+
 
     useEffect(() => {
-        fetchAnalyses(STUB_CALLS.map(c => c.filename));
-    }, []);
+        if (userId) fetchCalls(userId, page);
+    }, [userId, page]);
+
+    useEffect(() => {
+        const ids = calls.filter(c => c.hasRecording).map(c => c.filename);
+        if (ids.length) fetchAnalyses(ids);
+    }, [calls]);
+
+    async function handlePlay(row: CallRecord) {
+        if (playingCall?.id === row.id) { setPlayingCall(null); setPlayingUrl(null); return; }
+        setLoadingPlay(row.id);
+        setPlayingCall(null);
+        setPlayingUrl(null);
+        const url = await fetchRecordingUrl(userId!, row.callId);
+        if (!url) setError('Не удалось получить запись');
+        else { setPlayingCall(row); setPlayingUrl(url); }
+        setLoadingPlay(null);
+    }
 
     async function analyze(call: CallRecord) {
         setAnalysing(call.id);
         try {
+            const url = await fetchRecordingUrl(userId!, call.callId);
+            if (!url) { setError('Не удалось получить ссылку на запись'); return; }
+
             const res = await fetch('/api/calls/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: call.filename, url: `/records/${call.filename}` }),
+                body: JSON.stringify({ id: call.callId, url }),
             });
             const data = await res.json();
-            if (data.analysis) {
-                setAnalysis(data.analysis);
-                setViewingAnalysis(call.id);
-            }
+            if (data.analysis) { setAnalysis(data.analysis); setViewingAnalysis(call.id); }
         } finally {
             setAnalysing(null);
         }
     }
 
     const analyses: Record<number, Analysis> = {};
-    for (const call of STUB_CALLS) {
+    for (const call of calls) {
         if (rawAnalyses[call.filename]) analyses[call.id] = rawAnalyses[call.filename];
     }
     const analysis = viewingAnalysis !== null ? analyses[viewingAnalysis] ?? null : null;
 
+    if (!userId) return <p className="text-gray-400 text-sm">Нет данных пользователя</p>;
+
     return (
         <div className="space-y-4">
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
             <div className="bg-white rounded-xl shadow-sm">
                 <Table
                     columns={columns}
-                    data={STUB_CALLS}
+                    data={calls}
                     keyField="id"
-                    emptyText="Нет записей"
-                    buttonPlay
-                    buttonAnalyze={row => !analyses[row.id]}
+                    emptyText={loading ? 'Загрузка...' : 'Нет записей'}
+                    buttonPlay={row => row.hasRecording}
+                    buttonAnalyze={row => row.hasRecording && !analyses[row.id]}
                     buttonViewAnalysis
-                    onPlay={row => setPlayingCall(playingCall?.id === row.id ? null : row)}
+                    onPlay={row => handlePlay(row)}
+                    isPlayLoading={row => loadingPlay === row.id}
                     onAnalyze={row => analyze(row)}
                     onViewAnalysis={row => setViewingAnalysis(viewingAnalysis === row.id ? null : row.id)}
                     isAnalysing={row => analysing === row.id}
@@ -113,10 +136,36 @@ export default function CallsContent({ userId }: Props) {
                 />
             </div>
 
-            {playingCall && (
+            {/* пагинация */}
+            {meta && meta.last_page > 1 && (
+                <div className="flex items-center justify-center gap-3 pt-2">
+                    <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1 || loading}
+                        className="px-3 py-1 rounded-lg border text-sm text-gray-600 disabled:opacity-40 hover:bg-gray-50"
+                    >
+                        ←
+                    </button>
+                    <span className="text-sm text-gray-500">
+                        {page} / {meta.last_page} (всего {meta.total})
+                    </span>
+                    <button
+                        onClick={() => setPage(p => Math.min(meta.last_page, p + 1))}
+                        disabled={page === meta.last_page || loading}
+                        className="px-3 py-1 rounded-lg border text-sm text-gray-600 disabled:opacity-40 hover:bg-gray-50"
+                    >
+                        →
+                    </button>
+                </div>
+            )}
+
+            {playingCall && playingUrl && (
                 <div className="bg-white rounded-xl shadow-sm p-4">
                     <p className="text-xs text-gray-500 mb-2">{playingCall.client_name} — {playingCall.datetime}</p>
-                    <audio controls autoPlay className="w-full" src={`/records/${playingCall.filename}`} />
+                    <audio controls autoPlay className="w-full" src={playingUrl} />
+                    <p className="text-xs text-gray-400 mt-1">
+                        Ссылка действительна ~1 час
+                    </p>
                 </div>
             )}
 

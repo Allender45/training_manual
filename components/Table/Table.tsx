@@ -18,12 +18,13 @@ type TableProps<T extends Record<string, any>> = {
     buttonEdit?: boolean;
     buttonDel?: boolean;
     buttonDetail?: boolean;
-    buttonPlay?: boolean;
+    buttonPlay?: boolean | ((row: T) => boolean);
     buttonAnalyze?: boolean | ((row: T) => boolean);
     buttonViewAnalysis?: boolean;
     onPlay?: (row: T) => void;
     onAnalyze?: (row: T) => void;
     onViewAnalysis?: (row: T) => void;
+    isPlayLoading?: (row: T) => boolean;
     isAnalysing?: (row: T) => boolean;
     hasAnalysis?: (row: T) => boolean;
     onEdit?: (row: T) => void;
@@ -35,7 +36,7 @@ export default function Table<T extends Record<string, any>>({
                                                                  columns, data, keyField, emptyText = 'Нет данных',
                                                                  buttonEdit, buttonDel, buttonDetail, onEdit, onDelete,
                                                                  buttonPlay, buttonAnalyze, buttonViewAnalysis,
-                                                                 onPlay, onAnalyze, onViewAnalysis,
+                                                                 onPlay, onAnalyze, onViewAnalysis, isPlayLoading,
                                                                  isAnalysing, hasAnalysis, extraActions,
                                                              }: TableProps<T>) {
     return (
@@ -94,10 +95,13 @@ export default function Table<T extends Record<string, any>>({
                                                     <Eye  size={14} />
                                                 </button>
                                             )}
-                                            {buttonPlay && (
-                                                <button className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                            {(typeof buttonPlay === 'function' ? buttonPlay(row) : buttonPlay) && (
+                                                <button className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50"
+                                                        disabled={isPlayLoading?.(row)}
                                                         onClick={() => onPlay?.(row)} title="Воспроизвести">
-                                                    <Play size={14} />
+                                                    {isPlayLoading?.(row)
+                                                        ? <Loader2 size={14} className="animate-spin" />
+                                                        : <Play size={14} />}
                                                 </button>
                                             )}
                                             {(typeof buttonAnalyze === 'function' ? buttonAnalyze(row) : buttonAnalyze) && (

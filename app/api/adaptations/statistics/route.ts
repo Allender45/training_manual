@@ -14,8 +14,10 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Service not configured' }, { status: 503 });
     }
 
+    const baseUrl = process.env.ADAPTATION_API_URL;
+    if (!baseUrl) return NextResponse.json({ error: 'Service not configured' }, { status: 503 });
     const res = await fetch(
-        `https://dev7.sfcrm.ru/adaptation-api/v1/users/${userId}/statistics/by-day?period=${period}`,
+        `${baseUrl}users/${userId}/statistics/by-day?period=${period}`,
         { headers: { 'X-Service-Token': token } }
     );
 

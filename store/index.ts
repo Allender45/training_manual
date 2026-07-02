@@ -21,3 +21,5 @@ export { useMentorWidgetStatsStore } from './mentorWidgetStatsStore';
 export type { ApiDayItem } from './mentorWidgetStatsStore';
 export { useMentorInternsPlansStore } from './mentorInternsPlansStore';
 export type { InternAdaptationInfo } from './mentorInternsPlansStore';
+export { useCallsStore } from './callsStore';
+export type { CallRecord, CallsMeta } from './callsStore';

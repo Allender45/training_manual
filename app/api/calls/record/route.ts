@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const userId = searchParams.get('userId');
-    const page   = searchParams.get('page') ?? '1';
+    const callId = searchParams.get('callId');
 
-    if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    if (!userId || !callId) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
 
     const token = process.env.ADAPTATION_API_TOKEN;
     if (!token) return NextResponse.json({ error: 'Service not configured' }, { status: 503 });
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     if (!baseUrl) return NextResponse.json({ error: 'Service not configured' }, { status: 503 });
 
     const res = await fetch(
-        `${baseUrl}users/${userId}/calls?page=${page}`,
+        `${baseUrl}users/${userId}/calls/${callId}`,
         { headers: { 'X-Service-Token': token } }
     );
 
