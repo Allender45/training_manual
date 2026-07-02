@@ -21,6 +21,23 @@ export default function InstructionPage() {
     const [instruction, setInstruction] = useState<Instruction | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [neighbors, setNeighbors] = useState<{ prev: number | null; next: number | null }>({ prev: null, next: null });
+
+    useEffect(() => {
+        fetch('/api/functional')
+            .then(res => res.json())
+            .then(data => {
+                if (data.instructions) {
+                    const active = (data.instructions as { id: number; is_active: boolean }[]).filter(i => i.is_active);
+                    const idx = active.findIndex(i => String(i.id) === id);
+                    setNeighbors({
+                        prev: idx > 0 ? active[idx - 1].id : null,
+                        next: idx < active.length - 1 ? active[idx + 1].id : null,
+                    });
+                }
+            })
+            .catch(() => {});
+    }, [id]);
 
     useEffect(() => {
         fetch(`/api/functional/${id}`)
@@ -59,6 +76,22 @@ export default function InstructionPage() {
                             />
                         </>
                     )}
+
+                    <div className="flex justify-between my-4">
+                        <Button variant="outline" size="sm"
+                                disabled={!neighbors.prev}
+                                onClick={() => neighbors.prev && router.push(`/functional/${neighbors.prev}`)}>
+                            ← Предыдущий
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/functional')}>
+                            К списку
+                        </Button>
+                        <Button variant="outline" size="sm"
+                                disabled={!neighbors.next}
+                                onClick={() => neighbors.next && router.push(`/functional/${neighbors.next}`)}>
+                            Следующий →
+                        </Button>
+                    </div>
                 </main>
             </div>
         </div>
