@@ -6,6 +6,7 @@ import {useUserStore} from '@/store/userStore';
 import {Header, Sidebar} from '@/containers';
 import {Input, Button, Checkbox} from '@/components';
 import Select from "@/components/Select/Select";
+import {hasFeature} from "@/lib/permissions";
 
 type ProfileForm = {
     last_name: string; first_name: string; middle_name: string;
@@ -48,6 +49,7 @@ export default function ProfilePage() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
     const {user, fetchUser, setUser} = useUserStore();
+    const rid = user?.role_id ?? null;
 
     const [form, setForm] = useState<ProfileForm>(userToForm(null));
     const [original, setOriginal] = useState<ProfileForm>(userToForm(null));
@@ -165,7 +167,7 @@ export default function ProfilePage() {
                         <div className="flex flex-col md:flex-row gap-8">
                             <div className={'flex w-full gap-5'}>
                                 {/* Фото */}
-                                <div className="flex flex-col flex-1 items-center gap-2 flex-shrink-0">
+                                <div className="flex flex-col flex-1 items-center gap-2 shrink-0">
                                     {photoPreview || user?.photo ? (
                                         <img
                                             src={photoPreview ?? user!.photo!}
@@ -208,9 +210,11 @@ export default function ProfilePage() {
                                    placeholder="ГГГГ-ММ-ДД"/>
                             <Input label="Серия паспорта" name="passport_series" value={form.passport_series}
                                    onChange={handleChange} placeholder="1234"/>
-                            <Select label="Роль" name="role" value={form.role}
-                                    onChange={handleChange} placeholder="Выберите роль"
-                                    options={roleOptions} />
+                            {hasFeature(rid, 'profileRoleChange') &&
+                                <Select label="Роль" name="role" value={form.role}
+                                        onChange={handleChange} placeholder="Выберите роль"
+                                        options={roleOptions} />
+                            }
                             <Input label="Номер паспорта" name="passport_number" value={form.passport_number}
                                    onChange={handleChange} placeholder="567890"/>
                             <div className="sm:col-span-2">
