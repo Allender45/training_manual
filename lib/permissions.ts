@@ -32,6 +32,8 @@ export type Feature =
     | 'functionalAddButton'
     | 'functionalEditButton'
     | 'profileRoleChange'
+    | 'profilePassChange'
+    | 'profileActiveStatusChange'
     | 'courseTests';
 
 type RolePermissions = Feature[] | '*';
@@ -50,7 +52,8 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'usersTableFilters',
         'adaptationTableAddButtons',
         'mentorWidgets',
-        'profileRoleChange',
+        'profilePassChange',
+        'profileActiveStatusChange',
     ],    // Наставник
     3: [
         'sidebarHrMenu',
@@ -62,7 +65,8 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'coursesTableAddButtons',
         'usersTableEditUserButton',
         'usersTableDellUserButton',
-        'profileRoleChange'
+        'profilePassChange',
+        'profileActiveStatusChange',
     ],    // Кадровик
     2: [
         'sidebarMentorMenu',
@@ -75,6 +79,8 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'usersTableEditUserButton',
         'functionalAddButton',
         'profileRoleChange',
+        'profilePassChange',
+        'profileActiveStatusChange',
         'functionalEditButton'
     ],    // Админ
     1: '*',  // СуперПользователь

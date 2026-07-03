@@ -59,6 +59,10 @@ export default function ProfilePage() {
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    const [pwSaving, setPwSaving] = useState(false);
+    const [pwError, setPwError] = useState<string | null>(null);
+    const [pwSuccess, setPwSuccess] = useState(false);
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
@@ -146,6 +150,37 @@ export default function ProfilePage() {
         }
     }
 
+    async function handleChangePassword() {
+        setPwError(null);
+        setPwSuccess(false);
+        if (pwForm.newPassword !== pwForm.confirmPassword) {
+            setPwError('Новый пароль и подтверждение не совпадают');
+            return;
+        }
+        setPwSaving(true);
+        try {
+            const res = await fetch('/api/auth/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentPassword: pwForm.currentPassword,
+                    newPassword: pwForm.newPassword,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setPwError(data.error ?? 'Ошибка смены пароля');
+            } else {
+                setPwSuccess(true);
+                setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            }
+        } catch {
+            setPwError('Ошибка соединения с сервером');
+        } finally {
+            setPwSaving(false);
+        }
+    }
+
     function formatBirthday(raw: string): string {
         const digits = raw.replace(/\D/g, '').slice(0, 8);
         if (digits.length <= 4) return digits;
@@ -222,9 +257,13 @@ export default function ProfilePage() {
                                 <textarea name="comment" value={form.comment} onChange={handleChange} rows={3}
                                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"/>
                             </div>
-                            <Checkbox label="Активен" name="notifications" checked={true} onChange={handleChange}
-                                      variant="switch"/>
+                            {hasFeature(rid, 'profileActiveStatusChange') &&
+                                <Checkbox label="Активен" name="notifications" checked={true} onChange={handleChange}
+                                          variant="switch"/>
+                            }
                         </div>
+
+
 
                         {saveError && (
                             <div
@@ -234,6 +273,40 @@ export default function ProfilePage() {
                         <div className="flex gap-3 mt-6 pt-5 border-t justify-end">
                             <Button variant="outline" onClick={handleReset} disabled={!isDirty}>Сбросить</Button>
                             <Button onClick={handleSave} disabled={!isDirty} loading={saving}>Сохранить</Button>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-sm p-6 mt-6">
+                        <h4 className="text-base font-semibold text-gray-800 mb-4">Смена пароля</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <Input label="Текущий пароль" name="currentPassword" type="password"
+                                   value={pwForm.currentPassword}
+                                   onChange={e => setPwForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                                   icon="lock" />
+                            <Input label="Новый пароль" name="newPassword" type="password"
+                                   value={pwForm.newPassword}
+                                   onChange={e => setPwForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                                   icon="lock" />
+                            <Input label="Подтвердить пароль" name="confirmPassword" type="password"
+                                   value={pwForm.confirmPassword}
+                                   onChange={e => setPwForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                   icon="lock" />
+                        </div>
+                        {pwError && (
+                            <div className="mt-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
+                                {pwError}
+                            </div>
+                        )}
+                        {pwSuccess && (
+                            <div className="mt-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-3 py-2">
+                                Пароль успешно изменён
+                            </div>
+                        )}
+                        <div className="flex justify-end mt-4 pt-4 border-t">
+                            <Button onClick={handleChangePassword} loading={pwSaving}
+                                    disabled={!pwForm.currentPassword || !pwForm.newPassword || !pwForm.confirmPassword}>
+                                Изменить пароль
+                            </Button>
                         </div>
                     </div>
                 </main>

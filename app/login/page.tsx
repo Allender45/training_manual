@@ -78,9 +78,9 @@ export default function LoginPage() {
                                        className="w-4 h-4 rounded border-gray-300" />
                                 <span className="text-sm text-gray-600">Запомнить</span>
                             </label>
-                            <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
-                                Забыл пароль
-                            </a>
+                            {/*<a href="/forgot-password" className="text-sm text-blue-600 hover:underline">*/}
+                            {/*    Забыл пароль*/}
+                            {/*</a>*/}
                         </div>
 
                         {error && (

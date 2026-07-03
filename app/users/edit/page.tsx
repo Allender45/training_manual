@@ -54,12 +54,17 @@ export default function EditUserPage() {
     const [mentorForm, setMentorForm] = useState({mentor_id: ''});
     const [originalMentorId, setOriginalMentorId] = useState('');
     const { plans: adaptationPlans, fetchPlans } = useAdaptationPlansStore();
+    const [newPassword, setNewPassword] = useState('');
+    const [pwSaving, setPwSaving] = useState(false);
+    const [pwError, setPwError] = useState<string | null>(null);
+    const [pwSuccess, setPwSuccess] = useState(false);
 
 
     const isDirty = JSON.stringify(form) !== JSON.stringify(originalForm)
         || photoFile !== null
         || mentorForm.mentor_id !== originalMentorId
-        || selectedPlanId !== originalPlanId;
+        || selectedPlanId !== originalPlanId
+        || !!newPassword;
 
     const canEdit = !hasFeature(rid, 'editUser');
 
@@ -175,11 +180,48 @@ export default function EditUserPage() {
                 });
             }
 
+            if (newPassword) {
+                const pwRes = await fetch(`/api/users/${userId}/set-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newPassword }),
+                });
+                const pwData = await pwRes.json();
+                if (!pwRes.ok) {
+                    setSaveError(pwData.error ?? 'Ошибка смены пароля');
+                    return;
+                }
+            }
+
             router.push('/users');
         } catch {
             setSaveError('Ошибка соединения с сервером');
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function handleSetPassword() {
+        setPwError(null);
+        setPwSuccess(false);
+        setPwSaving(true);
+        try {
+            const res = await fetch(`/api/users/${userId}/set-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newPassword }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setPwError(data.error ?? 'Ошибка смены пароля');
+            } else {
+                setPwSuccess(true);
+                setNewPassword('');
+            }
+        } catch {
+            setPwError('Ошибка соединения с сервером');
+        } finally {
+            setPwSaving(false);
         }
     }
 
@@ -197,7 +239,7 @@ export default function EditUserPage() {
                     </div>
                     <div className="bg-white rounded-2xl shadow-sm p-6">
                         <div className="flex w-full gap-5 mb-6">
-                            <div className="flex flex-col flex-1 items-center gap-2 flex-shrink-0">
+                            <div className="flex flex-col flex-1 items-center gap-2 shrink-0">
                                 {photoPreview || editedUser?.photo ? (
                                     <img src={photoPreview ?? editedUser!.photo!} alt="Фото профиля"
                                          className="w-28 h-28 rounded-full object-cover"/>
@@ -274,12 +316,24 @@ export default function EditUserPage() {
                                         onClick={() => router.push('/adaptationPlans')}
                                         disabled={canEdit}
                                         title="Создать план адаптации"
-                                        className="p-2 mb-0.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors flex-shrink-0"
+                                        className="p-2 mb-0.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors shrink-0"
                                     >
                                         <Plus size={16} />
                                     </button>
                                 </div>
                             )}
+
+                            {hasFeature(rid, 'profilePassChange') &&
+                                <Input
+                                    label="Новый пароль"
+                                    name="newPassword"
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={e => setNewPassword(e.target.value)}
+                                    icon="lock"
+                                />
+                            }
+
                             <div className="sm:col-span-2">
                                 <label className="block text-gray-500 text-sm mb-2">Комментарий</label>
                                 <textarea name="comment" value={form.comment} onChange={handleChange} rows={3}
