@@ -201,30 +201,6 @@ export default function EditUserPage() {
         }
     }
 
-    async function handleSetPassword() {
-        setPwError(null);
-        setPwSuccess(false);
-        setPwSaving(true);
-        try {
-            const res = await fetch(`/api/users/${userId}/set-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ newPassword }),
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                setPwError(data.error ?? 'Ошибка смены пароля');
-            } else {
-                setPwSuccess(true);
-                setNewPassword('');
-            }
-        } catch {
-            setPwError('Ошибка соединения с сервером');
-        } finally {
-            setPwSaving(false);
-        }
-    }
-
     if (loading) return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
 
     return (

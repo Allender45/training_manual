@@ -298,6 +298,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                 value={order.dateTime}
                 onChange={e => handleOrderChange('dateTime', e.target.value)}
                 disabled={order.nearestTime}
+                nearestTimeCheckbox={false}
             />
 
             <Checkbox

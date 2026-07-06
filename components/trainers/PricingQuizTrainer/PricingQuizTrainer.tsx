@@ -77,16 +77,16 @@ const questions: PricingQuestion[] = [
     // },
     {
         id: 1,
-        description: "Клиенту нужно поднять стиральную машину из машины на 4 этаж.",
+        description: "Клиенту нужно поднять стиральную машину из автомобиля на 4 этаж.",
         task: "Нужно указать стоимость человеко-часа для клиента, количество рабочих и транспорт, если нужен.",
         audio1: "/records/trainers/prising/5-1.mp3",
         audio2: "/records/trainers/prising/5-2.mp3",
         workerPrice: 550,
-        correctPriceForClient: 475,
+        correctPriceForClient: 550,
         correctWorkersNumber: 2,
         correctTransportSize: '',
         successMsg: "Всё верно, отлично. Прослушай полный разговор.",
-        errorMsg: "Неверно. Посмотри критерии поднятия цен.",
+        errorMsg: "Неверно. Где-то ошибка. Проверь всё ещё раз. Если совсем не получается, попроси помощи наставника.",
     },
     {
         id: 2,
@@ -99,7 +99,7 @@ const questions: PricingQuestion[] = [
         correctWorkersNumber: 1,
         correctTransportSize: '',
         successMsg: "Всё верно, отлично. Прослушай полный разговор.",
-        errorMsg: "Неверно. Посмотри критерии поднятия цен.",
+        errorMsg: "Неверно. Где-то ошибка. Проверь всё ещё раз. Если совсем не получается, попроси помощи наставника.",
     },
     {
         id: 3,
@@ -112,7 +112,7 @@ const questions: PricingQuestion[] = [
         correctWorkersNumber: 1,
         correctTransportSize: '',
         successMsg: "Всё верно, отлично. Прослушай полный разговор.",
-        errorMsg: "Неверно. Посмотри критерии поднятия цен.",
+        errorMsg: "Неверно. Где-то ошибка. Проверь всё ещё раз. Если совсем не получается, попроси помощи наставника.",
     },
     {
         id: 4,
@@ -125,7 +125,7 @@ const questions: PricingQuestion[] = [
         correctWorkersNumber: 3,
         correctTransportSize: '',
         successMsg: "Всё верно, отлично. Прослушай полный разговор.",
-        errorMsg: "Неверно. Посмотри критерии поднятия цен.",
+        errorMsg: "Неверно. Где-то ошибка. Проверь всё ещё раз. Если совсем не получается, попроси помощи наставника.",
     },
 ];
 

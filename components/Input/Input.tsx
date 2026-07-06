@@ -41,6 +41,7 @@ type InputProps = {
     accept?: string;
     className?: string;
     disabled?: boolean;
+    nearestTimeCheckbox?: boolean;
 };
 
 const icons = {
@@ -79,7 +80,7 @@ const icons = {
 const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
     {
         label, name, type = 'text', value, onChange, required, placeholder,
-        maxLength, minLength, icon, error, onFocus, onBlur, accept, className, disabled, rows
+        maxLength, minLength, icon, error, onFocus, onBlur, accept, className, disabled, rows, nearestTimeCheckbox = true
     },
     ref
 ) {
@@ -146,19 +147,26 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
                         className="flex-1 px-3 py-2 text-sm focus:outline-none bg-white text-gray-700 min-w-0 disabled:bg-gray-50 disabled:text-gray-400 [&::-webkit-calendar-picker-indicator]:hidden"
                     />
                 </div>
-                <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
-                    <input
-                        type="checkbox"
-                        checked={nearestTime}
-                        onChange={e => {
-                            const checked = e.target.checked;
-                            setNearestTime(checked);
-                            onChange?.({target: {name: name ?? '', value: checked ? formatDateTimeLocal(new Date()) : ''}} as React.ChangeEvent<HTMLInputElement>);
-                        }}
-                        className="w-4 h-4 rounded accent-blue-600"
-                    />
-                    <span className="text-sm text-gray-700">В ближайшее время</span>
-                </label>
+                {nearestTimeCheckbox && (
+                    <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={nearestTime}
+                            onChange={e => {
+                                const checked = e.target.checked;
+                                setNearestTime(checked);
+                                onChange?.({
+                                    target: {
+                                        name: name ?? '',
+                                        value: checked ? formatDateTimeLocal(new Date()) : ''
+                                    }
+                                } as React.ChangeEvent<HTMLInputElement>);
+                            }}
+                            className="w-4 h-4 rounded accent-blue-600"
+                        />
+                        <span className="text-sm text-gray-700">В ближайшее время</span>
+                    </label>
+                )}
                 {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
             </div>
         );
