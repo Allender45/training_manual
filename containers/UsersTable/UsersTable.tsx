@@ -20,6 +20,8 @@ export type UserRow = {
     mentor_name: string | null;
     crm_id: number | null;
     adaptation_access: boolean;
+    courses_completed: number | null;
+    courses_total: number | null;
 };
 
 type UsersTableProps = {
@@ -45,6 +47,7 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
         mentor_name: false,
         crm_id: false,
         adaptation_access: false,
+        courses: false,
     });
     const [showSearch, setShowSearch] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
@@ -134,7 +137,8 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                                 onClick={e => e.stopPropagation()}
                             >
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.932z"/>
+                                    <path
+                                        d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.932z"/>
                                 </svg>
                             </a>
                         )}
@@ -176,6 +180,12 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                 }`}>
                     {row.adaptation_access ? 'Допущен' : 'Не допущен'}
                 </span>
+            ),
+        },
+        {
+            key: 'courses', header: 'Курсы',
+            render: (row) => (
+                <span className="text-sm text-gray-600">{row.courses_completed ?? 0} / {row.courses_total ?? '—'}</span>
             ),
         },
     ];
@@ -295,14 +305,14 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                             title="Адаптация"
                             onClick={() => setAdaptationUser(row)}
                         >
-                            <BadgePercent size={14} />
+                            <BadgePercent size={14}/>
                         </button>
                         <button
                             className="p-1.5 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200"
                             title="Звонки"
                             onClick={() => setCallsUser(row)}
                         >
-                            <Phone size={14} />
+                            <Phone size={14}/>
                         </button>
                     </>
                 )}
@@ -374,8 +384,12 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                         <Checkbox label="Наставник" name="mentor_name" checked={colVisibility.mentor_name}
                                   onChange={toggleCol} variant="switch"/>
                     }
-                    <Checkbox label="ID в CRM" name="crm_id" checked={colVisibility.crm_id} onChange={toggleCol} variant="switch"/>
-                    <Checkbox label="Адаптация" name="adaptation_access" checked={colVisibility.adaptation_access} onChange={toggleCol} variant="switch"/>
+                    <Checkbox label="ID в CRM" name="crm_id" checked={colVisibility.crm_id} onChange={toggleCol}
+                              variant="switch"/>
+                    <Checkbox label="Адаптация" name="adaptation_access" checked={colVisibility.adaptation_access}
+                              onChange={toggleCol} variant="switch"/>
+                    <Checkbox label="Курсы" name="courses" checked={colVisibility.courses} onChange={toggleCol}
+                              variant="switch"/>
 
                     <div className="pt-3 border-t border-gray-100 flex flex-col gap-3">
                         <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Показывать</p>
@@ -411,7 +425,7 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                 className={'max-w-[800px]'}
             >
                 {adaptationUser && (
-                    <AdaptationContent userId={adaptationUser.id} crmUserId={adaptationUser.crm_id} />
+                    <AdaptationContent userId={adaptationUser.id} crmUserId={adaptationUser.crm_id}/>
                 )}
             </Modal>
 
@@ -421,7 +435,7 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
                 title={callsUser ? `Звонки — ${callsUser.name}` : ''}
                 className={'max-w-[800px]'}
             >
-                {callsUser && <CallsContent userId={callsUser.crm_id} />}
+                {callsUser && <CallsContent userId={callsUser.crm_id}/>}
             </Modal>
         </div>
     );

@@ -31,19 +31,25 @@ export async function GET(req: NextRequest) {
         if (roleId === 4) {
             result = await pool.query(
                 `SELECT u.id,
-                        TRIM(u.last_name || ' ' || u.first_name) AS name,
-                        COALESCE(u.email, '')                    AS email,
-                        COALESCE(u.phone, '')                    AS phone,
-                        COALESCE(r.name, '')                     AS role,
-                        u.is_active                              AS active,
+                        TRIM(u.last_name || ' ' || u.first_name)                   AS name,
+                        COALESCE(u.email, '')                                      AS email,
+                        COALESCE(u.phone, '')                                      AS phone,
+                        COALESCE(r.name, '')                                       AS role,
+                        u.is_active                                                AS active,
                         u.photo,
                         u.crm_id,
                         u.adaptation_access,
-                        TRIM(m_user.last_name || ' ' || m_user.first_name) AS mentor_name
+                        TRIM(m_user.last_name || ' ' || m_user.first_name)         AS mentor_name,
+                        COALESCE(up_count.completed, 0)                            AS courses_completed,
+                        (SELECT COUNT(*)::int FROM manuals WHERE is_active = true) AS courses_total
                  FROM users u
                           LEFT JOIN roles r ON r.id = u.role_id
                           JOIN mentorships ms ON ms.intern_id = u.id AND ms.end_date IS NULL AND ms.mentor_id = $1
                           LEFT JOIN users m_user ON m_user.id = ms.mentor_id
+                          LEFT JOIN (SELECT user_id, COUNT(*)::int AS completed
+                                     FROM user_progress
+                                     WHERE content_type = 'manual'
+                                     GROUP BY user_id) up_count ON up_count.user_id = u.id
                  ORDER BY u.last_name, u.first_name`,
                 [userId]
             );
@@ -58,11 +64,17 @@ export async function GET(req: NextRequest) {
                         u.photo,
                         u.crm_id,
                         u.adaptation_access,
-                        TRIM(m_user.last_name || ' ' || m_user.first_name) AS mentor_name
+                        TRIM(m_user.last_name || ' ' || m_user.first_name) AS mentor_name,
+                        COALESCE(up_count.completed, 0)                            AS courses_completed,
+                        (SELECT COUNT(*)::int FROM manuals WHERE is_active = true) AS courses_total
                  FROM users u
                           LEFT JOIN roles r ON r.id = u.role_id
                           LEFT JOIN mentorships ms ON ms.intern_id = u.id AND ms.end_date IS NULL
                           LEFT JOIN users m_user ON m_user.id = ms.mentor_id
+                          LEFT JOIN (SELECT user_id, COUNT(*)::int AS completed
+                                     FROM user_progress
+                                     WHERE content_type = 'manual'
+                                     GROUP BY user_id) up_count ON up_count.user_id = u.id
                  ORDER BY u.last_name, u.first_name`
             );
         }

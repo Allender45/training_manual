@@ -4,8 +4,10 @@ import { unsignSession } from '@/lib/session';
 
 export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const sessionUserId = unsignSession(raw);
+    if (!sessionUserId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+
+    const userId = req.nextUrl.searchParams.get('userId') ?? sessionUserId;
 
     const [totalRes, completedRes] = await Promise.all([
         pool.query(`SELECT COUNT(*)::int AS total FROM manuals WHERE is_active = true`),
