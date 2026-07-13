@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const [totalRes, completedRes] = await Promise.all([
         pool.query(`SELECT COUNT(*)::int AS total FROM manuals WHERE is_active = true`),
         pool.query(
-            `SELECT COUNT(*)::int AS completed FROM user_progress WHERE user_id = $1 AND content_type = 'manual'`,
+            `SELECT COUNT(*)::int AS completed FROM user_progress WHERE user_id = $1 AND content_type = 'course'`,
             [userId]
         ),
     ]);

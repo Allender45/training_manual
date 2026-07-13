@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
                           LEFT JOIN users m_user ON m_user.id = ms.mentor_id
                           LEFT JOIN (SELECT user_id, COUNT(*)::int AS completed
                                      FROM user_progress
-                                     WHERE content_type = 'manual'
+                                     WHERE content_type = 'course'
                                      GROUP BY user_id) up_count ON up_count.user_id = u.id
                  ORDER BY u.last_name, u.first_name`,
                 [userId]
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
                           LEFT JOIN users m_user ON m_user.id = ms.mentor_id
                           LEFT JOIN (SELECT user_id, COUNT(*)::int AS completed
                                      FROM user_progress
-                                     WHERE content_type = 'manual'
+                                     WHERE content_type = 'course'
                                      GROUP BY user_id) up_count ON up_count.user_id = u.id
                  ORDER BY u.last_name, u.first_name`
             );
