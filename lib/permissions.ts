@@ -15,6 +15,8 @@ export type Feature =
     | 'sidebarMentorMenu'
     | 'sidebarStudentMenu'
     | 'sidebarHrMenu'
+    | 'sidebarStudentsTable'
+    | 'sidebarAdaptationPlans'
     | 'usersTableCreateButton'
     | 'usersTableFilters'
     | 'usersTableRole'
@@ -47,13 +49,14 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'studentWidgets',
     ],   // Стажёр
     4: [
-        'sidebarMentorMenu',
         'usersTableDetailUserButton',
         'usersTableFilters',
         'adaptationTableAddButtons',
         'mentorWidgets',
         'profilePassChange',
         'profileActiveStatusChange',
+        'sidebarStudentsTable',
+        'sidebarAdaptationPlans',
     ],    // Наставник
     3: [
         'sidebarHrMenu',

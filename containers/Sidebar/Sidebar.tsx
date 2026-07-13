@@ -75,13 +75,13 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                     }
 
                     {/*Панель наставника*/}
-                    {hasFeature(rid, 'sidebarMentorMenu') &&
-                        <>
+                    {hasFeature(rid, 'sidebarStudentsTable') &&
                             <SidebarButton href="/users" icon={Users} label="Стажёры"
                                            sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
+                    }
+                    {hasFeature(rid, 'sidebarAdaptationPlans') &&
                             <SidebarButton href="/adaptationPlans" icon={Sheet} label="Планы адаптации"
                                            sidebarOpen={sidebarOpen} active={pathname.startsWith('/adaptationPlans')}/>
-                        </>
                     }
 
                     {/*Панель кадровика*/}

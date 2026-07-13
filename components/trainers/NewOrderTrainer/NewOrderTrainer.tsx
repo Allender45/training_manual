@@ -119,7 +119,6 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                 return;
             }
             setReview(data);
-            onComplete?.();
         } catch {
             setReviewError('Ошибка соединения с сервером');
         } finally {
@@ -215,11 +214,13 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                 </div>
             </div>
 
-            <div className="flex justify-end pt-2">
-                <Button onClick={handleSubmit} disabled={!isValid || reviewing}>
-                    {reviewing ? 'Проверяю...' : 'Оформить заявку'}
-                </Button>
-            </div>
+            {!review &&
+                <div className="flex justify-end pt-2">
+                    <Button onClick={handleSubmit} disabled={!isValid || reviewing}>
+                        {reviewing ? 'Проверяю...' : 'Оформить заявку'}
+                    </Button>
+                </div>
+            }
 
             {reviewError && (
                 <p className="text-red-500 text-sm">{reviewError}</p>

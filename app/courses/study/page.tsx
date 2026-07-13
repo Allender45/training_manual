@@ -116,6 +116,7 @@ export default function CourseStudyPage() {
     const [testPhase, setTestPhase] = useState<'intro' | 'test' | 'result'>('intro');
     const [completedTrainers, setCompletedTrainers] = useState<Set<number>>(new Set());
     const [openTrainerId, setOpenTrainerId] = useState<number | null>(null);
+    const [testPassed, setTestPassed] = useState(false);
     const [currentQ, setCurrentQ] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -221,6 +222,10 @@ export default function CourseStudyPage() {
             ? Math.round((finalScore / testQuestions.length) * 100)
             : 0;
 
+        if (finalScore >= testQuestions.length * 0.7) {
+            setTestPassed(true);
+        }
+
         setTestPhase('result');
 
         if (courseTest?.notify_trainee) {
@@ -255,9 +260,6 @@ export default function CourseStudyPage() {
 
     const score = testQuestions.filter((q, i) => selectedAnswers[i] === q.correct_answer).length;
     const allTrainersCompleted = trainers.length === 0 || trainers.every(t => completedTrainers.has(t.id));
-
-    console.log(course)
-    console.log(courseTest)
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -399,12 +401,16 @@ export default function CourseStudyPage() {
                                             <p className="font-semibold text-gray-800">{courseTest.title}</p>
                                             <p className="text-sm text-gray-400">
                                                 {courseTest.time_limit ? `${courseTest.time_limit} мин · ` : ''}
-                                                {!allTrainersCompleted ? 'Сначала пройдите тренажёры' : 'Тест по курсу'}
+                                                {!allTrainersCompleted ? 'Сначала пройдите тренажёры' : testPassed ? 'Тест пройден' : 'Тест по курсу'}
                                             </p>
                                         </div>
                                     </div>
-                                    <Button onClick={openTestModal} disabled={!allTrainersCompleted}>
-                                        Пройти тест
+                                    <Button
+                                        variant={testPassed ? 'outline' : 'primary'}
+                                        onClick={openTestModal}
+                                        disabled={!allTrainersCompleted}
+                                    >
+                                        {testPassed ? 'Повторить' : 'Пройти тест'}
                                     </Button>
                                 </div>
                             )}

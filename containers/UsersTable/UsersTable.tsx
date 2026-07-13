@@ -40,14 +40,14 @@ function getPageNumbers(current: number, total: number): (number | '...')[] {
 export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [colVisibility, setColVisibility] = useState({
-        email: true,
+        email: false,
         phone: true,
         role: true,
         active: true,
         mentor_name: false,
         crm_id: false,
         adaptation_access: false,
-        courses: false,
+        courses: true,
     });
     const [showSearch, setShowSearch] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
