@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import type { AchievementOption } from './achievementsStore';
+
+type AchievementToast = AchievementOption | null;
 
 export type Notification = {
     id: number;
@@ -15,11 +18,15 @@ type NotificationsStore = {
     push: (data: { text: string; icon?: string; user_id?: number }) => Promise<void>;
     markRead: (id: number) => Promise<void>;
     markAllRead: () => Promise<void>;
+    achievementToast: AchievementToast;
+    showAchievement: (a: AchievementOption) => void;
+    dismissAchievement: () => void;
 };
 
 export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
     notifications: [],
     unreadCount: 0,
+    achievementToast: null,
 
     fetch: async () => {
         try {
@@ -62,5 +69,13 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
     markAllRead: async () => {
         await fetch('/api/notifications/read-all', { method: 'POST' });
         set({ notifications: [], unreadCount: 0 });
+    },
+
+    showAchievement: (a) => {
+        set({ achievementToast: a });
+    },
+
+    dismissAchievement: () => {
+        set({ achievementToast: null });
     },
 }));

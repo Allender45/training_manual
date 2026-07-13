@@ -23,3 +23,4 @@ export { useMentorInternsPlansStore } from './mentorInternsPlansStore';
 export type { InternAdaptationInfo } from './mentorInternsPlansStore';
 export { useCallsStore } from './callsStore';
 export type { CallRecord, CallsMeta } from './callsStore';
+export type Toast = { id: number; text: string; icon: string };

@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 
-export type AchievementOption = { id: number; title: string };
+export type AchievementOption = {
+    id: number;
+    icon: string;
+    title: string;
+    description: string | null
+};
 
 type AchievementsStore = {
     achievements: AchievementOption[];

@@ -2,7 +2,7 @@
 
 import React, {useState, useEffect} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
-import {useUserStore, useNotificationsStore} from '@/store';
+import {useUserStore, useNotificationsStore, useAchievementsStore} from '@/store';
 import {Header, Sidebar, Modal} from '@/containers';
 import {Clock, BookOpen, Video, Music, FileText, ClipboardList, CheckCircle, XCircle} from 'lucide-react';
 import {CallCardTrainer, CaseQuizTrainer, PricingQuizTrainer, NewOrderTrainer, Button, FullOrderCreate} from '@/components';
@@ -100,8 +100,10 @@ export default function CourseStudyPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const courseId = searchParams.get('id');
-    const {fetchUser} = useUserStore();
+    const {user, fetchUser} = useUserStore();
     const push = useNotificationsStore(s => s.push);
+    const showAchievement = useNotificationsStore(s => s.showAchievement);
+    const { achievements, fetch: fetchAchievements } = useAchievementsStore();
 
     const [course, setCourse] = useState<Course | null>(null);
     const [manuals, setManuals] = useState<Manual[]>([]);
@@ -117,6 +119,7 @@ export default function CourseStudyPage() {
     const [completedTrainers, setCompletedTrainers] = useState<Set<number>>(new Set());
     const [openTrainerId, setOpenTrainerId] = useState<number | null>(null);
     const [testPassed, setTestPassed] = useState(false);
+    const [testAttempted, setTestAttempted] = useState(false);
     const [currentQ, setCurrentQ] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -161,6 +164,8 @@ export default function CourseStudyPage() {
             .catch(e => { if (e !== null) setError('Ошибка загрузки данных'); })
             .finally(() => setLoading(false));
     }, [courseId]);
+
+    useEffect(() => { fetchAchievements(); }, []);
 
     useEffect(() => {
         if (testPhase !== 'test' || timeLeft === null) return;
@@ -222,27 +227,34 @@ export default function CourseStudyPage() {
             ? Math.round((finalScore / testQuestions.length) * 100)
             : 0;
 
-        if (finalScore >= testQuestions.length * 0.7) {
+        if (finalScore == testQuestions.length) {
             setTestPassed(true);
+
+            setTestPhase('result');
+
+            if (courseTest?.notify_trainee) {
+                push({text: 'Стажёр: ' + user?.last_name + ' ' + user?.first_name + ' ' + user?.middle_name + ' ' + courseTest.notify_trainee, icon: '📋'});
+            }
+
+            if (courseTest?.achievement_id) {
+                const achievement = achievements.find(a => a.id === courseTest.achievement_id);
+                if (achievement) showAchievement(achievement);
+            }
+
+            if (course?.id) {
+                fetch('/api/user-progress', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        content_type: 'course',
+                        content_id: course.id,
+                        score: scorePercent,
+                    }),
+                }).catch(() => {});
+            }
         }
 
-        setTestPhase('result');
-
-        if (courseTest?.notify_trainee) {
-            push({text: courseTest.notify_trainee, icon: '📋'});
-        }
-
-        if (course?.id) {
-            fetch('/api/user-progress', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    content_type: 'course',
-                    content_id: course.id,
-                    score: scorePercent,
-                }),
-            }).catch(() => {});
-        }
+        setTestAttempted(true);
     }
 
     function closeTestModal() {
@@ -410,7 +422,7 @@ export default function CourseStudyPage() {
                                         onClick={openTestModal}
                                         disabled={!allTrainersCompleted}
                                     >
-                                        {testPassed ? 'Повторить' : 'Пройти тест'}
+                                        {testPassed ? 'Повторить' : testAttempted ? 'Пройти повторно' : 'Пройти тест'}
                                     </Button>
                                 </div>
                             )}
