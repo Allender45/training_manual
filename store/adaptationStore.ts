@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { ApiDayItem } from '@/lib/adaptationUtils'
 
 export type DayData = {
     date: string;
@@ -6,13 +7,6 @@ export type DayData = {
     conversion: number;
     revenue_new: number;
     revenue_total: number;
-};
-
-type ApiDayItem = {
-    date: string;
-    calls: { total: number };
-    conversions: { newClientConversionPercent: number };
-    cash: { newClients: number; total: number };
 };
 
 function mapApiDay(item: ApiDayItem): DayData {

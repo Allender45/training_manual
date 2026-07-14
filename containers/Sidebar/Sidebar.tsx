@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
     Home, FileText, Dumbbell, ClipboardList,
     Users, Building2, Shield, Trophy, BarChart2,
-    BookOpen, ChevronRight, BadgePercent, Sheet, Phone,
+    BookOpen, ChevronRight, BadgePercent, Sheet, Phone, GraduationCap
 } from 'lucide-react';
 import {usePathname} from 'next/navigation';
 import {SidebarButton} from '@/components';
@@ -91,6 +91,13 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                            sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
                             <SidebarButton href="/achievements" icon={Trophy} label="Достижения"
                                            sidebarOpen={sidebarOpen} active={pathname.startsWith('/achievements')}/>
+                        </>
+                    }
+
+                    {hasFeature(rid, 'sidebarTeachersMenu') &&
+                        <>
+                            <SidebarButton href="/teachers" icon={GraduationCap} label="Наставники"
+                                           sidebarOpen={sidebarOpen} active={pathname.startsWith('/teachers')}/>
                         </>
                     }
 
