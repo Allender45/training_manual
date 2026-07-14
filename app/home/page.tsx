@@ -5,7 +5,7 @@ import {useRouter} from 'next/navigation';
 import {useUserStore} from '@/store';
 import {CalendarDays} from 'lucide-react';
 import {Header, Sidebar} from '@/containers';
-import {StatCard, MentorChart, InternStatsWidget, InternProgressWidget, CourseProgressWidget } from "@/components";
+import {StatCard, MentorChart, InternStatsWidget, InternProgressWidget, CourseProgressWidget, AchievementsWidget } from "@/components";
 import {hasFeature} from "@/lib/permissions";
 
 type AdaptationInfo = {
@@ -108,8 +108,9 @@ export default function HomePage() {
                                         color="bg-blue-100 text-blue-600"
                                     />
                                 )}
-                                <div className="w-full lg:w-56 shrink-0">
+                                <div className="flex gap-5 w-full shrink-0">
                                     <CourseProgressWidget />
+                                    <AchievementsWidget />
                                 </div>
                             </>
                         }

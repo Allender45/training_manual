@@ -4,7 +4,7 @@ import {useState, useEffect, useRef} from 'react';
 import {useRouter} from 'next/navigation';
 import {useUserStore} from '@/store/userStore';
 import {Header, Sidebar} from '@/containers';
-import {Input, Button, Checkbox} from '@/components';
+import {Input, Button, Checkbox, AchievementsWidget } from '@/components';
 import Select from "@/components/Select/Select";
 import {hasFeature} from "@/lib/permissions";
 
@@ -230,6 +230,8 @@ export default function ProfilePage() {
                                            icon="user"/>
                                     <Input label="Отчество" name="middle_name" value={form.middle_name}
                                            onChange={handleChange} icon="user"/>
+
+                                    <AchievementsWidget variant={'block'} className={'mt-2'} />
                                 </div>
                             </div>
                         </div>

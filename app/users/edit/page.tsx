@@ -3,7 +3,7 @@
 import {useState, useEffect, useRef} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
 import {Header, Sidebar} from '@/containers';
-import {Input, Button, Select, Checkbox} from '@/components';
+import {Input, Button, Select, Checkbox, AchievementsWidget} from '@/components';
 import {hasFeature} from '@/lib/permissions';
 import { Plus } from 'lucide-react';
 import { useAdaptationPlansStore, useUserStore, useRolesStore, useEditedUserStore } from '@/store';
@@ -217,11 +217,13 @@ export default function EditUserPage() {
                         <div className="flex w-full gap-5 mb-6">
                             <div className="flex flex-col flex-1 items-center gap-2 shrink-0">
                                 {photoPreview || editedUser?.photo ? (
-                                    <img src={photoPreview ?? editedUser!.photo!} alt="Фото профиля"
-                                         className="w-28 h-28 rounded-full object-cover"/>
+                                    <img
+                                        src={photoPreview ?? editedUser!.photo!}
+                                        alt="Фото профиля"
+                                        className="object-fit"
+                                    />
                                 ) : (
-                                    <div
-                                        className="w-28 h-28 rounded-full bg-blue-600 text-white flex items-center justify-center text-3xl font-semibold select-none">
+                                    <div className="w-28 h-28 rounded-full bg-blue-600 text-white flex items-center justify-center text-3xl font-semibold select-none">
                                         {initials}
                                     </div>
                                 )}
@@ -241,6 +243,7 @@ export default function EditUserPage() {
                                        icon="user" disabled={canEdit}/>
                                 <Input label="Отчество" name="middle_name" value={form.middle_name}
                                        onChange={handleChange} icon="user" disabled={canEdit}/>
+                                <AchievementsWidget variant="block" />
                             </div>
                         </div>
 

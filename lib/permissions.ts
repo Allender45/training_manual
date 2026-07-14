@@ -25,6 +25,7 @@ export type Feature =
     | 'usersTableEditUserButton'
     | 'usersTableDellUserButton'
     | 'usersTableDetailUserButton'
+    | 'userProfileAddAchievementsButton'
     | 'adaptationTableAddButtons'
     | 'coursesTableAddButtons'
     | 'manualsTableAddButtons'
@@ -51,6 +52,7 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
     4: [
         'usersTableDetailUserButton',
         'usersTableFilters',
+        'userProfileAddAchievementsButton',
         'adaptationTableAddButtons',
         'mentorWidgets',
         'profilePassChange',
@@ -62,6 +64,7 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'sidebarHrMenu',
         'usersTableDetailUserButton',
         'usersTableFilters',
+        'userProfileAddAchievementsButton',
         'editUser',
         'usersTableCreateButton',
         'coursesTableButtons',
@@ -76,6 +79,7 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'sidebarAdminMenu',
         'usersTableCreateButton',
         'usersTableFilters',
+        'userProfileAddAchievementsButton',
         'coursesTableButtons',
         'editUser',
         'usersTableDellUserButton',

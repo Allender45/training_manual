@@ -22,3 +22,4 @@ export { default as InternStatsWidget } from './InternStatsWidget/InternStatsWid
 export { default as InternProgressWidget } from './InternProgressWidget/InternProgressWidget';
 export { default as CourseProgressWidget } from './CourseProgressWidget/CourseProgressWidget';
 export { default as AchievementToast } from './AchievementToast/AchievementToast';
+export { default as AchievementsWidget } from './AchievementsWidget/AchievementsWidget';
