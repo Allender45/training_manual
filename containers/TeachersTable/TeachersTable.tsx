@@ -124,7 +124,7 @@ export default function TeachersTable() {
     const loading  = useUsersListStore(s => s.loading);
     const fetchMentors = useUsersListStore(s => s.fetchMentors);
 
-    const [expanded, setExpanded] = useState<number | null>(null);
+    const [expanded, setExpanded] = useState<Set<number>>(new Set());
     const [internCache, setInternCache] = useState<Record<number, Intern[]>>({});
     const [internLoading, setInternLoading] = useState<Record<number, boolean>>({});
     const [plans, setPlans] = useState<Record<number, AdaptationPlan | null>>({});
@@ -135,8 +135,11 @@ export default function TeachersTable() {
     }, []);
 
     async function toggleMentor(mentorId: number) {
-        if (expanded === mentorId) { setExpanded(null); return; }
-        setExpanded(mentorId);
+        if (expanded.has(mentorId)) {
+            setExpanded(prev => { const next = new Set(prev); next.delete(mentorId); return next; });
+            return;
+        }
+        setExpanded(prev => new Set(prev).add(mentorId));
         if (internCache[mentorId]) return;
 
         setInternLoading(p => ({ ...p, [mentorId]: true }));
@@ -204,7 +207,7 @@ export default function TeachersTable() {
                             <React.Fragment key={mentor.id}>
                                 <tr
                                     onClick={() => toggleMentor(mentor.id)}
-                                    className={`border-b hover:bg-gray-50 cursor-pointer transition-colors ${expanded === mentor.id ? 'bg-blue-50 hover:bg-blue-50' : ''}`}
+                                    className={`border-b hover:bg-gray-50 cursor-pointer transition-colors ${expanded.has(mentor.id) ? 'bg-blue-50 hover:bg-blue-50' : ''}`}
                                 >
                                     <td className="px-4 py-3 text-sm text-gray-400">{idx + 1}</td>
                                     <td className="px-4 py-3 text-sm font-medium text-gray-800">{mentor.name}</td>
@@ -217,12 +220,12 @@ export default function TeachersTable() {
                                     <td className="px-3 text-right">
                                         <ChevronRight
                                             size={16}
-                                            className={`text-gray-400 transition-transform duration-200 ${expanded === mentor.id ? 'rotate-90' : ''}`}
+                                            className={`text-gray-400 transition-transform duration-200 ${expanded.has(mentor.id) ? 'rotate-90' : ''}`}
                                         />
                                     </td>
                                 </tr>
 
-                                {expanded === mentor.id && (
+                                {expanded.has(mentor.id) && (
                                     <tr>
                                         <td colSpan={5} className="p-0 bg-gray-50 border-b">
                                             {internLoading[mentor.id] ? (
