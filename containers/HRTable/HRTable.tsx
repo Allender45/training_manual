@@ -63,7 +63,7 @@ const MODAL_CONFIG: Record<ModalType, {
 function computeStats(d: InternApiData): InternStats {
     const working = d.data.filter(x => x.calls.total > 3);
     return {
-        hireDate: d.meta.hireDate,
+        hireDate: d.meta.hireDate ?? '',
         shifts: working.length,
         totalAppeals: d.data.reduce((s, x) => s + x.conversions.appealsCount, 0),
         medianAppeals: median(working.map(x => x.conversions.appealsCount)),
@@ -77,53 +77,9 @@ function computeStats(d: InternApiData): InternStats {
 }
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
-const fmtDate = (s: string) => { const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; };
+const fmtDate = (s: string | undefined | null) => { if (!s) return '—'; const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; };
 const fmtMoney = (n: number) => `${fmt(Math.round(n))} ₽`;
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-
-// ── Mock data (July 2026) ──────────────────────────────────────────
-const MOCK_DATA: InternApiData = {
-    data: [
-        { date:'2026-07-01', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:6,completedOrdersCount:4,newClientOrdersCount:4,completedNewClientOrdersCount:3,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:75,completedFromAppealsPercent:0}, cash:{newClients:16142,total:17502} },
-        { date:'2026-07-02', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-03', calls:{inbound:22,outbound:0,total:22}, conversions:{ordersCount:10,completedOrdersCount:7,newClientOrdersCount:5,completedNewClientOrdersCount:2,appealsCount:29,newClientConversionPercent:17.24,completedNewClientConversionPercent:40,completedFromAppealsPercent:6.9}, cash:{newClients:2226,total:6652} },
-        { date:'2026-07-04', calls:{inbound:23,outbound:3,total:26}, conversions:{ordersCount:14,completedOrdersCount:11,newClientOrdersCount:13,completedNewClientOrdersCount:10,appealsCount:29,newClientConversionPercent:44.83,completedNewClientConversionPercent:76.92,completedFromAppealsPercent:34.48}, cash:{newClients:11261,total:11896} },
-        { date:'2026-07-05', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:4,completedOrdersCount:3,newClientOrdersCount:4,completedNewClientOrdersCount:3,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:75,completedFromAppealsPercent:0}, cash:{newClients:3202,total:3202} },
-        { date:'2026-07-06', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:1,completedOrdersCount:1,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:2575} },
-        { date:'2026-07-07', calls:{inbound:38,outbound:0,total:38}, conversions:{ordersCount:17,completedOrdersCount:14,newClientOrdersCount:14,completedNewClientOrdersCount:12,appealsCount:49,newClientConversionPercent:28.57,completedNewClientConversionPercent:85.71,completedFromAppealsPercent:24.49}, cash:{newClients:10022,total:14032} },
-        { date:'2026-07-08', calls:{inbound:27,outbound:5,total:32}, conversions:{ordersCount:12,completedOrdersCount:5,newClientOrdersCount:10,completedNewClientOrdersCount:4,appealsCount:43,newClientConversionPercent:23.26,completedNewClientConversionPercent:40,completedFromAppealsPercent:9.3}, cash:{newClients:8703,total:8703} },
-        { date:'2026-07-09', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:10,completedOrdersCount:4,newClientOrdersCount:5,completedNewClientOrdersCount:2,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:40,completedFromAppealsPercent:0}, cash:{newClients:1763,total:5346} },
-        { date:'2026-07-10', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:4,completedOrdersCount:3,newClientOrdersCount:3,completedNewClientOrdersCount:2,appealsCount:1,newClientConversionPercent:300,completedNewClientConversionPercent:66.67,completedFromAppealsPercent:200}, cash:{newClients:7632,total:11923} },
-        { date:'2026-07-11', calls:{inbound:30,outbound:1,total:31}, conversions:{ordersCount:11,completedOrdersCount:11,newClientOrdersCount:10,completedNewClientOrdersCount:10,appealsCount:37,newClientConversionPercent:27.03,completedNewClientConversionPercent:100,completedFromAppealsPercent:27.03}, cash:{newClients:9681,total:9681} },
-        { date:'2026-07-12', calls:{inbound:32,outbound:3,total:35}, conversions:{ordersCount:12,completedOrdersCount:10,newClientOrdersCount:11,completedNewClientOrdersCount:10,appealsCount:36,newClientConversionPercent:30.56,completedNewClientConversionPercent:90.91,completedFromAppealsPercent:27.78}, cash:{newClients:7066,total:7066} },
-        { date:'2026-07-13', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:9,completedOrdersCount:7,newClientOrdersCount:6,completedNewClientOrdersCount:4,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:66.67,completedFromAppealsPercent:0}, cash:{newClients:6683,total:10512} },
-        { date:'2026-07-14', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-15', calls:{inbound:19,outbound:0,total:19}, conversions:{ordersCount:17,completedOrdersCount:13,newClientOrdersCount:14,completedNewClientOrdersCount:11,appealsCount:20,newClientConversionPercent:70,completedNewClientConversionPercent:78.57,completedFromAppealsPercent:55}, cash:{newClients:15578,total:20102} },
-        { date:'2026-07-16', calls:{inbound:14,outbound:0,total:14}, conversions:{ordersCount:13,completedOrdersCount:11,newClientOrdersCount:7,completedNewClientOrdersCount:6,appealsCount:18,newClientConversionPercent:38.89,completedNewClientConversionPercent:85.71,completedFromAppealsPercent:33.33}, cash:{newClients:7207,total:17730} },
-        { date:'2026-07-17', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:3,completedOrdersCount:3,newClientOrdersCount:2,completedNewClientOrdersCount:2,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:100,completedFromAppealsPercent:0}, cash:{newClients:3392,total:6172} },
-        { date:'2026-07-18', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:2,completedOrdersCount:1,newClientOrdersCount:2,completedNewClientOrdersCount:1,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:50,completedFromAppealsPercent:0}, cash:{newClients:694,total:694} },
-        { date:'2026-07-19', calls:{inbound:11,outbound:0,total:11}, conversions:{ordersCount:8,completedOrdersCount:4,newClientOrdersCount:6,completedNewClientOrdersCount:3,appealsCount:13,newClientConversionPercent:46.15,completedNewClientConversionPercent:50,completedFromAppealsPercent:23.08}, cash:{newClients:5467,total:6439} },
-        { date:'2026-07-20', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:7,completedOrdersCount:0,newClientOrdersCount:4,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-21', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:1,completedOrdersCount:0,newClientOrdersCount:1,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-22', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:1,completedOrdersCount:0,newClientOrdersCount:1,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-23', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-24', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-25', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-26', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-27', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-28', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-29', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-30', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-        { date:'2026-07-31', calls:{inbound:0,outbound:0,total:0}, conversions:{ordersCount:0,completedOrdersCount:0,newClientOrdersCount:0,completedNewClientOrdersCount:0,appealsCount:0,newClientConversionPercent:0,completedNewClientConversionPercent:0,completedFromAppealsPercent:0}, cash:{newClients:0,total:0} },
-    ],
-    meta: {
-        hireDate: '2026-03-06',
-        salaryForecast: { amount: 50978.97, periodName: 'Разгрузчики 2' },
-        previousPeriod: '202606',
-    },
-};
-
-const MOCK_STATS = computeStats(MOCK_DATA);
 
 // ── Intern sub-table ───────────────────────────────────────────────
 function HRInternSubTable({ interns, period }: {
