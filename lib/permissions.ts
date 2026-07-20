@@ -18,6 +18,7 @@ export type Feature =
     | 'sidebarTeachersMenu'
     | 'sidebarStudentsTable'
     | 'sidebarAdaptationPlans'
+    | 'sidebarHrTable'
     | 'usersTableCreateButton'
     | 'usersTableFilters'
     | 'usersTableRole'
@@ -64,6 +65,8 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
     3: [
         'sidebarHrMenu',
         'sidebarTeachersMenu',
+        'sidebarHrTable',
+        'sidebarStudentsTable',
         'usersTableDetailUserButton',
         'usersTableFilters',
         'userProfileAddAchievementsButton',
@@ -80,6 +83,8 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'sidebarMentorMenu',
         'sidebarTeachersMenu',
         'sidebarAdminMenu',
+        'sidebarHrTable',
+        'sidebarStudentsTable',
         'usersTableCreateButton',
         'usersTableFilters',
         'userProfileAddAchievementsButton',

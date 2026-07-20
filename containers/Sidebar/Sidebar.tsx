@@ -91,9 +91,12 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                            sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
                             <SidebarButton href="/achievements" icon={Trophy} label="Достижения"
                                            sidebarOpen={sidebarOpen} active={pathname.startsWith('/achievements')}/>
-                            <SidebarButton href="/hr" icon={Sheet} label="Сводная таблица стажёров"
-                                           sidebarOpen={sidebarOpen} active={pathname.startsWith('/hr')}/>
                         </>
+                    }
+
+                    {hasFeature(rid, 'sidebarHrTable') &&
+                        <SidebarButton href="/hr" icon={Sheet} label="Сводная таблица стажёров"
+                                       sidebarOpen={sidebarOpen} active={pathname.startsWith('/hr')}/>
                     }
 
                     {hasFeature(rid, 'sidebarTeachersMenu') &&
