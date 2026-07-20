@@ -8,3 +8,4 @@ export type { CourseRow } from './CoursesTable/CoursesTable';
 export { default as EntityTable } from './EntityTable/EntityTable';
 export type { EntityRow, EntityType, ManualRow, TrainingRow, TestRow, AdaptationPlanRow, AchievementRow, FunctionalRow } from './EntityTable/EntityTable';
 export { default as TeachersTable } from './TeachersTable/TeachersTable';
+export { default as HRTable } from './HRTable/HRTable';
