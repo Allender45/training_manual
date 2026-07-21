@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Button from '@/components/Button/Button';
-import Input from '@/components/Input/Input';
+import { Button, Checkbox, Input } from '@/components';
+import { ChevronDown } from 'lucide-react';
 
 export interface NewOrderTrainerProps {
     onComplete?: () => void;
@@ -34,28 +34,80 @@ const PAYMENT_OPTIONS: { value: PaymentType; label: string }[] = [
     { value: 'invoice', label: 'Безнал'   },
 ];
 
-const TRANSCRIPT = `Спикер 1:
-00:00:00 - Алло. Здравствуйте, пропущенный, ранее был от вас. Чем могу помочь?
-Спикер 2:
+const CORRECT_ANSWERS: Record<string, string> = {
+    city: 'Альметьевск',
+    street: 'Полевая, дом 2',
+    dateTime: 'В ближайшее время',
+    payment: 'На карту (перевод по ссылке СБП)',
+    workDescription: 'В дробилку деревья засовывать, смены по 8 часов, 3–4 дня',
+};
+
+const TRANSCRIPT = `
+Спикер 1: 
+00:00:00 - Алло. Здравствуйте, компания Атлант пропущенный, ранее был от вас. Чем могу помочь?
+Спикер 2: 
 00:00:06 - Здравствуйте, работяги нужны, город Альметьевск.
-Спикер 1:
+Спикер 1: 
 00:00:10 - Что делать надо?
-Спикер 2:
+Спикер 2: 
 00:00:11 - В дробилку деревья засовывать.
-Спикер 1:
-00:00:29 -А на какой адрес надо подъехать?
-Спикер 2:
+Спикер 1: 
+00:00:16 - Время смену рассматриваете.
+Спикер 2: 
+00:00:19 - Где-то на три-четыре дня.
+Спикер 1: 
+00:00:21 - А смены по сколько? По восемь часов?
+Спикер 2: 
+00:00:23 - Восемь.
+Спикер 1: 
+00:00:26 - Не расслышал.
+Спикер 2: 
+00:00:27 - А 8 часов.
+Спикер 1: 
+00:00:29 - Так, когда надо, чтобы приступили? А на какой адрес надо подъехать?
+Спикер 2: 
 00:00:35 - Улица Полевая, дом два.
-Спикер 1:
-00:00:37 - Полевая 2. Хорошо, по окончании работы сможете рассчитаться на карту?  
-Спикер 2:
-00:00:37 - Да, конечно.
-Спикер 1:
-00:00:42 - Всё замечательно. Тогда в конце работы я вам эсэмэской пришлю, куда перевести на месте рассчитываться не нужно будет с рабочими. Они подъедут? Они подъедут ориентировочно в течение часа-полтора, как подъедут, позвонят вам.
-Спикер 2:
-00:01:00 - Добро.
-Спикер 1:
-00:01:03 - Всё, договорились, ожидайте тогда.`;
+Спикер 1: 
+00:00:37 - Полевая 2. Хорошо, с вами ой, по окончании работы сможете рассчитаться переводом, по ссылке СБП оплатить? Да, конечно. Всё замечательно. Тогда в конце работы я вам эсэмэской пришлю, куда перевести на месте рассчитываться не нужно будет с рабочими. Они подъедут? Они подъедут ориентировочно в течение часа-полтора, как подъедут, позвонят вам. Добро.
+00:01:03 - Всё, договорились, ожидайте тогда.
+`;
+
+function normalize(s: string) {
+    return s.trim().toLowerCase().replace(/[.,]/g, '').replace(/\s+/g, ' ');
+}
+
+function validateForm(f: OrderForm): Partial<Record<keyof OrderForm, string>> {
+    const errors: Partial<Record<keyof OrderForm, string>> = {};
+
+    if (!f.city.trim()) {
+        errors.city = 'Введите город';
+    } else if (!normalize(f.city).includes('альметьевск')) {
+        errors.city = 'Неверно указан город';
+    }
+
+    if (!f.street.trim()) {
+        errors.street = 'Введите адрес';
+    } else {
+        const n = normalize(f.street);
+        if (!n.includes('полевая') || !n.includes('2')) {
+            errors.street = 'Неверно указан адрес';
+        }
+    }
+
+    if (!f.workDescription.trim()) {
+        errors.workDescription = 'Укажите характер работ';
+    }
+
+    if (!f.nearestTime && !f.dateTime.trim()) {
+        errors.dateTime = 'Укажите дату и время';
+    }
+
+    if (f.payment !== 'card') {
+        errors.payment = 'Неверно указана форма оплаты';
+    }
+
+    return errors;
+}
 
 export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
     const [form, setForm] = useState<OrderForm>({
@@ -71,12 +123,23 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
     const [reviewing, setReviewing] = useState(false);
     const [review, setReview] = useState<Review | null>(null);
     const [reviewError, setReviewError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof OrderForm, string>>>({});
+    const [showAnswers, setShowAnswers] = useState(false);
 
     function handleChange(field: keyof OrderForm, value: string) {
         setForm(prev => ({ ...prev, [field]: value }));
+        setFieldErrors(prev => {
+            if (!(field in prev)) return prev;
+            const { [field]: _, ...rest } = prev;
+            return rest;
+        });
     }
 
     async function handleSubmit() {
+        const errors = validateForm(form);
+        setFieldErrors(errors);
+        if (Object.keys(errors).length > 0) return;
+
         setReviewing(true);
         setReview(null);
         setReviewError(null);
@@ -88,6 +151,7 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                 address: form.street,
                 apartment: form.apartment || '',
                 dateTime: form.dateTime,
+                nearestTime: form.nearestTime,
                 payment: PAYMENT_OPTIONS.find(o => o.value === form.payment)?.label ?? form.payment,
                 workDescription: form.workDescription,
             };
@@ -114,9 +178,12 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
         setForm({ city: '', street: '', apartment: '', dateTime: '', nearestTime: false, payment: 'cash', workDescription: '' });
         setReview(null);
         setReviewError(null);
+        setFieldErrors({});
+        setShowAnswers(false);
     }
 
     const isValid = !!(form.city.trim() && form.street.trim() && form.workDescription.trim() && (form.nearestTime || form.dateTime));
+    const hasErrors = Object.keys(fieldErrors).length > 0 || (!!review && !review.passed);
 
     return (
         <div className="flex flex-col gap-4">
@@ -135,6 +202,7 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                 onChange={e => handleChange('city', e.target.value)}
                 placeholder="Введите город"
                 required
+                error={fieldErrors.city}
             />
 
             <div>
@@ -152,6 +220,7 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                 placeholder="Например: грузить коробки 8 часов"
                 required
                 type="textarea"
+                error={fieldErrors.workDescription}
             />
 
             <Input
@@ -161,6 +230,7 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                 onChange={e => handleChange('street', e.target.value)}
                 placeholder="Улица, дом"
                 required
+                error={fieldErrors.street}
             />
 
             <Input
@@ -177,6 +247,20 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                 type="datetime"
                 value={form.dateTime}
                 onChange={e => handleChange('dateTime', e.target.value)}
+                disabled={form.nearestTime}
+                nearestTimeCheckbox={false}
+                error={fieldErrors.dateTime}
+            />
+
+            <Checkbox
+                label="В ближайшее время"
+                name="nearestTime"
+                checked={form.nearestTime}
+                onChange={e => setForm(prev => ({
+                    ...prev,
+                    nearestTime: e.target.checked,
+                    dateTime: e.target.checked ? '' : prev.dateTime,
+                }))}
             />
 
             <div className="flex flex-col gap-2">
@@ -196,6 +280,7 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                         </label>
                     ))}
                 </div>
+                {fieldErrors.payment && <p className="text-red-500 text-xs mt-1">{fieldErrors.payment}</p>}
             </div>
 
             {!review &&
@@ -208,6 +293,28 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
 
             {reviewError && (
                 <p className="text-red-500 text-sm">{reviewError}</p>
+            )}
+
+            {hasErrors && (
+                <div className="border border-amber-200 rounded-lg overflow-hidden">
+                    <button
+                        type="button"
+                        onClick={() => setShowAnswers(v => !v)}
+                        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors"
+                    >
+                        <span>{showAnswers ? 'Скрыть правильные ответы' : 'Показать правильные ответы'}</span>
+                        <ChevronDown size={16} className={`transition-transform ${showAnswers ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showAnswers && (
+                        <ul className="px-3 py-2 text-sm text-gray-700 space-y-1 bg-white">
+                            <li><span className="font-medium">Город:</span> {CORRECT_ANSWERS.city}</li>
+                            <li><span className="font-medium">Адрес:</span> {CORRECT_ANSWERS.street}</li>
+                            <li><span className="font-medium">Время:</span> {CORRECT_ANSWERS.dateTime}</li>
+                            <li><span className="font-medium">Оплата:</span> {CORRECT_ANSWERS.payment}</li>
+                            <li><span className="font-medium">Вид работ:</span> {CORRECT_ANSWERS.workDescription}</li>
+                        </ul>
+                    )}
+                </div>
             )}
 
             {review && (

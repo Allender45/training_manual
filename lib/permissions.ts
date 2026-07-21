@@ -54,6 +54,7 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
     4: [
         'usersTableDetailUserButton',
         'usersTableFilters',
+        'usersTableCreateButton',
         'userProfileAddAchievementsButton',
         'adaptationTableAddButtons',
         'mentorWidgets',
