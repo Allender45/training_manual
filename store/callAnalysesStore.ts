@@ -12,6 +12,7 @@ type CallAnalysesStore = {
     analyses: Record<string, Analysis>;
     fetchAnalyses: (filenames: string[]) => Promise<void>;
     setAnalysis: (analysis: Analysis) => void;
+    reset: () => void;
 };
 
 export const useCallAnalysesStore = create<CallAnalysesStore>((set, get) => ({
@@ -23,6 +24,7 @@ export const useCallAnalysesStore = create<CallAnalysesStore>((set, get) => ({
         try {
             const ids = filenames.join(',');
             const res = await fetch(`/api/calls/analyze?ids=${encodeURIComponent(ids)}`);
+            if (!res.ok) return;
             const data = await res.json();
             if (data.analyses) set(state => ({ analyses: { ...state.analyses, ...data.analyses } }));
         } catch (e) {
@@ -31,4 +33,5 @@ export const useCallAnalysesStore = create<CallAnalysesStore>((set, get) => ({
     },
     setAnalysis: (analysis: Analysis) =>
         set(state => ({ analyses: { ...state.analyses, [analysis.recording_id]: analysis } })),
+    reset: () => set({ analyses: {} }),
 }));

@@ -14,6 +14,7 @@ type UsersListStore = {
     mentors: MentorRow[];
     mentorsLoading: boolean;
     fetchMentors: () => Promise<void>;
+    reset: () => void;
 };
 
 export const useUsersListStore = create<UsersListStore>((set) => ({
@@ -49,4 +50,5 @@ export const useUsersListStore = create<UsersListStore>((set) => ({
             set({ mentorsLoading: false });
         }
     },
+    reset: () => set({ users: [], loading: false, mentors: [], mentorsLoading: false }),
 }));

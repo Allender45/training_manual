@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, PhoneCall, Percent, UserPlus, Wallet } from 'lucide-react';
 import StatCard from '@/components/StatCard/StatCard';
+import { MONTHS, buildMonthCells, toPeriod } from '@/lib/date';
+import { formatMoney } from '@/lib/format';
 
 type DayData = {
     date: string;
@@ -54,16 +56,7 @@ export default function AdaptationCalendar({ data, plan, onMonthChange  }: Props
     const year  = viewDate.getFullYear();
     const month = viewDate.getMonth();
 
-    const firstDay = new Date(year, month, 1);
-    const lastDay  = new Date(year, month + 1, 0);
-
-    // стартовый день недели (пн=0)
-    const startOffset = (firstDay.getDay() + 6) % 7;
-    const cells: (Date | null)[] = [
-        ...Array(startOffset).fill(null),
-        ...Array.from({ length: lastDay.getDate() }, (_, i) => new Date(year, month, i + 1)),
-    ];
-    while (cells.length % 7 !== 0) cells.push(null);
+    const cells = buildMonthCells(year, month);
 
     const selectedDay = selected ? data.find(d => d.date === selected) : null;
 
@@ -82,14 +75,10 @@ export default function AdaptationCalendar({ data, plan, onMonthChange  }: Props
         return curr >= plan ? 'bg-green-100' : 'bg-red-100';
     }
 
-    const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь',
-        'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-
     function changeMonth(delta: number) {
         const next = new Date(year, month + delta, 1);
         setViewDate(next);
-        const period = `${next.getFullYear()}${String(next.getMonth() + 1).padStart(2, '0')}`;
-        onMonthChange?.(period);
+        onMonthChange?.(toPeriod(next));
     }
 
     return (
@@ -101,7 +90,7 @@ export default function AdaptationCalendar({ data, plan, onMonthChange  }: Props
                     <ChevronLeft size={18} />
                 </button>
                 <span className="text-sm font-semibold text-gray-700">
-                    {monthNames[month]} {year}
+                    {MONTHS[month]} {year}
                 </span>
                 <button onClick={() => changeMonth(+1)}
                         className="p-1 rounded hover:bg-gray-100">
@@ -118,9 +107,9 @@ export default function AdaptationCalendar({ data, plan, onMonthChange  }: Props
 
             {/* Ячейки */}
             <div className="grid grid-cols-7 gap-1">
-                {cells.map((date, i) => {
-                    if (!date) return <div key={i} />;
-                    const key = toDataDate(date);
+                {cells.map((dayNum, i) => {
+                    if (!dayNum) return <div key={i} />;
+                    const key = toDataDate(new Date(year, month, dayNum));
                     const day = data.find(d => d.date === key);
                     const color = getDayColor(day, plan);
                     const isSelected = selected === key;
@@ -131,7 +120,7 @@ export default function AdaptationCalendar({ data, plan, onMonthChange  }: Props
                                 ${color}
                                 ${isSelected ? 'ring-2 ring-blue-400' : ''}
                                 ${day ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}>
-                            {date.getDate()}
+                            {dayNum}
                         </button>
                     );
                 })}
@@ -156,13 +145,13 @@ export default function AdaptationCalendar({ data, plan, onMonthChange  }: Props
                                       bgColor={diffColor(selectedDay.conversion, plan.plan_conversion)}
                             />
                             <StatCard label="Касса (новые)" icon={UserPlus} color="bg-blue-100 text-blue-600"
-                                      value={`${selectedDay.revenue_new.toLocaleString('ru-RU')} ₽`}
+                                      value={formatMoney(selectedDay.revenue_new)}
                                       sub={fmtDiff(selectedDay.revenue_new, plan.plan_revenue_new) + ' от плана'}
                                       subClass={diffClass(selectedDay.revenue_new, plan.plan_revenue_new)}
                                       bgColor={diffColor(selectedDay.revenue_new, plan.plan_revenue_new)}
                             />
                             <StatCard label="Касса общая" icon={Wallet} color="bg-green-100 text-green-600"
-                                      value={`${selectedDay.revenue_total.toLocaleString('ru-RU')} ₽`}
+                                      value={formatMoney(selectedDay.revenue_total)}
                                       sub={fmtDiff(selectedDay.revenue_total, plan.plan_revenue_total) + ' от плана'}
                                       subClass={diffClass(selectedDay.revenue_total, plan.plan_revenue_total)}
                                       bgColor={diffColor(selectedDay.revenue_total, plan.plan_revenue_total)}

@@ -48,8 +48,14 @@ type CourseTest = {
 type TestQuestion = {
     id: number;
     question: string;
-    correct_answer: string;
     options: string[];
+};
+
+type TestSubmitResult = {
+    score: number;
+    total: number;
+    correct: number;
+    results: { question_id: number; correct: boolean; correct_answer?: string }[];
 };
 
 function formatStudyTime(minutes: number): string {
@@ -123,6 +129,9 @@ export default function CourseStudyPage() {
     const [currentQ, setCurrentQ] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
+    const [testResult, setTestResult] = useState<TestSubmitResult | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
@@ -184,6 +193,8 @@ export default function CourseStudyPage() {
         setCurrentQ(0);
         setSelectedAnswers({});
         setTimeLeft(null);
+        setTestResult(null);
+        setSubmitError(null);
         setTestLoading(true);
         try {
             const res = await fetch(`/api/courseTests/${courseTest.id}`);
@@ -193,10 +204,7 @@ export default function CourseStudyPage() {
             setTestQuestions(shuffledQs.map(q => ({
                 id: q.id,
                 question: q.question,
-                correct_answer: q.correct_answer,
-                options: courseTest.shuffle_answers
-                    ? shuffle([q.correct_answer, ...q.wrong_answers])
-                    : [q.correct_answer, ...q.wrong_answers],
+                options: q.options ?? [],
             })));
         } finally {
             setTestLoading(false);
@@ -221,40 +229,61 @@ export default function CourseStudyPage() {
         }
     }
 
-    function finishTest() {
-        const finalScore = testQuestions.filter((q, i) => selectedAnswers[i] === q.correct_answer).length;
-        const scorePercent = testQuestions.length > 0
-            ? Math.round((finalScore / testQuestions.length) * 100)
-            : 0;
+    async function finishTest() {
+        if (submitting || !courseTest) return;
+        setSubmitting(true);
+        setSubmitError(null);
+        try {
+            const res = await fetch(`/api/courseTests/${courseTest.id}/submit`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    answers: testQuestions.map((q, i) => ({
+                        question_id: q.id,
+                        answer: selectedAnswers[i] ?? null,
+                    })),
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setSubmitError(data.error ?? 'Ошибка проверки ответов');
+                return;
+            }
 
-        if (finalScore == testQuestions.length) {
-            setTestPassed(true);
-
+            setTestResult(data);
             setTestPhase('result');
 
-            if (courseTest?.notify_trainee) {
-                push({text: 'Стажёр: ' + user?.last_name + ' ' + user?.first_name + ' ' + user?.middle_name + ' ' + courseTest.notify_trainee, icon: '📋'});
+            if (data.correct === data.total) {
+                setTestPassed(true);
+
+                if (courseTest?.notify_trainee) {
+                    push({text: 'Стажёр: ' + user?.last_name + ' ' + user?.first_name + ' ' + user?.middle_name + ' ' + courseTest.notify_trainee, icon: '📋'});
+                }
+
+                if (courseTest?.achievement_id) {
+                    const achievement = achievements.find(a => a.id === courseTest.achievement_id);
+                    if (achievement) showAchievement(achievement);
+                }
+
+                if (course?.id) {
+                    fetch('/api/user-progress', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            content_type: 'course',
+                            content_id: course.id,
+                            score: data.score,
+                        }),
+                    }).catch(() => {});
+                }
             }
 
-            if (courseTest?.achievement_id) {
-                const achievement = achievements.find(a => a.id === courseTest.achievement_id);
-                if (achievement) showAchievement(achievement);
-            }
-
-            if (course?.id) {
-                fetch('/api/user-progress', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        content_type: 'course',
-                        content_id: course.id,
-                        score: scorePercent,
-                    }),
-                }).catch(() => {});
-            }
+            setTestAttempted(true);
+        } catch {
+            setSubmitError('Ошибка соединения с сервером');
+        } finally {
+            setSubmitting(false);
         }
-
-        setTestAttempted(true);
     }
 
     function closeTestModal() {
@@ -270,7 +299,6 @@ export default function CourseStudyPage() {
         setOpenTrainerId(null);
     }
 
-    const score = testQuestions.filter((q, i) => selectedAnswers[i] === q.correct_answer).length;
     const allTrainersCompleted = trainers.length === 0 || trainers.every(t => completedTrainers.has(t.id));
 
     return (
@@ -473,10 +501,8 @@ export default function CourseStudyPage() {
                                     let cls = 'w-full text-left px-4 py-3 rounded-xl border text-sm transition-colors ';
                                     if (!chosen) {
                                         cls += 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 text-gray-700 cursor-pointer';
-                                    } else if (opt === q.correct_answer) {
-                                        cls += 'border-green-400 bg-green-50 text-green-800 font-medium';
                                     } else if (opt === chosen) {
-                                        cls += 'border-red-400 bg-red-50 text-red-800';
+                                        cls += 'border-indigo-400 bg-indigo-50 text-indigo-800 font-medium';
                                     } else {
                                         cls += 'border-gray-100 text-gray-400';
                                     }
@@ -489,29 +515,37 @@ export default function CourseStudyPage() {
                             </div>
                             {chosen && (
                                 <div className="flex justify-end pt-1">
-                                    <Button onClick={nextQuestion}>
+                                    <Button onClick={nextQuestion} loading={submitting}>
                                         {currentQ < testQuestions.length - 1 ? 'Следующий' : 'Завершить'}
                                     </Button>
                                 </div>
                             )}
+                            {submitError && (
+                                <div className="flex items-center justify-between gap-3 pt-1">
+                                    <p className="text-sm text-red-600">{submitError}</p>
+                                    <Button variant="outline" onClick={finishTest} loading={submitting}>Попробовать снова</Button>
+                                </div>
+                            )}
                         </div>
                     );
-                })() : testPhase === 'result' ? (
+                })() : testPhase === 'result' && testResult ? (
                     <div className="flex flex-col gap-4">
                         <div className={`rounded-2xl p-5 text-center ${
-                            score === testQuestions.length ? 'bg-green-50' :
-                                score >= testQuestions.length * 0.7 ? 'bg-indigo-50' : 'bg-amber-50'
+                            testResult.correct === testResult.total ? 'bg-green-50' :
+                                testResult.correct >= testResult.total * 0.7 ? 'bg-indigo-50' : 'bg-amber-50'
                         }`}>
-                            <p className="text-3xl font-bold text-gray-800">{score} / {testQuestions.length}</p>
+                            <p className="text-3xl font-bold text-gray-800">{testResult.correct} / {testResult.total}</p>
                             <p className="text-sm text-gray-500 mt-1">
-                                {score === testQuestions.length ? '🎉 Отлично! Все ответы верны' :
-                                    score >= testQuestions.length * 0.7 ? '👍 Хороший результат' :
+                                {testResult.correct === testResult.total ? '🎉 Отлично! Все ответы верны' :
+                                    testResult.correct >= testResult.total * 0.7 ? '👍 Хороший результат' :
                                         '📚 Стоит повторить материал'}
                             </p>
                         </div>
                         <div className="flex flex-col gap-2 max-h-72 overflow-y-auto">
                             {testQuestions.map((q, i) => {
-                                const correct = selectedAnswers[i] === q.correct_answer;
+                                const r = testResult.results.find(r => r.question_id === q.id);
+                                const correct = r?.correct === true;
+                                const userAnswer = selectedAnswers[i];
                                 return (
                                     <div key={i} className={`rounded-xl p-3 text-sm ${correct ? 'bg-green-50' : 'bg-red-50'}`}>
                                         <div className="flex items-start gap-2">
@@ -520,11 +554,14 @@ export default function CourseStudyPage() {
                                                 : <XCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5"/>}
                                             <div>
                                                 <p className="text-gray-700 font-medium">{q.question}</p>
-                                                {!correct && selectedAnswers[i] && (
-                                                    <p className="text-red-600 mt-0.5">Ваш ответ: {selectedAnswers[i]}</p>
+                                                {!correct && userAnswer && (
+                                                    <p className="text-red-600 mt-0.5">Ваш ответ: {userAnswer}</p>
                                                 )}
-                                                {!correct && (
-                                                    <p className="text-green-700 mt-0.5">Верно: {q.correct_answer}</p>
+                                                {!correct && !userAnswer && (
+                                                    <p className="text-red-600 mt-0.5">Нет ответа</p>
+                                                )}
+                                                {!correct && r?.correct_answer && (
+                                                    <p className="text-green-700 mt-0.5">Верно: {r.correct_answer}</p>
                                                 )}
                                             </div>
                                         </div>

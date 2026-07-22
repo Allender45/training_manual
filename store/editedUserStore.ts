@@ -30,21 +30,25 @@ type EditedUserStore = {
     mentorship: Mentorship | null;
     mentorOptions: { value: string; label: string }[];
     loading: boolean;
+    requestId: number;
     fetchEditedUser: (id: string) => Promise<void>;
     clearEditedUser: () => void;
 };
 
-export const useEditedUserStore = create<EditedUserStore>((set) => ({
+export const useEditedUserStore = create<EditedUserStore>((set, get) => ({
     editedUser: null,
     mentorship: null,
     mentorOptions: [],
     loading: false,
+    requestId: 0,
     fetchEditedUser: async (id) => {
-        set({ loading: true, editedUser: null, mentorship: null, mentorOptions: [] });
+        const reqId = get().requestId + 1;
+        set({ loading: true, editedUser: null, mentorship: null, mentorOptions: [], requestId: reqId });
         try {
             const res = await fetch(`/api/users/${id}`);
             const data = await res.json();
             if (!res.ok) return;
+            if (get().requestId !== reqId) return;
 
             const user: EditedUser = data.user;
             set({ editedUser: user });
@@ -54,6 +58,7 @@ export const useEditedUserStore = create<EditedUserStore>((set) => ({
                     fetch(`/api/mentorships?intern_id=${id}`).then(r => r.json()),
                     fetch('/api/users?scope=mentors').then(r => r.json()),
                 ]);
+                if (get().requestId !== reqId) return;
                 set({
                     mentorship: mData.mentorship ?? null,
                     mentorOptions: (uData.users ?? [])
@@ -64,7 +69,7 @@ export const useEditedUserStore = create<EditedUserStore>((set) => ({
         } catch (error) {
             console.error('[fetchEditedUser]', error);
         } finally {
-            set({ loading: false });
+            if (get().requestId === reqId) set({ loading: false });
         }
     },
     clearEditedUser: () => set({ editedUser: null, mentorship: null, mentorOptions: [] }),

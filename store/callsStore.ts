@@ -27,6 +27,7 @@ type CallsStore = {
     callsByPage: Record<number, CallRecord[]>;
     meta: CallsMeta | null;
     loading: boolean;
+    loadingUserId: number | null;
     error: string | null;
     loadedUserId: number | null;
     fetchCalls: (userId: number, page: number) => Promise<void>;
@@ -40,6 +41,7 @@ export const useCallsStore = create<CallsStore>((set, get) => ({
     callsByPage: {},
     meta: null,
     loading: false,
+    loadingUserId: null,
     error: null,
     loadedUserId: null,
     setError: (error) => set({ error }),
@@ -65,17 +67,18 @@ export const useCallsStore = create<CallsStore>((set, get) => ({
 
     fetchCalls: async (userId, page) => {
         const s = get();
-        if (s.loading) return;
+        if (s.loading && s.loadingUserId === userId) return;
         if (s.loadedUserId === userId && s.callsByPage[page]) return;
 
         if (s.loadedUserId !== null && s.loadedUserId !== userId) {
             set({ callsByPage: {} });
         }
 
-        set({ loading: true, error: null });
+        set({ loading: true, loadingUserId: userId, error: null });
         try {
             const res = await fetch(`/api/calls?userId=${userId}&page=${page}`);
             const data = await res.json();
+            if (get().loadingUserId !== userId) return;
             if (!res.ok) { set({ error: data.error ?? 'Ошибка' }); return; }
 
             const mapped: CallRecord[] = data.data.map((c: any, i: number) => ({
@@ -95,11 +98,11 @@ export const useCallsStore = create<CallsStore>((set, get) => ({
                 loadedUserId: userId,
             }));
         } catch {
-            set({ error: 'Ошибка соединения' });
+            if (get().loadingUserId === userId) set({ error: 'Ошибка соединения' });
         } finally {
-            set({ loading: false });
+            if (get().loadingUserId === userId) set({ loading: false, loadingUserId: null });
         }
     },
 
-    reset: () => set({ callsByPage: {}, meta: null, loading: false, error: null, loadedUserId: null, recordingUrls: {} }),
+    reset: () => set({ callsByPage: {}, meta: null, loading: false, loadingUserId: null, error: null, loadedUserId: null, recordingUrls: {} }),
 }));

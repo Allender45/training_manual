@@ -9,6 +9,13 @@ export async function POST(req: NextRequest) {
 
     try {
         const { content_type, content_id, score } = await req.json();
+        if (!['course', 'manual', 'test'].includes(content_type)) {
+            return NextResponse.json({ error: 'Некорректный content_type' }, { status: 400 });
+        }
+        if (score !== undefined && score !== null
+            && (typeof score !== 'number' || !Number.isFinite(score) || score < 0 || score > 100)) {
+            return NextResponse.json({ error: 'Некорректный score' }, { status: 400 });
+        }
         await pool.query(
             `INSERT INTO user_progress (user_id, content_type, content_id, score)
              VALUES ($1, $2, $3, $4)

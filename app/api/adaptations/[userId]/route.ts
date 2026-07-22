@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { unsignSession } from '@/lib/session';
+import { getAuth, canAccessUserData } from '@/lib/apiAuth';
 
 export async function GET(req: NextRequest, { params }: { params: { userId: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    if (!unsignSession(raw)) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await getAuth(req);
+    if (!auth) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    if (!canAccessUserData(auth, auth.userId === Number(params.userId))) {
+        return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 });
+    }
 
     try {
         const result = await pool.query(

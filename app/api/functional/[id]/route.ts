@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
 
 export async function GET(
     req: NextRequest,
@@ -30,9 +31,9 @@ export async function PUT(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'functionalEditButton');
+    if (auth instanceof NextResponse) return auth;
+    const userId = String(auth.userId);
 
     const id = parseInt(params.id, 10);
     if (isNaN(id)) return NextResponse.json({ error: 'Неверный ID' }, { status: 400 });

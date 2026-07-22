@@ -18,6 +18,7 @@ type NotificationsStore = {
     push: (data: { text: string; icon?: string; user_id?: number }) => Promise<void>;
     markRead: (id: number) => Promise<void>;
     markAllRead: () => Promise<void>;
+    reset: () => void;
     achievementToast: AchievementToast;
     showAchievement: (a: AchievementOption) => void;
     dismissAchievement: () => void;
@@ -59,17 +60,29 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
     },
 
     markRead: async (id: number) => {
-        await fetch(`/api/notifications/${id}`, { method: 'PATCH' });
-        set(state => ({
-            notifications: state.notifications.filter(n => n.id !== id),
-            unreadCount: Math.max(0, state.unreadCount - 1),
-        }));
+        try {
+            const res = await fetch(`/api/notifications/${id}`, { method: 'PATCH' });
+            if (!res.ok) return;
+            set(state => ({
+                notifications: state.notifications.filter(n => n.id !== id),
+                unreadCount: Math.max(0, state.unreadCount - 1),
+            }));
+        } catch (e) {
+            console.error('[notificationsStore.markRead]', e);
+        }
     },
 
     markAllRead: async () => {
-        await fetch('/api/notifications/read-all', { method: 'POST' });
-        set({ notifications: [], unreadCount: 0 });
+        try {
+            const res = await fetch('/api/notifications/read-all', { method: 'POST' });
+            if (!res.ok) return;
+            set({ notifications: [], unreadCount: 0 });
+        } catch (e) {
+            console.error('[notificationsStore.markAllRead]', e);
+        }
     },
+
+    reset: () => set({ notifications: [], unreadCount: 0, achievementToast: null }),
 
     showAchievement: (a) => {
         set({ achievementToast: a });

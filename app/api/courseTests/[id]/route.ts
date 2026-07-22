@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { unsignSession } from '@/lib/session';
+import { getAuth, requireFeature } from '@/lib/apiAuth';
+import { hasFeature } from '@/lib/permissions';
+
+function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    if (!unsignSession(raw)) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await getAuth(req);
+    if (!auth) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
 
     try {
         const testResult = await pool.query(
@@ -16,13 +26,25 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         );
         if (!testResult.rows[0]) return NextResponse.json({ error: 'Не найден' }, { status: 404 });
 
+        // correct_answer отдаём только редакторам тестов — иначе ответы видны до сдачи.
+        // Варианты ответов собираем на сервере, чтобы не раскрывать верный.
+        const canSeeAnswers = hasFeature(auth.roleId, 'sidebarAdminMenu');
+        const shuffleAnswers = testResult.rows[0].shuffle_answers !== false;
+
         const questionsResult = await pool.query(
             `SELECT id, question, correct_answer, wrong_answers, order_position
              FROM test_questions WHERE test_id = $1 ORDER BY order_position ASC`,
             [params.id]
         );
+        const questions = questionsResult.rows.map(row => {
+            const base = [row.correct_answer, ...(row.wrong_answers ?? [])];
+            const options = shuffleAnswers ? shuffle(base) : base;
+            if (canSeeAnswers) return { ...row, options };
+            const { correct_answer, wrong_answers, ...q } = row;
+            return { ...q, options };
+        });
 
-        return NextResponse.json({ test: testResult.rows[0], questions: questionsResult.rows });
+        return NextResponse.json({ test: testResult.rows[0], questions });
     } catch (error: any) {
         console.error('[GET /api/courseTests/test]', error);
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
@@ -30,9 +52,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'sidebarAdminMenu');
+    if (auth instanceof NextResponse) return auth;
+    const userId = String(auth.userId);
 
     try {
         const { title, time_limit, shuffle_questions, shuffle_answers, is_active, questions,
@@ -95,8 +117,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    if (!unsignSession(raw)) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'sidebarAdminMenu');
+    if (auth instanceof NextResponse) return auth;
 
     try {
         const result = await pool.query(

@@ -2,21 +2,7 @@ import React from 'react';
 
 import { Calendar, X } from 'lucide-react';
 
-function formatPhone(raw: string): string {
-    const digits = raw.replace(/\D/g, '');
-    if (digits.length === 0) return '';
-    let d = digits.startsWith('7') ? digits : '7' + digits;
-    d = d.slice(0, 11);
-    let formatted = '+' + d[0];
-    if (d.length > 1) {
-        formatted += ' (' + d.slice(1, Math.min(4, d.length));
-        if (d.length >= 4) formatted += ')';
-        if (d.length > 4) formatted += ' ' + d.slice(4, Math.min(7, d.length));
-    }
-    if (d.length > 7) formatted += '-' + d.slice(7, Math.min(9, d.length));
-    if (d.length > 9) formatted += '-' + d.slice(9, 11);
-    return formatted;
-}
+import { formatPhone } from '@/lib/format';
 
 function formatDateTimeLocal(date: Date): string {
     const pad = (n: number) => String(n).padStart(2, '0');

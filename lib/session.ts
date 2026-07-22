@@ -1,6 +1,13 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 
-const SECRET = process.env.SESSION_SECRET!;
+const envSecret = process.env.SESSION_SECRET;
+if (!envSecret || envSecret.length < 32) {
+    throw new Error(
+        'SESSION_SECRET не задан или короче 32 символов. ' +
+        'Задайте переменную окружения SESSION_SECRET длиной не менее 32 символов.'
+    );
+}
+const SECRET: string = envSecret;
 
 export function signSession(value: string): string {
     const sig = createHmac('sha256', SECRET).update(value).digest('base64url');

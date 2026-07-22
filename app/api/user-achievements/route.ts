@@ -1,6 +1,7 @@
 import pool from "@/lib/db";
 import {NextResponse, NextRequest} from "next/server";
 import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
 
 export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
@@ -24,9 +25,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'userProfileAddAchievementsButton');
+    if (auth instanceof NextResponse) return auth;
+    const userId = String(auth.userId);
     try {
         const { achievement_id } = await req.json();
         const result = await pool.query(

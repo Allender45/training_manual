@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { getAuth } from '@/lib/apiAuth';
+import { hasFeature } from '@/lib/permissions';
 
 export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
@@ -20,15 +22,17 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await getAuth(req);
+    if (!auth) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
 
     try {
         const { text, icon = 'bell', user_id } = await req.json();
         if (!text?.trim()) return NextResponse.json({ error: 'Текст обязателен' }, { status: 400 });
 
-        const targetUserId = user_id ?? userId;
+        const targetUserId = user_id ?? auth.userId;
+        if (Number(targetUserId) !== auth.userId && !hasFeature(auth.roleId, 'editUser')) {
+            return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 });
+        }
         const result = await pool.query(
             'INSERT INTO notifications (user_id, text, icon) VALUES ($1, $2, $3) RETURNING *',
             [targetUserId, text.trim(), icon]

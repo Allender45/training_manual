@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
 
 export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
@@ -33,9 +34,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'adaptationTableAddButtons');
+    if (auth instanceof NextResponse) return auth;
+    const userId = String(auth.userId);
 
     try {
         const body = await req.json();

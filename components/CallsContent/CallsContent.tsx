@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import {useCallAnalysesStore, useCallsStore} from '@/store';
 import { Table } from '@/components';
 import type { Column } from '@/components/Table/Table';
+import ReviewResult from '@/components/ReviewResult/ReviewResult';
 
 type CallRecord = {
     id: number;
@@ -175,24 +176,11 @@ export default function CallsContent({ userId }: Props) {
                         <p className="font-semibold text-gray-700 mb-1">Транскрипция</p>
                         <p className="text-gray-600 bg-gray-50 rounded-lg p-3 whitespace-pre-wrap">{analysis.transcript}</p>
                     </div>
-                    <div>
-                        <p className="font-semibold text-green-700 mb-1">✓ Сильные стороны</p>
-                        <ul className="space-y-1">
-                            {analysis.strong_points.map((p, i) => <li key={i} className="bg-green-50 rounded-lg p-2 text-gray-700">{p}</li>)}
-                        </ul>
-                    </div>
-                    <div>
-                        <p className="font-semibold text-red-700 mb-1">✗ Слабые стороны</p>
-                        <ul className="space-y-1">
-                            {analysis.weak_points.map((p, i) => <li key={i} className="bg-red-50 rounded-lg p-2 text-gray-700">{p}</li>)}
-                        </ul>
-                    </div>
-                    <div>
-                        <p className="font-semibold text-blue-700 mb-1">💡 Рекомендации</p>
-                        <ul className="space-y-1">
-                            {analysis.recommendations.map((p, i) => <li key={i} className="bg-blue-50 rounded-lg p-2 text-gray-700">{p}</li>)}
-                        </ul>
-                    </div>
+                    <ReviewResult
+                        strongPoints={analysis.strong_points}
+                        weakPoints={analysis.weak_points}
+                        recommendations={analysis.recommendations}
+                    />
                 </div>
             )}
         </div>

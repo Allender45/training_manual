@@ -4,12 +4,13 @@ import { useState } from 'react';
 import Button from '@/components/Button/Button';
 import Input from '@/components/Input/Input';
 import { Checkbox, Select } from '@/components';
+import PricingCriteriaDetails from '@/components/trainers/PricingCriteriaDetails/PricingCriteriaDetails';
+import ReviewResult from '@/components/ReviewResult/ReviewResult';
+import { PaymentType, Review, PAYMENT_OPTIONS } from '@/components/trainers/review';
 
 export interface FullOrderCreateProps {
     onComplete?: () => void;
 }
-
-type PaymentType = 'cash' | 'card' | 'invoice';
 
 type OrderForm = {
     city: string;
@@ -30,20 +31,6 @@ type PricingForm = {
     transportParam: string;
     transportSize: string;
 };
-
-type Review = {
-    passed: boolean;
-    strong_points: string[];
-    weak_points: string[];
-    recommendations: string[];
-    answers: string[];
-};
-
-const PAYMENT_OPTIONS: { value: PaymentType; label: string }[] = [
-    { value: 'cash',    label: 'Наличные' },
-    { value: 'card',    label: 'На карту' },
-    { value: 'invoice', label: 'Безнал'   },
-];
 
 type CaseData = {
     id: number;
@@ -339,40 +326,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                 </div>
             )}
 
-            <details className="rounded-xl border border-gray-200 overflow-hidden">
-                <summary className="px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer select-none hover:bg-gray-50 transition-colors [list-style:none] flex items-center justify-between">
-                    <span>📋 Критерии изменения цены</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 transition-transform details-open:rotate-180"><polyline points="6 9 12 15 18 9"/></svg>
-                </summary>
-                <div className="px-4 pb-4 pt-2 text-sm text-gray-600 flex flex-col gap-4 border-t border-gray-100 max-h-[300px] overflow-y-auto">
-                    <div>
-                        <p className="font-semibold text-gray-700 mb-2">Критерии для поднятия цены грузчиков:</p>
-                        <ol className="list-decimal list-inside space-y-1 leading-relaxed">
-                            <li>Стройматериалы (от 20 кг/ед): +75 ₽/час к стартовой цене</li>
-                            <li>Подъём по лестнице выше 3 этажа: +75 ₽/час к стартовой цене</li>
-                            <li>Подъём по лестнице выше 6 этажа: +150 ₽/час к стартовой цене</li>
-                            <li>Грязная работа: +75 ₽/час к стартовой цене</li>
-                            <li>Сборка/разборка: +75–150 ₽ в зависимости от сложности (либо сдельная оплата)</li>
-                            <li>Вечернее время после 19:00: +75 ₽/час к стартовой цене</li>
-                            <li>Такелажные работы: +75–150 ₽/час в зависимости от сложности (либо сдельная оплата)</li>
-                            <li>Работа за пределами черты города: +75 ₽/час к стартовой цене</li>
-                            <li>Если время работы не превысит 15 минут: −75 ₽ от стартовой цены</li>
-                            <li>Работа на полный день: −75–150 ₽ от стартовой цены</li>
-                        </ol>
-                    </div>
-                    <div>
-                        <p className="font-semibold text-gray-700 mb-2">Критерии для поднятия цены на услуги транспорта (газели):</p>
-                        <ol className="list-decimal list-inside space-y-1 leading-relaxed">
-                            <li>Вечернее время после 18:00: +100–200 ₽/час</li>
-                            <li>Погодные условия, мешающие работе транспорта (снегопад, град, ливни, сильная жара): +100–200 ₽/час</li>
-                            <li>Заезды на дополнительные точки: +100 ₽ за адрес</li>
-                            <li>Удалённость адресов друг от друга (с правого берега на левый и т.д.): +100–200 ₽/час</li>
-                            <li>Выезд за город: 50 ₽/км (оплачивается только в одну сторону)</li>
-                            <li>Газель без грузчиков по городу: продаём на 200–300 ₽ выше стоимости ЦРМ</li>
-                        </ol>
-                    </div>
-                </div>
-            </details>
+            <PricingCriteriaDetails />
 
             <div className="border-t border-gray-100 pt-4 flex flex-col gap-3">
                 <div>Базовая ставка рабочего: {caseData.workerPrice}₽</div>
@@ -492,36 +446,11 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
 
             {review && (
                 <div className="space-y-3 text-sm">
-                    {review.strong_points.filter(p => p.trim()).length > 0 && (
-                        <div>
-                            <p className="font-semibold text-green-700 mb-1">✓ Сильные стороны</p>
-                            <ul className="space-y-1">
-                                {review.strong_points.map((p, i) => (
-                                    <li key={i} className="bg-green-50 rounded-lg p-2 text-gray-700">{p}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                    {review.weak_points.filter(p => p.trim()).length > 0 && (
-                        <div>
-                            <p className="font-semibold text-red-700 mb-1">✗ Слабые стороны</p>
-                            <ul className="space-y-1">
-                                {review.weak_points.map((p, i) => (
-                                    <li key={i} className="bg-red-50 rounded-lg p-2 text-gray-700">{p}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                    {review.recommendations.filter(p => p.trim()).length > 0 && (
-                        <div>
-                            <p className="font-semibold text-blue-700 mb-1">💡 Рекомендации</p>
-                            <ul className="space-y-1">
-                                {review.recommendations.map((p, i) => (
-                                    <li key={i} className="bg-blue-50 rounded-lg p-2 text-gray-700">{p}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
+                    <ReviewResult
+                        strongPoints={review.strong_points}
+                        weakPoints={review.weak_points}
+                        recommendations={review.recommendations}
+                    />
                     <div className="flex justify-end pt-2">
                         {review.passed ? (
                             <Button onClick={handleNext}>

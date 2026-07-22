@@ -1,13 +1,14 @@
 'use client';
 
 import React, {useState, useEffect, useMemo} from 'react';
-import {Table, Checkbox, Button, Select, AdaptationContent, CallsContent} from '@/components';
+import {Table, Checkbox, Button, Select, AdaptationContent, CallsContent, Avatar, Badge, Pagination} from '@/components';
 import {Column} from '@/components/Table/Table';
-import {Settings, ChevronLeft, ChevronRight, Plus, Search, X, BadgePercent, Phone} from 'lucide-react';
+import {Settings, Plus, Search, X, BadgePercent, Phone} from 'lucide-react';
 import Modal from '../Modal/Modal';
 import {useRouter} from 'next/navigation';
 import {hasFeature} from "@/lib/permissions";
 import {useUserStore} from "@/store/userStore";
+import {phoneDigits, getInitials} from '@/lib/format';
 
 export type UserRow = {
     id: number;
@@ -29,13 +30,6 @@ type UsersTableProps = {
     onEdit?: (row: UserRow) => void;
     onDelete?: (row: UserRow) => void;
 };
-
-function getPageNumbers(current: number, total: number): (number | '...')[] {
-    if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
-    if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
-    if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
-    return [1, '...', current - 1, current, current + 1, '...', total];
-}
 
 export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -106,15 +100,14 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
             key: 'name', header: 'Имя',
             render: (row) => (
                 <div className="flex items-center gap-2">
-                    {row.photo ? (
-                        <img src={row.photo} alt={row.name}
-                             className="w-8 h-8 rounded-full object-cover flex-shrink-0"/>
-                    ) : (
-                        <div
-                            className="w-8 h-8 rounded-full bg-[#41A141] flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                            {row.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                        </div>
-                    )}
+                    <Avatar
+                        src={row.photo ?? undefined}
+                        alt={row.name}
+                        size="sm"
+                        fallback={getInitials(...row.name.split(' '))}
+                        color="bg-[#41A141] text-white"
+                        className="border-0 flex-shrink-0 font-medium"
+                    />
                     <span>{row.name}</span>
                 </div>
             ),
@@ -123,7 +116,7 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
         {
             key: 'phone', header: 'Телефон',
             render: (row) => {
-                const digits = row.phone?.replace(/\D/g, '');
+                const digits = row.phone ? phoneDigits(row.phone) : '';
                 return (
                     <div className="flex items-center">
                         <span>{row.phone ?? '—'}</span>
@@ -161,11 +154,7 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
         {
             key: 'active', header: 'Статус',
             render: (row) => (
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                    row.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                }`}>
-                    {row.active ? 'Активен' : 'Неактивен'}
-                </span>
+                <Badge variant={row.active ? 'green' : 'gray'} text={row.active ? 'Активен' : 'Неактивен'}/>
             ),
         },
         {
@@ -175,11 +164,8 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
         {
             key: 'adaptation_access', header: 'Адаптация',
             render: (row) => (
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                    row.adaptation_access ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                }`}>
-                    {row.adaptation_access ? 'Допущен' : 'Не допущен'}
-                </span>
+                <Badge variant={row.adaptation_access ? 'green' : 'gray'}
+                       text={row.adaptation_access ? 'Допущен' : 'Не допущен'}/>
             ),
         },
         {
@@ -193,8 +179,6 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
     const columns = allColumns.filter(col =>
         col.key === 'name' || colVisibility[col.key as keyof typeof colVisibility]
     );
-
-    const pageNumbers = getPageNumbers(currentPage, totalPages);
 
     return (
         <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -319,52 +303,7 @@ export default function UsersTable({data, onEdit, onDelete}: UsersTableProps) {
             />
 
             {showPagination && (
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-1">
-                        <button
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                            className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-30"
-                        >
-                            <ChevronLeft size={16}/>
-                        </button>
-                        {pageNumbers.map((page, i) => (
-                            page === '...'
-                                ? <span key={i}
-                                        className="w-8 h-8 flex items-center justify-center text-gray-400 text-sm">…</span>
-                                : <button
-                                    key={i}
-                                    onClick={() => setCurrentPage(page as number)}
-                                    className={`w-8 h-8 rounded-lg text-sm transition-colors ${
-                                        page === currentPage ? 'bg-[#41A141] text-white' : 'text-gray-500 hover:bg-gray-100'
-                                    }`}
-                                >
-                                    {page}
-                                </button>
-                        ))}
-                        <button
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
-                            className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-30"
-                        >
-                            <ChevronRight size={16}/>
-                        </button>
-                    </div>
-                    <div className="flex items-end gap-2 text-sm text-gray-500">
-                        <Select
-                            label="Страница"
-                            name="currentPage"
-                            value={String(currentPage)}
-                            onChange={e => setCurrentPage(Number(e.target.value))}
-                            options={Array.from({length: totalPages}, (_, i) => ({
-                                value: String(i + 1),
-                                label: String(i + 1),
-                            }))}
-                            size="sm"
-                        />
-                        <span className="mb-2">из {totalPages}</span>
-                    </div>
-                </div>
+                <Pagination currentPage={currentPage} totalPages={totalPages} onChange={setCurrentPage}/>
             )}
 
             <Modal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} title="Настройки таблицы">

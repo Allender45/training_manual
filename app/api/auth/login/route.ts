@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import pool from '@/lib/db';
 import { signSession } from '@/lib/session';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 function normalizePhone(phone: string): string {
     const cleaned = phone.replace(/[^\d]/g, '');
@@ -24,6 +25,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Неверный формат телефона' }, { status: 400 });
         }
 
+        const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+        if (!checkRateLimit(`${ip}:${phone}`)) {
+            return NextResponse.json(
+                { error: 'Слишком много попыток, попробуйте позже' },
+                { status: 429 }
+            );
+        }
+
         const result = await pool.query(
             'SELECT id, last_name, first_name, middle_name, phone, password_hash FROM users WHERE phone = $1',
             [phone]
@@ -44,6 +53,7 @@ export async function POST(req: NextRequest) {
         const response = NextResponse.json({ message: 'Вход выполнен', user: safeUser }, { status: 200 });
         response.cookies.set('session', signSession(String(user.id)), {
             httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: 60 * 60 * 24 * 7,
             sameSite: 'lax',
@@ -51,6 +61,6 @@ export async function POST(req: NextRequest) {
         return response;
     } catch (error: any) {
         console.error('[login]', error);
-        return NextResponse.json({ error: 'Внутренняя ошибка сервера', detail: String(error?.message ?? error) }, { status: 500 });
+        return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }

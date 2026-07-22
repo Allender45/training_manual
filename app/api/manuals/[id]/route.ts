@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
+import { AUDIO_EXT, IMAGE_EXT, VIDEO_EXT, extFromMime, validateUpload } from '@/lib/upload';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -19,9 +21,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'sidebarAdminMenu');
+    if (auth instanceof NextResponse) return auth;
+    const userId = String(auth.userId);
 
     try {
         const formData = await req.formData();
@@ -41,7 +43,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
         let iconPath: string | null = null;
         if (iconFile && iconFile.size > 0) {
-            const ext = iconFile.name.split('.').pop()?.toLowerCase() ?? 'png';
+            const iconError = validateUpload(iconFile, { allowedExt: IMAGE_EXT, maxSizeMb: 5 });
+            if (iconError) {
+                return NextResponse.json({ error: iconError }, { status: 400 });
+            }
+            const ext = extFromMime(iconFile.type) ?? 'png';
             const iconDir = path.join(process.cwd(), 'public', 'uploads', 'manuals', 'icons');
             await fs.mkdir(iconDir, { recursive: true });
             const iconFilename = `${Date.now()}_${params.id}.${ext}`;
@@ -55,7 +61,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         if (type === 'text') {
             contentUpdate = contentText;
         } else if (contentFile && contentFile.size > 0) {
-            const cExt   = contentFile.name.split('.').pop()?.toLowerCase() ?? (type === 'video' ? 'mp4' : 'mp3');
+            const isVideo = type === 'video';
+            const contentError = validateUpload(contentFile, {
+                allowedExt: isVideo ? VIDEO_EXT : AUDIO_EXT,
+                maxSizeMb: isVideo ? 200 : 50,
+            });
+            if (contentError) {
+                return NextResponse.json({ error: contentError }, { status: 400 });
+            }
+            const cExt   = extFromMime(contentFile.type) ?? (isVideo ? 'mp4' : 'mp3');
             const subDir = type === 'video' ? 'video' : 'audio';
             const cDir   = path.join(process.cwd(), 'public', 'uploads', 'manuals', subDir);
             await fs.mkdir(cDir, { recursive: true });
@@ -89,8 +103,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    if (!unsignSession(raw)) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'sidebarAdminMenu');
+    if (auth instanceof NextResponse) return auth;
 
     try {
         const result = await pool.query(

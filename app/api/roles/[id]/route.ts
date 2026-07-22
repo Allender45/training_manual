@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'sidebarAdminMenu');
+    if (auth instanceof NextResponse) return auth;
 
     try {
         const { name, comment, active } = await req.json();
@@ -24,9 +23,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'sidebarAdminMenu');
+    if (auth instanceof NextResponse) return auth;
 
     try {
         const result = await pool.query('DELETE FROM roles WHERE id=$1 RETURNING id', [params.id]);

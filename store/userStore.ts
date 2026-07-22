@@ -33,13 +33,18 @@ export const useUserStore = create<UserStore>((set, get) => ({
     logout: () => set({ user: null, loaded: false }),
     fetchUser: async (onUnauthorized) => {
         if (get().loaded) return;
-        const res = await fetch('/api/auth/me');
-        if (res.status === 401) {
-            set({ loaded: true });
-            onUnauthorized?.();
-            return;
+        try {
+            const res = await fetch('/api/auth/me');
+            if (res.status === 401) {
+                set({ loaded: true });
+                onUnauthorized?.();
+                return;
+            }
+            if (!res.ok) return;
+            const data = await res.json();
+            set({ user: data.user ?? null, loaded: true });
+        } catch (error) {
+            console.error('[fetchUser]', error);
         }
-        const data = await res.json();
-        set({ user: data.user, loaded: true });
     },
 }));

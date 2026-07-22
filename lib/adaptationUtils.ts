@@ -1,4 +1,6 @@
 // lib/adaptationUtils.ts
+import { PhoneCall, Percent, UserPlus, Wallet } from 'lucide-react';
+
 export type ApiDayItem = {
     date: string;
     calls: { total: number };
@@ -25,3 +27,14 @@ export function computeScore(data: ApiDayItem[], plan: AdaptationPlan) {
         revTotal: plan.plan_revenue_total != null ? last5.filter(d => d.cash.total >= plan.plan_revenue_total!).length : 0,
     };
 }
+
+export function scoreColor(s: number) {
+    return s === 5 ? 'text-green-600' : s >= 3 ? 'text-amber-500' : 'text-red-500';
+}
+
+export const BADGES = [
+    { key: 'calls'    as const, Icon: PhoneCall },
+    { key: 'conv'     as const, Icon: Percent   },
+    { key: 'revNew'   as const, Icon: UserPlus  },
+    { key: 'revTotal' as const, Icon: Wallet    },
+];

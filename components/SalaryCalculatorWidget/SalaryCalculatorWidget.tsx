@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { X } from 'lucide-react';
 import Button from '@/components/Button/Button';
+import Modal from '@/containers/Modal/Modal';
+import { formatMoney } from '@/lib/format';
 
 const OKLAD = 25000;
 const BASE_PERCENT = 0.14;
@@ -12,7 +13,7 @@ const NEW_CASH_THRESHOLD = 100000;
 const CONVERSION_THRESHOLD = 22;
 
 function formatCurrency(value: number) {
-    return value.toLocaleString('ru-RU', { maximumFractionDigits: 0 }) + ' ₽';
+    return formatMoney(Math.round(value));
 }
 
 type CalcInputs = {
@@ -99,22 +100,12 @@ export default function SalaryCalculatorWidget() {
                 </Button>
             </div>
 
-            {showModal && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-                    onClick={() => setShowModal(false)}
-                >
-                    <div
-                        className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold text-gray-800">Мотивация менеджера (до 3 месяцев)</h2>
-                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
-                                <X size={20} />
-                            </button>
-                        </div>
-
+            <Modal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                title="Мотивация менеджера (до 3 месяцев)"
+                className="max-w-2xl"
+            >
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Принятых звонков</label>
@@ -196,9 +187,7 @@ export default function SalaryCalculatorWidget() {
                                 <span className="text-lg font-bold text-blue-700">{formatCurrency(full.total)}</span>
                             </div>
                         </div>
-                    </div>
-                </div>
-            )}
+            </Modal>
         </div>
     );
 }

@@ -1,14 +1,15 @@
 'use client';
 
 import React, {useState, useEffect, useMemo} from 'react';
-import {Table, Checkbox, Button, Select} from '@/components';
+import {Table, Checkbox, Button, Select, Badge, Pagination} from '@/components';
 import {Column} from '@/components/Table/Table';
-import {Settings, ChevronLeft, ChevronRight, Plus, Search, X} from 'lucide-react';
+import {Settings, Plus, Search, X} from 'lucide-react';
 import Modal from '../Modal/Modal';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import {useUserStore} from '@/store/userStore';
 import {hasFeature} from '@/lib/permissions';
+import {formatNumber} from '@/lib/format';
 
 export type CourseRow = {
     id: number; title: string; icon: string; description: string;
@@ -96,13 +97,7 @@ type EntityConfig = {
 };
 
 function StatusBadge({active}: { active: boolean }) {
-    return (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-            active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-        }`}>
-            {active ? 'Активен' : 'Неактивен'}
-        </span>
-    );
+    return <Badge variant={active ? 'green' : 'gray'} text={active ? 'Активен' : 'Неактивен'}/>;
 }
 
 const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
@@ -263,19 +258,15 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
             {
                 key: 'shuffle_questions', header: 'Перемешивать вопросы',
                 render: (row: TestRow) => (
-                    <span
-                        className={`text-xs px-2 py-0.5 rounded-full ${row.shuffle_questions ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {row.shuffle_questions ? 'Да' : 'Нет'}
-                </span>
+                    <Badge soft variant={row.shuffle_questions ? 'green' : 'gray'}
+                           text={row.shuffle_questions ? 'Да' : 'Нет'}/>
                 ),
             },
             {
                 key: 'shuffle_answers', header: 'Перемешивать ответы',
                 render: (row: TestRow) => (
-                    <span
-                        className={`text-xs px-2 py-0.5 rounded-full ${row.shuffle_answers ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {row.shuffle_answers ? 'Да' : 'Нет'}
-                </span>
+                    <Badge soft variant={row.shuffle_answers ? 'green' : 'gray'}
+                           text={row.shuffle_answers ? 'Да' : 'Нет'}/>
                 ),
             },
             {
@@ -316,8 +307,8 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
             { key: 'name', header: 'Название', render: (row: AdaptationPlanRow) => <span className="font-medium text-gray-800">{row.name}</span> },
             { key: 'calls', header: 'Звонки', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.calls ?? '—'}</span> },
             { key: 'conversion', header: 'Конверсия, %', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.conversion ?? '—'}</span> },
-            { key: 'revenue_new', header: 'Касса (новые)', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.revenue_new ? Number(row.revenue_new).toLocaleString('ru-RU') : '—'}</span> },
-            { key: 'revenue_total', header: 'Касса (общая)', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.revenue_total ? Number(row.revenue_total).toLocaleString('ru-RU') : '—'}</span> },
+            { key: 'revenue_new', header: 'Касса (новые)', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.revenue_new ? formatNumber(Number(row.revenue_new)) : '—'}</span> },
+            { key: 'revenue_total', header: 'Касса (общая)', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.revenue_total ? formatNumber(Number(row.revenue_total)) : '—'}</span> },
             { key: 'comment', header: 'Комментарий', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-400 line-clamp-2">{row.comment ?? '—'}</span> },
             { key: 'is_active', header: 'Статус', render: (row: AdaptationPlanRow) => <StatusBadge active={row.is_active} /> },
             { key: 'author_name', header: 'Автор', render: (row: AdaptationPlanRow) => <span className="text-sm text-gray-500">{row.author_name ?? '—'}</span> },
@@ -387,13 +378,6 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         addButtonFeature: 'functionalTableAddButtons',
     },
 };
-
-function getPageNumbers(current: number, total: number): (number | '...')[] {
-    if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
-    if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
-    if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
-    return [1, '...', current - 1, current, current + 1, '...', total];
-}
 
 type EntityTableProps = {
     entityType: EntityType;
@@ -486,15 +470,12 @@ export default function EntityTable({entityType, data, onEdit, onDelete, buttonE
             if (col.key === 'is_active') return {
                 ...col,
                 render: (row: CourseRow) => row.is_locked
-                    ? <span
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">🔒 Недоступен</span>
+                    ? <Badge variant="amber" text="🔒 Недоступен"/>
                     : <StatusBadge active={row.is_active}/>,
             };
             return col;
         });
     }, [config.columns, colVisibility, entityType, isIntern]);
-
-    const pageNumbers = getPageNumbers(currentPage, totalPages);
 
     return (
         <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -563,40 +544,7 @@ export default function EntityTable({entityType, data, onEdit, onDelete, buttonE
             />
 
             {showPagination && (
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-1">
-                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
-                                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-30">
-                            <ChevronLeft size={16}/>
-                        </button>
-                        {pageNumbers.map((page, i) => (
-                            page === '...'
-                                ? <span key={i}
-                                        className="w-8 h-8 flex items-center justify-center text-gray-400 text-sm">…</span>
-                                : <button key={i} onClick={() => setCurrentPage(page as number)}
-                                          className={`w-8 h-8 rounded-lg text-sm transition-colors ${page === currentPage ? 'bg-[#41A141] text-white' : 'text-gray-500 hover:bg-gray-100'}`}>
-                                    {page}
-                                </button>
-                        ))}
-                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
-                                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-30">
-                            <ChevronRight size={16}/>
-                        </button>
-                    </div>
-                    <div className="flex items-end gap-2 text-sm text-gray-500">
-                        <Select
-                            label="Страница" name="currentPage" value={String(currentPage)}
-                            onChange={e => setCurrentPage(Number(e.target.value))}
-                            options={Array.from({length: totalPages}, (_, i) => ({
-                                value: String(i + 1),
-                                label: String(i + 1)
-                            }))}
-                            size="sm"
-                        />
-                        <span className="mb-2">из {totalPages}</span>
-                    </div>
-                </div>
+                <Pagination currentPage={currentPage} totalPages={totalPages} onChange={setCurrentPage}/>
             )}
 
             <Modal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} title="Настройки таблицы">

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuth, canAccessUserData } from '@/lib/apiAuth';
 
 export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
@@ -7,6 +8,13 @@ export async function GET(request: NextRequest) {
 
     if (!userId || !period) {
         return NextResponse.json({ error: 'Missing params' }, { status: 400 });
+    }
+
+    const auth = await getAuth(request);
+    if (!auth) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const isSelf = auth.crmId != null && String(auth.crmId) === userId;
+    if (!canAccessUserData(auth, isSelf)) {
+        return NextResponse.json({ error: 'Недостаточно прав' }, { status: 403 });
     }
 
     const token = process.env.ADAPTATION_API_TOKEN;

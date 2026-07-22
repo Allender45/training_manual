@@ -3,8 +3,7 @@ import bcrypt from 'bcryptjs';
 import path from 'path';
 import fs from 'fs/promises';
 import pool from '@/lib/db';
-
-const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+import { IMAGE_EXT, extFromMime, validateUpload } from '@/lib/upload';
 
 function normalizePhone(phone: string): string {
     // Удаляем +7, пробелы, дефисы, скобки
@@ -62,13 +61,11 @@ export async function POST(req: NextRequest) {
 
         let photoPath: string | null = null;
         if (photoFile && photoFile.size > 0) {
-            const ext = photoFile.name.split('.').pop()?.toLowerCase() ?? '';
-            if (!ALLOWED_EXTENSIONS.includes(ext)) {
-                return NextResponse.json(
-                    { error: 'Допустимые форматы фото: jpg, jpeg, png, webp, gif' },
-                    { status: 400 }
-                );
+            const uploadError = validateUpload(photoFile, { allowedExt: IMAGE_EXT, maxSizeMb: 5 });
+            if (uploadError) {
+                return NextResponse.json({ error: uploadError }, { status: 400 });
             }
+            const ext = extFromMime(photoFile.type) ?? 'jpg';
             const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
             await fs.mkdir(uploadsDir, { recursive: true });
 
@@ -111,6 +108,6 @@ export async function POST(req: NextRequest) {
             );
         }
         console.error('[register]', error);
-        return NextResponse.json({ error: 'Внутренняя ошибка сервера', detail: String(error?.message ?? error) }, { status: 500 });
+        return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }

@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Menu, Search, Bell, ChevronDown, BookOpen, FileText, File, User, Building2, Zap, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useUserStore, useNotificationsStore } from '@/store';
+import { useUserStore, useNotificationsStore, useCallsStore, useMentorInternsPlansStore, useEditedUserStore, useUsersListStore, useCallAnalysesStore } from '@/store';
 import { Avatar } from '@/components';
 
 type SearchResult = {
@@ -70,6 +70,12 @@ export default function Header({ sidebarOpen, setSidebarOpen, mobileMenuOpen, se
 
     async function handleLogout() {
         await fetch('/api/auth/logout', { method: 'POST' });
+        useCallsStore.getState().reset();
+        useMentorInternsPlansStore.getState().reset();
+        useEditedUserStore.getState().clearEditedUser();
+        useNotificationsStore.getState().reset();
+        useUsersListStore.getState().reset();
+        useCallAnalysesStore.getState().reset();
         logout();
         router.push('/login');
     }

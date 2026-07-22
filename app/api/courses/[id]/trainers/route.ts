@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
     const raw = req.cookies.get('session')?.value ?? '';
@@ -21,8 +22,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    if (!unsignSession(raw)) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'coursesTableButtons');
+    if (auth instanceof NextResponse) return auth;
 
     const { trainer_ids } = await req.json();
 

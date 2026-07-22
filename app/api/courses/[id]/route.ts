@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
+import { IMAGE_EXT, extFromMime, validateUpload } from '@/lib/upload';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -25,9 +27,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'coursesTableButtons');
+    if (auth instanceof NextResponse) return auth;
+    const userId = String(auth.userId);
 
     try {
         const formData = await req.formData();
@@ -50,7 +52,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
         let iconPath: string | null = null;
         if (iconFile && iconFile.size > 0) {
-            const ext = iconFile.name.split('.').pop()?.toLowerCase() ?? 'png';
+            const uploadError = validateUpload(iconFile, { allowedExt: IMAGE_EXT, maxSizeMb: 5 });
+            if (uploadError) {
+                return NextResponse.json({ error: uploadError }, { status: 400 });
+            }
+            const ext = extFromMime(iconFile.type) ?? 'png';
             const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'courses');
             await fs.mkdir(uploadsDir, { recursive: true });
             const filename = `${Date.now()}_${params.id}.${ext}`;
@@ -100,8 +106,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    if (!unsignSession(raw)) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'coursesTableButtons');
+    if (auth instanceof NextResponse) return auth;
 
     try {
         const result = await pool.query(

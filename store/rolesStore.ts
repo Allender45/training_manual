@@ -13,6 +13,7 @@ export const useRolesStore = create<RolesStore>((set, get) => ({
         if (get().loaded) return;
         try {
             const res = await fetch('/api/roles');
+            if (!res.ok) return;
             const data = await res.json();
             set({
                 roles: (data.roles ?? [])

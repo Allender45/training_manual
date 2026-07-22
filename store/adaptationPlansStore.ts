@@ -15,6 +15,7 @@ export const useAdaptationPlansStore = create<AdaptationPlansStore>((set, get) =
         if (get().loaded) return;
         try {
             const res = await fetch('/api/adaptation-plans');
+            if (!res.ok) return;
             const data = await res.json();
             set({
                 plans: (data.plans ?? [])

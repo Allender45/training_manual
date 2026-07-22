@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
+import { IMAGE_EXT, extFromMime, validateUpload } from '@/lib/upload';
 
 export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
@@ -35,9 +37,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'coursesTableAddButtons');
+    if (auth instanceof NextResponse) return auth;
+    const userId = String(auth.userId);
 
     try {
         const formData = await req.formData();
@@ -61,9 +63,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Выберите иконку курса' }, { status: 400 });
         }
 
+        const uploadError = validateUpload(iconFile, { allowedExt: IMAGE_EXT, maxSizeMb: 5 });
+        if (uploadError) {
+            return NextResponse.json({ error: uploadError }, { status: 400 });
+        }
+
         const path = await import('path');
         const fs   = await import('fs/promises');
-        const ext  = iconFile.name.split('.').pop()?.toLowerCase() ?? 'png';
+        const ext  = extFromMime(iconFile.type) ?? 'png';
         const uploadsDir = path.default.join(process.cwd(), 'public', 'uploads', 'courses');
         await fs.default.mkdir(uploadsDir, { recursive: true });
         const filename = `${Date.now()}_${title.replace(/[^a-zA-Zа-яА-ЯёЁ0-9]/g, '_').slice(0, 40)}.${ext}`;

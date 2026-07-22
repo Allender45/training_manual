@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, PhoneCall, Percent, UserPlus, Wallet } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useUsersListStore } from '@/store';
-import { computeScore } from '@/lib/adaptationUtils'
+import { computeScore, scoreColor, BADGES } from '@/lib/adaptationUtils'
+import { toPeriod } from '@/lib/date'
 
 type Intern = {
     id: number;
@@ -27,22 +28,6 @@ type DayItem = {
     conversions: { newClientConversionPercent: number };
     cash: { newClients: number; total: number };
 };
-
-function scoreColor(s: number) {
-    return s === 5 ? 'text-green-600' : s >= 3 ? 'text-amber-500' : 'text-red-500';
-}
-
-function getPeriod() {
-    const d = new Date();
-    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
-
-const BADGES = [
-    { key: 'calls'    as const, Icon: PhoneCall },
-    { key: 'conv'     as const, Icon: Percent   },
-    { key: 'revNew'   as const, Icon: UserPlus  },
-    { key: 'revTotal' as const, Icon: Wallet    },
-];
 
 function InternTable({ interns, plans, stats }: {
     interns: Intern[];
@@ -150,7 +135,7 @@ export default function TeachersTable() {
             setInternCache(p => ({ ...p, [mentorId]: list }));
 
             const withAdaptation = list.filter(i => i.adaptation_access);
-            const period = getPeriod();
+            const period = toPeriod(new Date());
 
             await Promise.all([
                 ...withAdaptation.map(intern =>

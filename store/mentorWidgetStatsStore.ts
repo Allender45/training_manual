@@ -12,26 +12,32 @@ export type ApiDayItem = {
 type mentorWidgetStatsStore = {
     raw: { intern: Intern; data: ApiDayItem[] }[];
     loading: boolean;
+    requestId: number;
     fetchStats: (interns: Intern[], period: string) => Promise<void>;
 };
 
-export const useMentorWidgetStatsStore = create<mentorWidgetStatsStore>((set) => ({
+export const useMentorWidgetStatsStore = create<mentorWidgetStatsStore>((set, get) => ({
     raw: [],
     loading: false,
+    requestId: 0,
     fetchStats: async (interns, period) => {
-        set({ loading: true });
+        const reqId = get().requestId + 1;
+        set({ loading: true, requestId: reqId });
         try {
             const results = await Promise.all(
-                interns.map(intern =>
-                    fetch(`/api/adaptations/statistics?userId=${intern.crm_id}&period=${period}`)
-                        .then(r => r.json())
-                        .then(json => ({ intern, data: (json.data ?? []) as ApiDayItem[] }))
-                        .catch(() => ({ intern, data: [] as ApiDayItem[] }))
-                )
+                interns
+                    .filter(intern => intern.crm_id != null)
+                    .map(intern =>
+                        fetch(`/api/adaptations/statistics?userId=${intern.crm_id}&period=${period}`)
+                            .then(r => r.ok ? r.json() : { data: [] })
+                            .then(json => ({ intern, data: (json.data ?? []) as ApiDayItem[] }))
+                            .catch(() => ({ intern, data: [] as ApiDayItem[] }))
+                    )
             );
+            if (get().requestId !== reqId) return;
             set({ raw: results });
         } finally {
-            set({ loading: false });
+            if (get().requestId === reqId) set({ loading: false });
         }
     },
 }));

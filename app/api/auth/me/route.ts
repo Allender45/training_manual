@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { phoneDigits } from '@/lib/format';
 
 export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
@@ -38,30 +39,22 @@ export async function PATCH(req: NextRequest) {
     try {
         const body = await req.json();
         const { last_name, first_name, middle_name, email,
-            passport_series, passport_number, birthday, comment, role } = body;
+            passport_series, passport_number, birthday, comment } = body;
 
-        const phone = (body.phone as string ?? '').replace(/\D/g, '').replace(/^7/, '').slice(0, 10);
-
-// resolve role_id by name
-        let role_id: number | null = null;
-        if (role) {
-            const roleRes = await pool.query('SELECT id FROM roles WHERE name = $1', [role]);
-            role_id = roleRes.rows[0]?.id ?? null;
-        }
+        const phone = phoneDigits(body.phone as string ?? '');
 
         const result = await pool.query(
             `UPDATE users
      SET last_name=$1, first_name=$2, middle_name=$3, phone=$4,
-         email=$5, passport_series=$6, passport_number=$7, birthday=$8, comment=$9,
-         role_id=$10
-     WHERE id=$11
+         email=$5, passport_series=$6, passport_number=$7, birthday=$8, comment=$9
+     WHERE id=$10
      RETURNING id, last_name, first_name, middle_name, phone, email,
          photo, passport_series, passport_number,
          TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday,
          comment, registered_at, role_id`,
             [last_name, first_name, middle_name, phone,
                 email || null, passport_series || null, passport_number || null,
-                birthday || null, comment || null, role_id, userId]
+                birthday || null, comment || null, userId]
         );
         const user = result.rows[0];
         if (user) {

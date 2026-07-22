@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
+import { hasFeature } from '@/lib/permissions';
+import { IMAGE_EXT, extFromMime, validateUpload } from '@/lib/upload';
+import { phoneDigits } from '@/lib/format';
 import bcrypt from 'bcryptjs';
 
 export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
     const userId = unsignSession(raw);
+    if (!userId) {
+        return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    }
     const url = new URL(req.url);
     const scope = url.searchParams.get('scope');
 
@@ -20,9 +27,6 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ users: result.rows });
     }
 
-    if (!userId) {
-        return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
-    }
     try {
         const meRes = await pool.query('SELECT role_id FROM users WHERE id = $1', [userId]);
         const roleId: number | null = meRes.rows[0]?.role_id ?? null;
@@ -87,11 +91,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) {
-        return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
-    }
+    const auth = await requireFeature(req, 'usersTableCreateButton');
+    if (auth instanceof NextResponse) return auth;
     try {
         const formData = await req.formData();
         const last_name   = (formData.get('last_name')   as string)?.trim();
@@ -100,12 +101,17 @@ export async function POST(req: NextRequest) {
         const phoneRaw    = (formData.get('phone')       as string)?.trim();
         const email       = (formData.get('email')       as string)?.trim() || null;
         const password    = (formData.get('password')    as string);
-        const role        = (formData.get('role')        as string)?.trim() || 'Стажёр';
+        const roleRaw     = (formData.get('role')        as string)?.trim();
         const passport_series = (formData.get('passport_series') as string)?.trim() || null;
         const passport_number = (formData.get('passport_number') as string)?.trim() || null;
         const birthday    = (formData.get('birthday')    as string) || null;
         const comment     = (formData.get('comment')     as string)?.trim() || null;
         const photoFile   = formData.get('photo') as File | null;
+
+        if (!hasFeature(auth.roleId, 'profileRoleChange') && roleRaw && roleRaw !== 'Стажёр') {
+            return NextResponse.json({ error: 'Недостаточно прав для назначения этой роли' }, { status: 403 });
+        }
+        const role = roleRaw || 'Стажёр';
 
         if (!last_name || !first_name || !middle_name || !phoneRaw || !password) {
             return NextResponse.json({ error: 'Заполните обязательные поля: ФИО, телефон, пароль' }, { status: 400 });
@@ -114,7 +120,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Пароль должен содержать не менее 8 символов' }, { status: 400 });
         }
 
-        const phone = phoneRaw.replace(/\D/g, '').replace(/^7/, '').slice(0, 10);
+        const phone = phoneDigits(phoneRaw);
 
         let role_id: number | null = null;
         if (role) {
@@ -124,9 +130,13 @@ export async function POST(req: NextRequest) {
 
         let photoPath: string | null = null;
         if (photoFile && photoFile.size > 0) {
+            const uploadError = validateUpload(photoFile, { allowedExt: IMAGE_EXT, maxSizeMb: 5 });
+            if (uploadError) {
+                return NextResponse.json({ error: uploadError }, { status: 400 });
+            }
             const path = await import('path');
             const fs = await import('fs/promises');
-            const ext = photoFile.name.split('.').pop()?.toLowerCase() ?? '';
+            const ext = extFromMime(photoFile.type) ?? 'jpg';
             const uploadsDir = path.default.join(process.cwd(), 'public', 'uploads');
             await fs.default.mkdir(uploadsDir, { recursive: true });
             const regDate = new Date().toISOString().slice(0, 10);

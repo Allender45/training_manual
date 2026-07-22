@@ -37,36 +37,46 @@ type AdaptationStore = {
     dayData: DayData[];
     dayDataLoading: boolean;
     fetchDayData: (crmUserId: number, period: string) => Promise<void>;
+    adaptationRequestId: number;
+    dayDataRequestId: number;
     reset: () => void;
 };
 
-export const useAdaptationStore = create<AdaptationStore>((set) => ({
+export const useAdaptationStore = create<AdaptationStore>((set, get) => ({
     adaptation: null,
     loading: false,
     fetchAdaptation: async (userId) => {
-        set({ loading: true });
+        const reqId = get().adaptationRequestId + 1;
+        set({ loading: true, adaptationRequestId: reqId });
         try {
             const res = await fetch(`/api/adaptations/${userId}`);
+            if (!res.ok) return;
             const data = await res.json();
+            if (get().adaptationRequestId !== reqId) return;
             set({ adaptation: data.adaptation ?? null });
         } catch (error) {
             console.error('[fetchAdaptation]', error);
         } finally {
-            set({ loading: false });
+            if (get().adaptationRequestId === reqId) set({ loading: false });
         }
     },
     dayData: [],
     dayDataLoading: false,
+    adaptationRequestId: 0,
+    dayDataRequestId: 0,
     fetchDayData: async (crmUserId, period) => {
-        set({ dayDataLoading: true });
+        const reqId = get().dayDataRequestId + 1;
+        set({ dayDataLoading: true, dayDataRequestId: reqId });
         try {
             const res = await fetch(`/api/adaptations/statistics?userId=${crmUserId}&period=${period}`);
+            if (!res.ok) throw new Error(`Ошибка загрузки статистики: ${res.status}`);
             const json = await res.json();
+            if (get().dayDataRequestId !== reqId) return;
             set({ dayData: (json.data as ApiDayItem[]).map(mapApiDay) });
         } catch {
-            set({ dayData: [] });
+            if (get().dayDataRequestId === reqId) set({ dayData: [] });
         } finally {
-            set({ dayDataLoading: false });
+            if (get().dayDataRequestId === reqId) set({ dayDataLoading: false });
         }
     },
     reset: () => set({ adaptation: null, loading: false, dayData: [], dayDataLoading: false }),

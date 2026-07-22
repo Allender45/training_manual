@@ -43,9 +43,9 @@ async function pollOperation(operationId: string): Promise<string> {
         const res = await fetch(`https://operation.api.cloud.yandex.net/operations/${operationId}`, {
             headers: { Authorization: `Api-Key ${API_KEY}` },
         });
+        if (!res.ok) throw new Error(`Ошибка опроса операции транскрипции: ${res.status}`);
         const data = await res.json();
         if (data.done) {
-            console.log('STT DONE, full response:', JSON.stringify(data, null, 2));
             const chunks: any[] = data.response?.chunks ?? [];
             const text = chunks
                 .flatMap((c: any) => c.alternatives?.[0]?.text ?? '')
@@ -59,12 +59,38 @@ async function pollOperation(operationId: string): Promise<string> {
     throw new Error('Превышено время ожидания транскрипции');
 }
 
+function isPrivateHost(hostname: string): boolean {
+    const host = hostname.toLowerCase();
+    if (host === 'localhost') return true;
+    const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (!m) return false;
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    if (a === 10 || a === 127) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 169 && b === 254) return true;
+    return false;
+}
+
 export async function POST(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
     if (!unsignSession(raw)) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
 
     const { id, url } = await req.json();
     if (!id) return NextResponse.json({ error: 'id обязателен' }, { status: 400 });
+
+    if (url) {
+        let parsed: URL;
+        try {
+            parsed = new URL(url);
+        } catch {
+            return NextResponse.json({ error: 'Некорректный url' }, { status: 400 });
+        }
+        if ((parsed.protocol !== 'http:' && parsed.protocol !== 'https:') || isPrivateHost(parsed.hostname)) {
+            return NextResponse.json({ error: 'Некорректный url' }, { status: 400 });
+        }
+    }
 
     const cached = await pool.query('SELECT * FROM call_analyses WHERE recording_id = $1', [id]);
     if (cached.rows[0]) return NextResponse.json({ analysis: cached.rows[0] });

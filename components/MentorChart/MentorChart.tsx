@@ -7,6 +7,7 @@ import {
 import {Button} from '@/components';
 import {useUsersListStore, useMentorWidgetStatsStore} from '@/store';
 import type {ApiDayItem} from '@/store';
+import {toPeriod} from '@/lib/date';
 
 type Intern = { id: number; name: string; crm_id: number | null };
 
@@ -26,10 +27,6 @@ const METRICS: { key: Metric; label: string }[] = [
 ];
 
 const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#a855f7'];
-
-function toPeriod(d: Date) {
-    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
 
 function getMetricValue(item: ApiDayItem, metric: Metric): number {
     if (metric === 'calls') return item.calls.total;

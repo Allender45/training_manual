@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useUserStore } from '@/store';
+import Avatar from '@/components/Avatar/Avatar';
 
 export interface CallCardResult {
     success: boolean;
@@ -99,9 +100,8 @@ export default function CallCardTrainer({ onComplete }: CallCardTrainerProps) {
             {/* Менеджер и город */}
             <div className="flex flex-col text-sm flex-shrink-0">
                 <div className="flex items-center gap-1.5">
-                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-                        {user?.first_name?.trim()?.[0]}
-                    </div>
+                    <Avatar size="xs" fallback={user?.first_name?.trim()?.[0] ?? ''}
+                            color="bg-blue-600 text-white" className="font-bold flex-shrink-0"/>
                     <span className="text-gray-800 font-medium text-sm">{user?.first_name} {user?.last_name}</span>
                 </div>
                 <span className="text-xs text-gray-500 font-normal mt-0.5">Курган (+2ч)</span>

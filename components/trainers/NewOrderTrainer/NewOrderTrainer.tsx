@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { Button, Checkbox, Input } from '@/components';
 import { ChevronDown } from 'lucide-react';
+import ReviewResult from '@/components/ReviewResult/ReviewResult';
+import { PaymentType, Review, PAYMENT_OPTIONS } from '@/components/trainers/review';
 
 export interface NewOrderTrainerProps {
     onComplete?: () => void;
 }
-
-type PaymentType = 'cash' | 'card' | 'invoice';
 
 type OrderForm = {
     city: string;
@@ -19,20 +19,6 @@ type OrderForm = {
     payment: PaymentType;
     workDescription: string;
 };
-
-type Review = {
-    passed: boolean;
-    strong_points: string[];
-    weak_points: string[];
-    recommendations: string[];
-    answers: string[];
-};
-
-const PAYMENT_OPTIONS: { value: PaymentType; label: string }[] = [
-    { value: 'cash',    label: 'Наличные' },
-    { value: 'card',    label: 'На карту' },
-    { value: 'invoice', label: 'Безнал'   },
-];
 
 const CORRECT_ANSWERS: Record<string, string> = {
     city: 'Альметьевск',
@@ -319,36 +305,11 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
 
             {review && (
                 <div className="space-y-3 text-sm">
-                    {review.strong_points.length > 0 && (
-                        <div>
-                            <p className="font-semibold text-green-700 mb-1">✓ Сильные стороны</p>
-                            <ul className="space-y-1">
-                                {review.strong_points.map((p, i) => (
-                                    <li key={i} className="bg-green-50 rounded-lg p-2 text-gray-700">{p}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                    {review.weak_points.length > 0 && (
-                        <div>
-                            <p className="font-semibold text-red-700 mb-1">✗ Слабые стороны</p>
-                            <ul className="space-y-1">
-                                {review.weak_points.map((p, i) => (
-                                    <li key={i} className="bg-red-50 rounded-lg p-2 text-gray-700">{p}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                    {review.recommendations.length > 0 && (
-                        <div>
-                            <p className="font-semibold text-blue-700 mb-1">💡 Рекомендации</p>
-                            <ul className="space-y-1">
-                                {review.recommendations.map((p, i) => (
-                                    <li key={i} className="bg-blue-50 rounded-lg p-2 text-gray-700">{p}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
+                    <ReviewResult
+                        strongPoints={review.strong_points}
+                        weakPoints={review.weak_points}
+                        recommendations={review.recommendations}
+                    />
                     <div className="flex justify-end pt-2">
                         {review.passed ? (
                             <Button onClick={() => onComplete?.()}>

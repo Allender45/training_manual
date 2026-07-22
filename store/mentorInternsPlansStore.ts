@@ -21,7 +21,7 @@ export const useMentorInternsPlansStore = create<MentorInternsPlansStore>((set, 
         await Promise.all(
             toFetch.map(id =>
                 fetch(`/api/adaptations/${id}`)
-                    .then(r => r.json())
+                    .then(r => r.ok ? r.json() : { adaptation: null })
                     .then(d => set(s => ({plans: {...s.plans, [id]: d.adaptation ?? null}})))
                     .catch(  () => set(s => ({plans: {...s.plans, [id]: null}})))
             )

@@ -2,8 +2,9 @@
 
 import {useState, useEffect, useRef} from 'react';
 import {useRouter} from 'next/navigation';
-import {Input, Button, Select, Checkbox, AchievementsWidget} from '@/components';
+import {Input, Button, Select, Checkbox, AchievementsWidget, Avatar} from '@/components';
 import {hasFeature} from '@/lib/permissions';
+import {formatPhone, getInitials} from '@/lib/format';
 import {Plus} from 'lucide-react';
 import {useAdaptationPlansStore, useUserStore, useRolesStore, useEditedUserStore} from '@/store';
 
@@ -27,20 +28,6 @@ const emptyForm: UserForm = {
     crm_id: '',
     adaptation_access: false,
 };
-
-function formatPhoneDisplay(raw: string): string {
-    if (!raw) return '';
-    const d = ('7' + raw.replace(/\D/g, '')).slice(0, 11);
-    let f = '+' + d[0];
-    if (d.length > 1) {
-        f += ' (' + d.slice(1, Math.min(4, d.length));
-        if (d.length >= 4) f += ')';
-        if (d.length > 4) f += ' ' + d.slice(4, Math.min(7, d.length));
-    }
-    if (d.length > 7) f += '-' + d.slice(7, Math.min(9, d.length));
-    if (d.length > 9) f += '-' + d.slice(9, 11);
-    return f;
-}
 
 type Props = {
     userId: string | null;
@@ -89,14 +76,21 @@ export default function UserContent({userId}: Props) {
         || (showAdminFields && selectedPlanId !== originalPlanId)
         || (showSimplePassword && !!newPassword);
 
-    const initials = [form.last_name, form.first_name, form.middle_name]
-        .filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    const initials = getInitials(form.last_name, form.first_name, form.middle_name);
 
     useEffect(() => {
         fetchRoles();
         if (userId) fetchEditedUser(userId);
+        setPhotoFile(null);
+        setPhotoPreview(null);
         return () => clearEditedUser();
     }, [userId]);
+
+    useEffect(() => {
+        return () => {
+            if (photoPreview) URL.revokeObjectURL(photoPreview);
+        };
+    }, [photoPreview]);
 
     useEffect(() => {
         if (!showAdminFields) return;
@@ -105,13 +99,22 @@ export default function UserContent({userId}: Props) {
 
     useEffect(() => {
         if (!showAdminFields) return;
-        fetch('/api/users?scope=mentors')
-            .then(r => r.json())
+        const controller = new AbortController();
+        fetch('/api/users?scope=mentors', {signal: controller.signal})
+            .then(r => {
+                if (!r.ok) throw new Error(`Ошибка загрузки списка наставников: ${r.status}`);
+                return r.json();
+            })
             .then(d => setMentorOptions(
                 (d.users ?? [])
                     .filter((u: any) => String(u.id) !== String(userId))
                     .map((u: any) => ({value: String(u.id), label: u.name}))
-            ));
+            ))
+            .catch(e => {
+                if (e?.name === 'AbortError') return;
+                console.error('[UserContent] Ошибка загрузки списка наставников', e);
+            });
+        return () => controller.abort();
     }, [showAdminFields, userId]);
 
     useEffect(() => {
@@ -120,7 +123,7 @@ export default function UserContent({userId}: Props) {
             last_name: editedUser.last_name ?? '',
             first_name: editedUser.first_name ?? '',
             middle_name: editedUser.middle_name ?? '',
-            phone: isSelf ? formatPhoneDisplay(editedUser.phone ?? '') : (editedUser.phone ?? ''),
+            phone: isSelf ? formatPhone(editedUser.phone ?? '') : (editedUser.phone ?? ''),
             email: editedUser.email ?? '',
             role: editedUser.role ?? '',
             passport_series: editedUser.passport_series ?? '',
@@ -141,14 +144,23 @@ export default function UserContent({userId}: Props) {
 
     useEffect(() => {
         if (!showAdminFields || !userId) return;
-        fetch(`/api/adaptations/${userId}`)
-            .then(r => r.json())
+        const controller = new AbortController();
+        fetch(`/api/adaptations/${userId}`, {signal: controller.signal})
+            .then(r => {
+                if (!r.ok) throw new Error(`Ошибка загрузки плана адаптации: ${r.status}`);
+                return r.json();
+            })
             .then(d => {
                 if (d.adaptation?.plan_id) {
                     setSelectedPlanId(String(d.adaptation.plan_id));
                     setOriginalPlanId(String(d.adaptation.plan_id));
                 }
+            })
+            .catch(e => {
+                if (e?.name === 'AbortError') return;
+                console.error('[UserContent] Ошибка загрузки плана адаптации', e);
             });
+        return () => controller.abort();
     }, [userId, showAdminFields]);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
@@ -209,27 +221,38 @@ export default function UserContent({userId}: Props) {
                 if (selectedRole === 'Стажёр' && mentorForm.mentor_id) {
                     const today = new Date().toISOString().split('T')[0];
                     const body = {mentor_id: Number(mentorForm.mentor_id), start_date: today, end_date: null};
+                    let mRes: Response;
                     if (mentorship) {
-                        await fetch(`/api/mentorships/${mentorship.id}`, {
+                        mRes = await fetch(`/api/mentorships/${mentorship.id}`, {
                             method: 'PATCH',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify(body),
                         });
                     } else {
-                        await fetch('/api/mentorships', {
+                        mRes = await fetch('/api/mentorships', {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({intern_id: Number(targetUserId), ...body}),
                         });
                     }
+                    if (!mRes.ok) {
+                        const mData = await mRes.json().catch(() => null);
+                        setSaveError(mData?.error ?? 'Ошибка сохранения наставника');
+                        return;
+                    }
                 }
 
                 if (selectedPlanId && selectedPlanId !== originalPlanId) {
-                    await fetch('/api/adaptations', {
+                    const aRes = await fetch('/api/adaptations', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({user_id: Number(targetUserId), plan_id: Number(selectedPlanId)}),
                     });
+                    if (!aRes.ok) {
+                        const aData = await aRes.json().catch(() => null);
+                        setSaveError(aData?.error ?? 'Ошибка сохранения плана адаптации');
+                        return;
+                    }
                 }
             }
 
@@ -311,9 +334,8 @@ export default function UserContent({userId}: Props) {
                                 className="object-fit"
                             />
                         ) : (
-                            <div className="w-28 h-28 rounded-full bg-blue-600 text-white flex items-center justify-center text-3xl font-semibold select-none">
-                                {initials}
-                            </div>
+                            <Avatar size="xl" fallback={initials} color="bg-blue-600 text-white"
+                                    className="font-semibold select-none"/>
                         )}
                         <span className="text-xs text-gray-400">
                             {editedUser?.registered_at ? `С ${new Date(editedUser.registered_at).toLocaleDateString('ru-RU')}` : ''}

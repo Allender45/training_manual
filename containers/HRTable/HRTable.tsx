@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useUsersListStore } from '@/store';
+import Modal from '../Modal/Modal';
+import { formatNumber, formatMoney } from '@/lib/format';
+import { MONTHS, buildMonthCells, toPeriod } from '@/lib/date';
 
 // ── Types ──────────────────────────────────────────────────────────
 type DayItem = {
@@ -76,10 +79,9 @@ function computeStats(d: InternApiData): InternStats {
     };
 }
 
-const fmt = (n: number) => n.toLocaleString('ru-RU');
+const fmt = formatNumber;
 const fmtDate = (s: string | undefined | null) => { if (!s) return '—'; const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; };
-const fmtMoney = (n: number) => `${fmt(Math.round(n))} ₽`;
-const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const fmtMoney = (n: number) => formatMoney(Math.round(n));
 
 // ── Intern sub-table ───────────────────────────────────────────────
 function HRInternSubTable({ interns, period }: {
@@ -213,69 +215,48 @@ function HRInternSubTable({ interns, period }: {
             </div>
 
             {modal && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-                    onClick={() => setModal(null)}
+                <Modal
+                    isOpen
+                    onClose={() => setModal(null)}
+                    title={MODAL_CONFIG[modal.type].title}
+                    className={modal.type.startsWith('cash') ? 'max-w-xl' : 'max-w-sm'}
                 >
-                    <div
-                        className={`bg-white rounded-2xl shadow-xl w-full mx-4 ${modal.type.startsWith('cash') ? 'max-w-xl' : 'max-w-sm'}`}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <div className="flex items-center justify-between px-6 py-4 border-b">
-                            <div>
-                                <p className="text-xs text-gray-400">Заявки по дням</p>
-                                <p className="text-xs text-gray-400">{MODAL_CONFIG[modal.type].title}</p>
-                            </div>
-                            <button onClick={() => setModal(null)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
-                        </div>
-                        <div className="p-4">
-                            {(() => {
-                                const cfg = MODAL_CONFIG[modal.type];
-                                const firstDay = new Date(modal.days[0]?.date + 'T00:00:00') ?? new Date();
-                                const y = firstDay.getFullYear();
-                                const mo = firstDay.getMonth();
-                                const daysInMonth = new Date(y, mo + 1, 0).getDate();
-                                let startDow = new Date(y, mo, 1).getDay();
-                                startDow = (startDow + 6) % 7;
+                    {(() => {
+                        const cfg = MODAL_CONFIG[modal.type];
+                        const firstDay = new Date(modal.days[0]?.date + 'T00:00:00') ?? new Date();
+                        const cells = buildMonthCells(firstDay.getFullYear(), firstDay.getMonth());
 
-                                const dayMap: Record<number, number> = {};
-                                modal.days.forEach(d => {
-                                    const dn = parseInt(d.date.split('-')[2], 10);
-                                    dayMap[dn] = cfg.getValue(d);
-                                });
+                        const dayMap: Record<number, number> = {};
+                        modal.days.forEach(d => {
+                            const dn = parseInt(d.date.split('-')[2], 10);
+                            dayMap[dn] = cfg.getValue(d);
+                        });
 
-                                const cells: (number | null)[] = [];
-                                for (let i = 0; i < startDow; i++) cells.push(null);
-                                for (let i = 1; i <= daysInMonth; i++) cells.push(i);
-                                while (cells.length % 7 !== 0) cells.push(null);
-
-                                return (
-                                    <>
-                                        <div className="grid grid-cols-7 mb-1">
-                                            {['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(d => (
-                                                <div key={d} className="text-center text-xs text-gray-400 py-1 font-medium">{d}</div>
-                                            ))}
-                                        </div>
-                                        <div className="grid grid-cols-7 gap-1">
-                                            {cells.map((day, i) => {
-                                                if (!day) return <div key={i} />;
-                                                const count = dayMap[day] ?? 0;
-                                                return (
-                                                    <div key={i} className={`rounded-lg p-1.5 text-center ${count > 0 ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                                                        <div className="text-xs text-gray-400 leading-none">{day}</div>
-                                                        <div className={`text-sm font-bold mt-0.5 ${count > 0 ? 'text-blue-700' : 'text-gray-200'} whitespace-nowrap`}>
-                                                            {count > 0 ? cfg.fmtCell(count) : '·'}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </>
-                                );
-                            })()}
-                        </div>
-                    </div>
-                </div>
+                        return (
+                            <>
+                                <div className="grid grid-cols-7 mb-1">
+                                    {['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(d => (
+                                        <div key={d} className="text-center text-xs text-gray-400 py-1 font-medium">{d}</div>
+                                    ))}
+                                </div>
+                                <div className="grid grid-cols-7 gap-1">
+                                    {cells.map((day, i) => {
+                                        if (!day) return <div key={i} />;
+                                        const count = dayMap[day] ?? 0;
+                                        return (
+                                            <div key={i} className={`rounded-lg p-1.5 text-center ${count > 0 ? 'bg-blue-50' : 'bg-gray-50'}`}>
+                                                <div className="text-xs text-gray-400 leading-none">{day}</div>
+                                                <div className={`text-sm font-bold mt-0.5 ${count > 0 ? 'text-blue-700' : 'text-gray-200'} whitespace-nowrap`}>
+                                                    {count > 0 ? cfg.fmtCell(count) : '·'}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        );
+                    })()}
+                </Modal>
             )}
         </>
     );
@@ -290,7 +271,7 @@ export default function HRTable() {
     const today = new Date();
     const [year, setYear]   = useState(today.getFullYear());
     const [month, setMonth] = useState(today.getMonth() + 1);
-    const period = `${year}${String(month).padStart(2, '0')}`;
+    const period = toPeriod(new Date(year, month - 1, 1));
 
     const [expanded, setExpanded]         = useState<Set<number>>(new Set());
     const [internCache, setInternCache]   = useState<Record<number, Intern[]>>({});

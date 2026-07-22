@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import pool from '@/lib/db';
-import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    if (!unsignSession(raw)) {
-        return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
-    }
+    const auth = await requireFeature(req, 'profilePassChange');
+    if (auth instanceof NextResponse) return auth;
     try {
         const { newPassword } = await req.json();
 

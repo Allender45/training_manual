@@ -4,15 +4,9 @@ import {useState, useEffect} from 'react';
 import {StatCard, AdaptationCalendar} from '@/components';
 import {PhoneCall, Percent, UserPlus, Wallet} from 'lucide-react';
 import {useAdaptationStore} from '@/store';
-
-function toPeriod(date: Date): string {
-    return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function parseDataDate(s: string): Date {
-    const [d, m, y] = s.split('.').map(Number);
-    return new Date(y, m - 1, d);
-}
+import {computeScore} from '@/lib/adaptationUtils';
+import {toPeriod} from '@/lib/date';
+import {formatMoney} from '@/lib/format';
 
 type Props = {
     userId: number;
@@ -39,15 +33,15 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
         fetchDayData(crmUserId, calendarPeriod);
     }, [crmUserId, calendarPeriod]);
 
-    const last5 = [...dayData]
-        .sort((a, b) => parseDataDate(b.date).getTime() - parseDataDate(a.date).getTime())
-        .filter(d => d.calls >= 5)
-        .slice(0, 5);
-
-    const calls    = adaptation ? last5.filter(d => adaptation.plan_calls     != null && d.calls         >= adaptation.plan_calls).length     : 0;
-    const conv     = adaptation ? last5.filter(d => adaptation.plan_conversion != null && d.conversion    >= adaptation.plan_conversion).length : 0;
-    const revNew   = adaptation ? last5.filter(d => adaptation.plan_revenue_new  != null && d.revenue_new  >= adaptation.plan_revenue_new).length  : 0;
-    const revTotal = adaptation ? last5.filter(d => adaptation.plan_revenue_total != null && d.revenue_total >= adaptation.plan_revenue_total).length : 0;
+    const score = adaptation
+        ? computeScore(dayData.map(d => ({
+            date: d.date.split('.').reverse().join('-'),
+            calls: { total: d.calls },
+            conversions: { newClientConversionPercent: d.conversion },
+            cash: { newClients: d.revenue_new, total: d.revenue_total },
+        })), adaptation)
+        : { calls: 0, conv: 0, revNew: 0, revTotal: 0 };
+    const { calls, conv, revNew, revTotal } = score;
 
     if (loading) return <p className="text-sm text-gray-400">Загрузка...</p>;
 
@@ -66,10 +60,10 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
                           value={adaptation.plan_conversion ? String(adaptation.plan_conversion) : '—'} icon={Percent}
                           color="bg-yellow-100 text-yellow-600"/>
                 <StatCard label="План по кассе от новых клиентов"
-                          value={adaptation.plan_revenue_new != null ? `${adaptation.plan_revenue_new.toLocaleString('ru-RU')} ₽` : '—'}
+                          value={adaptation.plan_revenue_new != null ? formatMoney(adaptation.plan_revenue_new) : '—'}
                           icon={UserPlus} color="bg-blue-100 text-blue-600"/>
                 <StatCard label="План по кассе общей"
-                          value={adaptation.plan_revenue_total != null ? `${adaptation.plan_revenue_total.toLocaleString('ru-RU')} ₽` : '—'}
+                          value={adaptation.plan_revenue_total != null ? formatMoney(adaptation.plan_revenue_total) : '—'}
                           icon={Wallet} color="bg-green-100 text-green-600"/>
                 <AdaptationCalendar data={dayData} plan={adaptation} onMonthChange={setCalendarPeriod}/>
                 <div></div>

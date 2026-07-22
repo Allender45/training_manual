@@ -25,3 +25,7 @@ export { default as AchievementToast } from './AchievementToast/AchievementToast
 export { default as AchievementsWidget } from './AchievementsWidget/AchievementsWidget';
 export { default as SalaryCalculatorWidget } from './SalaryCalculatorWidget/SalaryCalculatorWidget';
 export { default as UserContent } from './UserContent/UserContent';
+export { default as Badge } from './Badge/Badge';
+export { default as Pagination } from './Pagination/Pagination';
+export { default as ReviewResult } from './ReviewResult/ReviewResult';
+export { default as PricingCriteriaDetails } from './trainers/PricingCriteriaDetails/PricingCriteriaDetails';

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { IMAGE_EXT, extFromMime, validateUpload } from '@/lib/upload';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -17,7 +18,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Файл не передан' }, { status: 400 });
         }
 
-        const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+        const uploadError = validateUpload(file, { allowedExt: IMAGE_EXT, maxSizeMb: 5 });
+        if (uploadError) {
+            return NextResponse.json({ error: uploadError }, { status: 400 });
+        }
+        const ext = extFromMime(file.type) ?? 'jpg';
         const filename = `id_${userId}_profilePhoto.${ext}`;
         const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'photos');
 

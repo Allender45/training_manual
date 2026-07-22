@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unsignSession } from '@/lib/session';
+import { IMAGE_EXT, extFromMime, validateUpload } from '@/lib/upload';
 import fs from 'fs';
 import path from 'path';
 
@@ -15,7 +16,9 @@ export async function POST(req: NextRequest) {
         const uploadDir = path.join(process.cwd(), 'public', 'achievements');
         if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-        const ext = path.extname(file.name);
+        const uploadError = validateUpload(file, { allowedExt: IMAGE_EXT, maxSizeMb: 5 });
+        if (uploadError) return NextResponse.json({ error: uploadError }, { status: 400 });
+        const ext = `.${extFromMime(file.type) ?? 'png'}`;
         const filename = `${Date.now()}${ext}`;
         const buffer = Buffer.from(await file.arrayBuffer());
         fs.writeFileSync(path.join(uploadDir, filename), buffer);

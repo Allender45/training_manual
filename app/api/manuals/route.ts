@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
+import { requireFeature } from '@/lib/apiAuth';
+import { AUDIO_EXT, IMAGE_EXT, VIDEO_EXT, extFromMime, validateUpload } from '@/lib/upload';
 
 export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
@@ -25,9 +27,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const raw = req.cookies.get('session')?.value ?? '';
-    const userId = unsignSession(raw);
-    if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+    const auth = await requireFeature(req, 'manualsTableAddButtons');
+    if (auth instanceof NextResponse) return auth;
+    const userId = String(auth.userId);
 
     try {
         const formData = await req.formData();
@@ -51,10 +53,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Некорректный тип материала' }, { status: 400 });
         }
 
+        const iconError = validateUpload(iconFile, { allowedExt: IMAGE_EXT, maxSizeMb: 5 });
+        if (iconError) {
+            return NextResponse.json({ error: iconError }, { status: 400 });
+        }
+
         const path = await import('path');
         const fs   = await import('fs/promises');
 
-        const ext = iconFile.name.split('.').pop()?.toLowerCase() ?? 'png';
+        const ext = extFromMime(iconFile.type) ?? 'png';
         const iconDir = path.default.join(process.cwd(), 'public', 'uploads', 'manuals', 'icons');
         await fs.default.mkdir(iconDir, { recursive: true });
         const iconFilename = `${Date.now()}_${title.replace(/[^a-zA-Zа-яА-ЯёЁ0-9]/g, '_').slice(0, 40)}.${ext}`;
@@ -63,7 +70,15 @@ export async function POST(req: NextRequest) {
 
         let contentValue: string | null = contentText;
         if (type !== 'text' && contentFile && contentFile.size > 0) {
-            const cExt    = contentFile.name.split('.').pop()?.toLowerCase() ?? (type === 'video' ? 'mp4' : 'mp3');
+            const isVideo = type === 'video';
+            const contentError = validateUpload(contentFile, {
+                allowedExt: isVideo ? VIDEO_EXT : AUDIO_EXT,
+                maxSizeMb: isVideo ? 200 : 50,
+            });
+            if (contentError) {
+                return NextResponse.json({ error: contentError }, { status: 400 });
+            }
+            const cExt    = extFromMime(contentFile.type) ?? (isVideo ? 'mp4' : 'mp3');
             const subDir  = type === 'video' ? 'video' : 'audio';
             const cDir    = path.default.join(process.cwd(), 'public', 'uploads', 'manuals', subDir);
             await fs.default.mkdir(cDir, { recursive: true });
