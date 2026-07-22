@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
         const phoneRaw    = (formData.get('phone')       as string)?.trim();
         const email       = (formData.get('email')       as string)?.trim() || null;
         const password    = (formData.get('password')    as string);
-        const role        = (formData.get('role')        as string)?.trim() || null;
+        const role        = (formData.get('role')        as string)?.trim() || 'Стажёр';
         const passport_series = (formData.get('passport_series') as string)?.trim() || null;
         const passport_number = (formData.get('passport_number') as string)?.trim() || null;
         const birthday    = (formData.get('birthday')    as string) || null;

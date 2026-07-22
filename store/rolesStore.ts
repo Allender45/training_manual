@@ -15,7 +15,9 @@ export const useRolesStore = create<RolesStore>((set, get) => ({
             const res = await fetch('/api/roles');
             const data = await res.json();
             set({
-                roles: (data.roles ?? []).map((r: { name: string }) => ({ value: r.name, label: r.name })),
+                roles: (data.roles ?? [])
+                    .filter((r: { id: number }) => r.id !== 1)
+                    .map((r: { name: string }) => ({ value: r.name, label: r.name })),
                 loaded: true,
             });
         } catch (error) {

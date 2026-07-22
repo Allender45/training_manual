@@ -52,9 +52,10 @@ export default function UserContent({userId}: Props) {
     const {user: activeUser, fetchUser} = useUserStore();
     const rid = activeUser?.role_id ?? null;
     const isSelf = activeUser != null && String(activeUser.id) === String(userId);
+    const isCreate = userId === null;
 
     const {roles, fetchRoles} = useRolesStore();
-    const {editedUser, mentorship, mentorOptions, loading, fetchEditedUser, clearEditedUser} = useEditedUserStore();
+    const {editedUser, mentorship, loading, fetchEditedUser, clearEditedUser} = useEditedUserStore();
 
     const [form, setForm] = useState<UserForm>(emptyForm);
     const [originalForm, setOriginalForm] = useState<UserForm>(emptyForm);
@@ -67,16 +68,18 @@ export default function UserContent({userId}: Props) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [mentorForm, setMentorForm] = useState({mentor_id: ''});
     const [originalMentorId, setOriginalMentorId] = useState('');
+    const [mentorOptions, setMentorOptions] = useState<{ value: string; label: string }[]>([]);
     const {plans: adaptationPlans, fetchPlans} = useAdaptationPlansStore();
 
     const [newPassword, setNewPassword] = useState('');
+    const [createPw, setCreatePw] = useState({password: '', confirmPassword: ''});
 
     const [pwForm, setPwForm] = useState({currentPassword: '', newPassword: '', confirmPassword: ''});
     const [pwSaving, setPwSaving] = useState(false);
     const [pwError, setPwError] = useState<string | null>(null);
     const [pwSuccess, setPwSuccess] = useState(false);
 
-    const canEdit = !(isSelf || hasFeature(rid, 'editUser'));
+    const canEdit = !isCreate && !(isSelf || hasFeature(rid, 'editUser'));
     const showAdminFields = hasFeature(rid, 'editUser');
     const showSimplePassword = hasFeature(rid, 'profilePassChange') && !isSelf;
 
@@ -99,6 +102,17 @@ export default function UserContent({userId}: Props) {
         if (!showAdminFields) return;
         fetchPlans();
     }, [showAdminFields]);
+
+    useEffect(() => {
+        if (!showAdminFields) return;
+        fetch('/api/users?scope=mentors')
+            .then(r => r.json())
+            .then(d => setMentorOptions(
+                (d.users ?? [])
+                    .filter((u: any) => String(u.id) !== String(userId))
+                    .map((u: any) => ({value: String(u.id), label: u.name}))
+            ));
+    }, [showAdminFields, userId]);
 
     useEffect(() => {
         if (!editedUser) return;
@@ -163,22 +177,36 @@ export default function UserContent({userId}: Props) {
     }
 
     async function handleSave() {
+        if (isCreate && createPw.password !== createPw.confirmPassword) {
+            setSaveError('Пароли не совпадают');
+            return;
+        }
         setSaving(true);
         setSaveError(null);
         try {
             const fd = new FormData();
-            Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
+            Object.entries(form).forEach(([k, v]) => {
+                if (k === 'is_active') return;
+                fd.append(k, String(v));
+            });
+            if (isCreate) fd.append('password', createPw.password);
             if (photoFile) fd.append('photo', photoFile);
 
-            const res = await fetch(`/api/users/${userId}`, {method: 'PATCH', body: fd});
+            const res = await fetch(isCreate ? '/api/users' : `/api/users/${userId}`, {
+                method: isCreate ? 'POST' : 'PATCH',
+                body: fd,
+            });
             const data = await res.json();
             if (!res.ok) {
                 setSaveError(data.error ?? 'Ошибка');
                 return;
             }
 
+            const targetUserId = isCreate ? String(data.user.id) : userId;
+            const selectedRole = form.role || (isCreate ? 'Стажёр' : '');
+
             if (showAdminFields) {
-                if (form.role === 'Стажёр' && mentorForm.mentor_id) {
+                if (selectedRole === 'Стажёр' && mentorForm.mentor_id) {
                     const today = new Date().toISOString().split('T')[0];
                     const body = {mentor_id: Number(mentorForm.mentor_id), start_date: today, end_date: null};
                     if (mentorship) {
@@ -191,7 +219,7 @@ export default function UserContent({userId}: Props) {
                         await fetch('/api/mentorships', {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({intern_id: Number(userId), ...body}),
+                            body: JSON.stringify({intern_id: Number(targetUserId), ...body}),
                         });
                     }
                 }
@@ -200,12 +228,12 @@ export default function UserContent({userId}: Props) {
                     await fetch('/api/adaptations', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({user_id: Number(userId), plan_id: Number(selectedPlanId)}),
+                        body: JSON.stringify({user_id: Number(targetUserId), plan_id: Number(selectedPlanId)}),
                     });
                 }
             }
 
-            if (showSimplePassword && newPassword) {
+            if (!isCreate && showSimplePassword && newPassword) {
                 const pwRes = await fetch(`/api/users/${userId}/set-password`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -270,7 +298,7 @@ export default function UserContent({userId}: Props) {
         <main className="flex-1 p-6 max-w-3xl">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-gray-800">
-                    {isSelf ? 'Профиль' : 'Редактирование пользователя'}
+                    {isCreate ? 'Новый пользователь' : isSelf ? 'Профиль' : 'Редактирование пользователя'}
                 </h3>
             </div>
             <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -316,8 +344,11 @@ export default function UserContent({userId}: Props) {
                            placeholder="ГГГГ-ММ-ДД" disabled={canEdit}/>
                     <Input label="Серия паспорта" name="passport_series" value={form.passport_series}
                            onChange={handleChange} placeholder="1234" disabled={canEdit}/>
-                    <Select label="Роль" name="role" value={form.role} onChange={handleChange}
-                            placeholder="Выберите роль" options={roles} disabled={!hasFeature(rid, 'profileRoleChange')}/>
+                    {(!isCreate || hasFeature(rid, 'profileRoleChange')) && (
+                        <Select label="Роль" name="role" value={form.role} onChange={handleChange}
+                                placeholder="Выберите роль" options={roles}
+                                disabled={!hasFeature(rid, 'profileRoleChange')}/>
+                    )}
                     <Input label="Номер паспорта" name="passport_number" value={form.passport_number}
                            onChange={handleChange} placeholder="567890" disabled={canEdit}/>
                         <Select
@@ -363,7 +394,17 @@ export default function UserContent({userId}: Props) {
                         </div>
                     )}
 
-                    {showSimplePassword &&
+                    {isCreate ? (
+                        <>
+                            <Input label="Пароль *" name="password" type="password" value={createPw.password}
+                                   onChange={e => setCreatePw(prev => ({...prev, password: e.target.value}))}
+                                   icon="lock"/>
+                            <Input label="Подтверждение пароля *" name="confirmPassword" type="password"
+                                   value={createPw.confirmPassword}
+                                   onChange={e => setCreatePw(prev => ({...prev, confirmPassword: e.target.value}))}
+                                   icon="lock"/>
+                        </>
+                    ) : showSimplePassword && (
                         <Input
                             label="Новый пароль"
                             name="newPassword"
@@ -372,7 +413,7 @@ export default function UserContent({userId}: Props) {
                             onChange={e => setNewPassword(e.target.value)}
                             icon="lock"
                         />
-                    }
+                    )}
 
                     {(showAdminFields && !isSelf) &&
                         <div className="sm:col-span-2">
@@ -382,20 +423,28 @@ export default function UserContent({userId}: Props) {
                                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50"/>
                         </div>
                     }
-                    <Checkbox label="Активен" name="is_active" checked={form.is_active} onChange={handleChange}
-                              variant="switch" disabled={!hasFeature(rid, 'profileActiveStatusChange')}/>
+                    {!isCreate &&
+                        <Checkbox label="Активен" name="is_active" checked={form.is_active} onChange={handleChange}
+                                  variant="switch" disabled={!hasFeature(rid, 'profileActiveStatusChange')}/>
+                    }
                 </div>
 
                 {saveError && (
                     <div
                         className="mt-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">{saveError}</div>
                 )}
-                {!canEdit &&
+
+                {isCreate ? (
+                    <div className="flex gap-3 mt-6 pt-5 border-t justify-end">
+                        <Button variant="outline" onClick={() => router.push('/users')}>Отменить</Button>
+                        <Button onClick={handleSave} loading={saving}>Создать</Button>
+                    </div>
+                ) : !canEdit && (
                     <div className="flex gap-3 mt-6 pt-5 border-t justify-end">
                         <Button variant="outline" onClick={handleReset} disabled={!isDirty}>Сбросить</Button>
                         <Button onClick={handleSave} disabled={!isDirty} loading={saving}>Сохранить</Button>
                     </div>
-                }
+                )}
             </div>
 
             {isSelf && (
