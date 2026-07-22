@@ -24,3 +24,4 @@ export { default as CourseProgressWidget } from './CourseProgressWidget/CoursePr
 export { default as AchievementToast } from './AchievementToast/AchievementToast';
 export { default as AchievementsWidget } from './AchievementsWidget/AchievementsWidget';
 export { default as SalaryCalculatorWidget } from './SalaryCalculatorWidget/SalaryCalculatorWidget';
+export { default as UserContent } from './UserContent/UserContent';

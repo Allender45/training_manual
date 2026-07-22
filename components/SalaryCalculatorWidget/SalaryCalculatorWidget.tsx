@@ -43,8 +43,8 @@ export default function SalaryCalculatorWidget() {
     const [calls, setCalls] = useState(450);
     const [conversion, setConversion] = useState(24);
     const [avgCheck, setAvgCheck] = useState(1000);
-    const [repeatRevenue, setRepeatRevenue] = useState(30000);
-    const [deals, setDeals] = useState(12);
+    const [repeatRevenue, setRepeatRevenue] = useState(0);
+    const [deals, setDeals] = useState(0);
     const [showModal, setShowModal] = useState(false);
 
     const quick = calculateSalary({ calls, conversion, avgCheck, repeatRevenue: 0, deals: 0 });
