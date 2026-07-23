@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
     Home, FileText, Dumbbell, ClipboardList,
     Users, Building2, Shield, Trophy, BarChart2,
-    BookOpen, ChevronRight, BadgePercent, Sheet, Phone, GraduationCap
+    BookOpen, ChevronRight, BadgePercent, Sheet, Phone, GraduationCap, Images
 } from 'lucide-react';
 import {usePathname} from 'next/navigation';
 import {SidebarButton} from '@/components';
@@ -62,6 +62,8 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                    sidebarOpen={sidebarOpen} active={pathname.startsWith('/functional')}/>
                     <SidebarButton href="/courses" icon={FileText} label="Курсы" sidebarOpen={sidebarOpen}
                                    active={pathname.startsWith('/courses')}/>
+                    <SidebarButton href="/gallery" icon={Images} label="Фотогалерея" sidebarOpen={sidebarOpen}
+                                   active={pathname.startsWith('/gallery')}/>
 
 
                     {/*Панель стажёра*/}

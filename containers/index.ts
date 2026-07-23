@@ -1,6 +1,7 @@
 export { default as Header } from './Header/Header';
 export { default as Sidebar } from './Sidebar/Sidebar';
-export { default as Modal } from './Modal/Modal';
+export { default as Modal } from '@/containers/modals/Modal/Modal';
+export { default as GalleryModal } from '@/containers/modals/GalleryModal/GalleryModal';
 export { default as UsersTable } from './UsersTable/UsersTable';
 export type { UserRow } from './UsersTable/UsersTable';
 export { default as CoursesTable } from './CoursesTable/CoursesTable';

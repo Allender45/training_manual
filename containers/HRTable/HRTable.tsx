@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useUsersListStore } from '@/store';
-import Modal from '../Modal/Modal';
+import Modal from '@/containers/modals/Modal/Modal';
 import { formatNumber, formatMoney } from '@/lib/format';
 import { MONTHS, buildMonthCells, toPeriod } from '@/lib/date';
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Trophy, Plus } from 'lucide-react';
-import Modal from '@/containers/Modal/Modal';
+import Modal from '@/containers/modals/Modal/Modal';
 import {hasFeature} from "@/lib/permissions";
 import {useUserStore} from "@/store";
 

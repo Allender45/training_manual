@@ -4,7 +4,7 @@ import React, {useState, useEffect, useMemo} from 'react';
 import {Table, Checkbox, Button, Select, AdaptationContent, CallsContent, Avatar, Badge, Pagination} from '@/components';
 import {Column} from '@/components/Table/Table';
 import {Settings, Plus, Search, X, BadgePercent, Phone} from 'lucide-react';
-import Modal from '../Modal/Modal';
+import Modal from '@/containers/modals/Modal/Modal';
 import {useRouter} from 'next/navigation';
 import {hasFeature} from "@/lib/permissions";
 import {useUserStore} from "@/store/userStore";

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Button from '@/components/Button/Button';
-import Modal from '@/containers/Modal/Modal';
+import Modal from '@/containers/modals/Modal/Modal';
 import { formatMoney } from '@/lib/format';
 
 const OKLAD = 25000;
