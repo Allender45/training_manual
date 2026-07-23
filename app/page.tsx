@@ -15,15 +15,15 @@ export default function HomePage() {
           </div>
 
           <div className="space-y-4">
-            <a
-                href="/register"
-                className="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-700 transition"
-            >
-              Зарегистрироваться
-            </a>
+            {/*<a*/}
+            {/*    href="/register"*/}
+            {/*    className="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-700 transition"*/}
+            {/*>*/}
+            {/*  Зарегистрироваться*/}
+            {/*</a>*/}
 
             <div className="text-sm text-gray-400">
-              Уже есть аккаунт? <a href="/login" className="text-blue-600 hover:underline">Войти</a>
+              <a href="/login" className="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-700 transition">Войти</a>
             </div>
           </div>
         </div>
