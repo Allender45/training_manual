@@ -112,7 +112,7 @@ export default function HomePage() {
                                     <CourseProgressWidget />
                                     <AchievementsWidget />
                                 </div>
-                                <div className="w-full">
+                                <div className="max-w-sm">
                                     <SalaryCalculatorWidget/>
                                 </div>
                             </>

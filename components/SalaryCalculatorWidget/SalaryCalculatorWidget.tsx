@@ -50,12 +50,13 @@ export default function SalaryCalculatorWidget() {
 
     const quick = calculateSalary({ calls, conversion, avgCheck, repeatRevenue: 0, deals: 0 });
     const full = calculateSalary({ calls, conversion, avgCheck, repeatRevenue, deals });
+    const completed = Math.round(calls * (conversion / 100));
 
     return (
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
             <h3 className="text-sm font-semibold text-gray-800">Калькулятор зарплаты</h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="flex flex-col gap-3">
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Принятых звонков</label>
                     <input
@@ -63,16 +64,6 @@ export default function SalaryCalculatorWidget() {
                         min={0}
                         value={calls}
                         onChange={e => setCalls(Number(e.target.value) || 0)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-                <div>
-                    <label className="block text-xs text-gray-500 mb-1">Средний чек, ₽</label>
-                    <input
-                        type="number"
-                        min={0}
-                        value={avgCheck}
-                        onChange={e => setAvgCheck(Number(e.target.value) || 0)}
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
@@ -87,15 +78,41 @@ export default function SalaryCalculatorWidget() {
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
+                <div>
+                    <label className="block text-xs text-gray-500 mb-1">Выполненные</label>
+                    <input
+                        disabled={true}
+                        type="number"
+                        min={0}
+                        value={completed}
+                        onChange={e => setConversion(Number(e.target.value) || 0)}
+                        className="w-full border border-gray-200 bg-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs text-gray-500 mb-1">Средний чек, ₽</label>
+                    <input
+                        type="number"
+                        min={0}
+                        value={avgCheck}
+                        onChange={e => setAvgCheck(Number(e.target.value) || 0)}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
             </div>
 
-            <div className="flex items-center justify-between bg-blue-50 rounded-lg px-4 py-3">
+            <div className="flex flex-col items-center bg-blue-50 rounded-lg px-4 py-3">
                 <span className="text-sm text-gray-600">Ожидаемая зарплата</span>
                 <span className="text-xl font-bold text-blue-700">{formatCurrency(quick.total)}</span>
             </div>
 
-            <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => setShowModal(true)}>
+            <div className="flex w-full">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowModal(true)}
+                    className="w-full"
+                >
                     Подробнее
                 </Button>
             </div>
@@ -118,12 +135,18 @@ export default function SalaryCalculatorWidget() {
                                 <input type="number" min={0} max={100} value={conversion} onChange={e => setConversion(Number(e.target.value) || 0)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                             </div>
                             <div>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">
+                                    Выполненные сделки
+                                </label>
+                                <input type="number" min={0} value={completed} className="w-full border border-gray-200 bg-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </div>
+                            <div>
                                 <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Средний чек, ₽</label>
                                 <input type="number" min={0} value={avgCheck} onChange={e => setAvgCheck(Number(e.target.value) || 0)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">
-                                    Повторники, ₽ <span className="text-gray-400 font-normal">доп. выручка от повторных продаж</span>
+                                    доп. выручка от повторных продаж
                                 </label>
                                 <input type="number" min={0} value={repeatRevenue} onChange={e => setRepeatRevenue(Number(e.target.value) || 0)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                             </div>
