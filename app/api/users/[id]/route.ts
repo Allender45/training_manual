@@ -24,7 +24,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 COALESCE(r.name, '') AS role,
                 u.registered_at,
                 u.crm_id,
-                u.adaptation_access
+                u.adaptation_access,
+                u.telegram_chat_id
          FROM users u
          LEFT JOIN roles r ON r.id = u.role_id
          WHERE u.id = $1`,

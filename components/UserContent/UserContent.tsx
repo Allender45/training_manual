@@ -17,6 +17,7 @@ type UserForm = {
     is_active: boolean;
     crm_id: string;
     adaptation_access: boolean;
+    telegram_chat_id: string;
 };
 
 const emptyForm: UserForm = {
@@ -27,6 +28,7 @@ const emptyForm: UserForm = {
     is_active: true,
     crm_id: '',
     adaptation_access: false,
+    telegram_chat_id: '',
 };
 
 type Props = {
@@ -133,6 +135,7 @@ export default function UserContent({userId}: Props) {
             is_active: editedUser.is_active ?? true,
             crm_id: String(editedUser.crm_id ?? ''),
             adaptation_access: editedUser.adaptation_access ?? false,
+            telegram_chat_id: editedUser.telegram_chat_id ?? '',
         };
         setForm(filled);
         setOriginalForm(filled);
@@ -360,6 +363,28 @@ export default function UserContent({userId}: Props) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input label="Телефон" name="phone" type="tel" value={form.phone} onChange={handleChange}
                            icon="phone" disabled={canEdit}/>
+
+                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <div className="flex-1">
+                            <div className="text-sm font-medium text-gray-700">Telegram-уведомления</div>
+                            <div className="text-xs text-gray-400 mt-0.5">
+                                {form.telegram_chat_id
+                                    ? '✅ Подключён'
+                                    : 'Не подключён — нажмите, чтобы получать заявки'}
+                            </div>
+                        </div>
+                        {!form.telegram_chat_id && (
+                            <a
+                                href={`https://t.me/${process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME}?start=${editedUser?.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 bg-[#2AABEE] text-white text-sm font-medium rounded-lg hover:bg-[#229ED9] transition-colors"
+                            >
+                                Подключить
+                            </a>
+                        )}
+                    </div>
+
                     <Input label="Email" name="email" type="email" value={form.email} onChange={handleChange}
                            icon="email" placeholder="example@mail.ru" disabled={canEdit}/>
                     <Input label="Дата рождения" name="birthday" value={form.birthday} onChange={handleChange}

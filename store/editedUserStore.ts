@@ -17,6 +17,7 @@ export type EditedUser = {
     registered_at: string | null;
     crm_id: number | null;
     adaptation_access: boolean;
+    telegram_chat_id: string;
 };
 
 export type Mentorship = {
