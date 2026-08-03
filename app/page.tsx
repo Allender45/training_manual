@@ -3,6 +3,11 @@ import React from "react";
 export default function HomePage() {
   return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <img
+            src="/login_bg.png"
+            alt=""
+            className="hidden lg:block  fixed bottom-5 right-5 pointer-events-none select-none w-[300px]"
+        />
         <div className="text-center">
           <div className="mb-8">
             <div className="text-center mb-4">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input, Button } from '@/components';
 
@@ -73,6 +73,11 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <img
+                src="/login_bg.png"
+                alt=""
+                className="hidden lg:block fixed bottom-5 right-5 pointer-events-none select-none w-[300px]"
+            />
             <div className="w-full max-w-sm">
                 <div className="bg-white rounded-2xl shadow-sm p-4">
 
