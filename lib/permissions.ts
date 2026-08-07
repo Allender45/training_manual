@@ -9,6 +9,7 @@ export type Feature =
     | 'roles'
     | 'achievements'
     | 'studentWidgets'
+    | 'studentRatingWidget'
     | 'mentorWidgets'
     | 'sidebarAdminMenu'
     | 'sidebarAdminMenuRoles'
@@ -50,6 +51,7 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'courses',
         'sidebarStudentMenu',
         'studentWidgets',
+        'studentRatingWidget',
     ],   // Стажёр
     4: [
         'editUser',

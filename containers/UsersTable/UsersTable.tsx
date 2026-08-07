@@ -23,6 +23,7 @@ export type UserRow = {
     adaptation_access: boolean;
     courses_completed: number | null;
     courses_total: number | null;
+    department_id: number | null;
 };
 
 type UsersTableProps = {

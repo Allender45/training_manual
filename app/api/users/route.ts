@@ -45,7 +45,9 @@ export async function GET(req: NextRequest) {
                         u.adaptation_access,
                         TRIM(m_user.last_name || ' ' || m_user.first_name)         AS mentor_name,
                         COALESCE(up_count.completed, 0)                            AS courses_completed,
-                        (SELECT COUNT(*)::int FROM manuals WHERE is_active = true) AS courses_total
+                        (SELECT COUNT(*)::int FROM manuals WHERE is_active = true) AS courses_total,
+                        u.department_id,
+                        COALESCE(d.name, '') AS department_name
                  FROM users u
                           LEFT JOIN roles r ON r.id = u.role_id
                           JOIN mentorships ms ON ms.intern_id = u.id AND ms.end_date IS NULL AND ms.mentor_id = $1
@@ -54,6 +56,7 @@ export async function GET(req: NextRequest) {
                                      FROM user_progress
                                      WHERE content_type = 'course'
                                      GROUP BY user_id) up_count ON up_count.user_id = u.id
+                          LEFT JOIN departments d ON d.id = u.department_id
                  ORDER BY u.last_name, u.first_name`,
                 [userId]
             );
@@ -70,7 +73,9 @@ export async function GET(req: NextRequest) {
                         u.adaptation_access,
                         TRIM(m_user.last_name || ' ' || m_user.first_name) AS mentor_name,
                         COALESCE(up_count.completed, 0)                            AS courses_completed,
-                        (SELECT COUNT(*)::int FROM manuals WHERE is_active = true) AS courses_total
+                        (SELECT COUNT(*)::int FROM manuals WHERE is_active = true) AS courses_total,
+                        u.department_id,
+                        COALESCE(d.name, '') AS department_name
                  FROM users u
                           LEFT JOIN roles r ON r.id = u.role_id
                           LEFT JOIN mentorships ms ON ms.intern_id = u.id AND ms.end_date IS NULL
@@ -79,6 +84,7 @@ export async function GET(req: NextRequest) {
                                      FROM user_progress
                                      WHERE content_type = 'course'
                                      GROUP BY user_id) up_count ON up_count.user_id = u.id
+                          LEFT JOIN departments d ON d.id = u.department_id
                  ORDER BY u.last_name, u.first_name`
             );
         }
@@ -107,6 +113,7 @@ export async function POST(req: NextRequest) {
         const birthday    = (formData.get('birthday')    as string) || null;
         const comment     = (formData.get('comment')     as string)?.trim() || null;
         const photoFile   = formData.get('photo') as File | null;
+        const department_id    = formData.get('department_id') as string | null;
 
         if (!hasFeature(auth.roleId, 'profileRoleChange') && roleRaw && roleRaw !== 'Стажёр') {
             return NextResponse.json({ error: 'Недостаточно прав для назначения этой роли' }, { status: 403 });
@@ -148,17 +155,21 @@ export async function POST(req: NextRequest) {
         }
 
         const password_hash = await bcrypt.hash(password, 12);
+        const departmentIdNum = department_id ? Number(department_id) : null;
+        if (department_id && !Number.isInteger(departmentIdNum)) {
+            return NextResponse.json({ error: 'Некорректный department_id' }, { status: 400 });
+        }
 
         const result = await pool.query(
             `INSERT INTO users
              (last_name, first_name, middle_name, phone, email,
               photo, passport_series, passport_number, birthday, comment,
-              password_hash, role_id)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-             RETURNING id, last_name, first_name, middle_name, phone, email, registered_at`,
+              password_hash, role_id, departmentIdNum)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, $13)
+             RETURNING id, last_name, first_name, middle_name, phone, email, registered_at, departmentIdNum`,
             [last_name, first_name, middle_name, phone, email,
                 photoPath, passport_series, passport_number,
-                birthday, comment, password_hash, role_id]
+                birthday, comment, password_hash, role_id, departmentIdNum]
         );
         return NextResponse.json({ user: result.rows[0] }, { status: 201 });
     } catch (error: any) {

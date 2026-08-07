@@ -181,7 +181,7 @@ export default function AboutPage() {
                         <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-2">
                             О нас
                         </h2>
-                        <p className="text-gray-600 text-lg text-center mb-10 px-20">
+                        <p className="text-gray-600 text-lg text-center mb-10 px-2 lg:px-20">
                             Мы начали свой путь в 2016 году со скромного офисного кабинета 12 кв.м. У нас было несколько
                             сломанных ноутбуков и дикое желание развиваться. Прошли годы, мы открыли филиалы в
                             близлежащих регионах, далее стали работать во всех крупных городах России, подключили

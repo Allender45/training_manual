@@ -55,15 +55,17 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
 
                     {/* Панель доступная всем */}
                     <SidebarButton
-                        href="/home" icon={Home} label="Dashboard"
+                        href="/home" icon={Home} label="Мой Dashboard"
                         sidebarOpen={sidebarOpen} active={pathname === '/home'}
+                    />
+                    <SidebarButton
+                        href="/company" icon={Home} label="О компании"
+                        sidebarOpen={sidebarOpen} active={pathname === '/company'}
                     />
                     <SidebarButton href="/functional" icon={FileText} label="Функционал CRM"
                                    sidebarOpen={sidebarOpen} active={pathname.startsWith('/functional')}/>
                     <SidebarButton href="/courses" icon={FileText} label="Курсы" sidebarOpen={sidebarOpen}
                                    active={pathname.startsWith('/courses')}/>
-                    <SidebarButton href="/gallery" icon={Images} label="Фотогалерея" sidebarOpen={sidebarOpen}
-                                   active={pathname.startsWith('/gallery')}/>
 
 
                     {/*Панель стажёра*/}
@@ -159,6 +161,9 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                 </div>
                             )}
                         </div>}
+
+                    <SidebarButton href="/gallery" icon={Images} label="Фотогалерея" sidebarOpen={sidebarOpen}
+                                   active={pathname.startsWith('/gallery')}/>
                 </nav>
             </aside>
         </>

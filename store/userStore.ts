@@ -16,6 +16,7 @@ export type User = {
     role_id: number | null;
     role: string | null;
     crm_id: number | null;
+    department_id: number | null;
 };
 
 type UserStore = {

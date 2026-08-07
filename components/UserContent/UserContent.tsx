@@ -6,7 +6,7 @@ import {Input, Button, Select, Checkbox, AchievementsWidget, Avatar} from '@/com
 import {hasFeature} from '@/lib/permissions';
 import {formatPhone, getInitials} from '@/lib/format';
 import {Plus} from 'lucide-react';
-import {useAdaptationPlansStore, useUserStore, useRolesStore, useEditedUserStore} from '@/store';
+import {useAdaptationPlansStore, useUserStore, useRolesStore, useEditedUserStore, useDepartmentsStore} from '@/store';
 
 type UserForm = {
     last_name: string; first_name: string; middle_name: string;
@@ -18,6 +18,7 @@ type UserForm = {
     crm_id: string;
     adaptation_access: boolean;
     telegram_chat_id: string;
+    department_id: string;
 };
 
 const emptyForm: UserForm = {
@@ -29,6 +30,7 @@ const emptyForm: UserForm = {
     crm_id: '',
     adaptation_access: false,
     telegram_chat_id: '',
+    department_id: '',
 };
 
 type Props = {
@@ -45,7 +47,7 @@ export default function UserContent({userId}: Props) {
 
     const {roles, fetchRoles} = useRolesStore();
     const {editedUser, mentorship, loading, fetchEditedUser, clearEditedUser} = useEditedUserStore();
-
+    const {departmentOptions, fetchDepartments} = useDepartmentsStore();
     const [form, setForm] = useState<UserForm>(emptyForm);
     const [originalForm, setOriginalForm] = useState<UserForm>(emptyForm);
     const [saving, setSaving] = useState(false);
@@ -82,6 +84,7 @@ export default function UserContent({userId}: Props) {
 
     useEffect(() => {
         fetchRoles();
+        fetchDepartments();
         if (userId) fetchEditedUser(userId);
         setPhotoFile(null);
         setPhotoPreview(null);
@@ -136,6 +139,7 @@ export default function UserContent({userId}: Props) {
             crm_id: String(editedUser.crm_id ?? ''),
             adaptation_access: editedUser.adaptation_access ?? false,
             telegram_chat_id: editedUser.telegram_chat_id ?? '',
+            department_id: String(editedUser.department_id ?? ''),
         };
         setForm(filled);
         setOriginalForm(filled);
@@ -398,15 +402,26 @@ export default function UserContent({userId}: Props) {
                     )}
                     <Input label="Номер паспорта" name="passport_number" value={form.passport_number}
                            onChange={handleChange} placeholder="567890" disabled={canEdit}/>
-                        <Select
-                            label="Наставник"
-                            name="mentor_id"
-                            value={mentorForm.mentor_id}
-                            onChange={e => setMentorForm({mentor_id: e.target.value})}
-                            options={mentorOptions}
-                            placeholder="Выберите наставника"
-                            disabled={canEdit}
-                        />
+                    <Select
+                        label="Наставник"
+                        name="mentor_id"
+                        value={mentorForm.mentor_id}
+                        onChange={e => setMentorForm({mentor_id: e.target.value})}
+                        options={mentorOptions}
+                        placeholder="Выберите наставника"
+                        disabled={canEdit}
+                    />
+
+                    <Select
+                        label="Отдел"
+                        name="department_id"
+                        value={form.department_id}
+                        onChange={handleChange}
+                        options={departmentOptions}
+                        placeholder="Выберите отдел"
+                        disabled={canEdit}
+                    />
+
                     {showAdminFields && (
                         <Input label="ID в CRM" name="crm_id" type="number" value={form.crm_id}
                                onChange={handleChange} disabled={canEdit}/>
@@ -517,7 +532,8 @@ export default function UserContent({userId}: Props) {
                         </div>
                     )}
                     {pwSuccess && (
-                        <div className="mt-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-3 py-2">
+                        <div
+                            className="mt-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-3 py-2">
                             Пароль успешно изменён
                         </div>
                     )}

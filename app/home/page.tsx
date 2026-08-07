@@ -5,7 +5,16 @@ import {useRouter} from 'next/navigation';
 import {useUserStore} from '@/store';
 import {CalendarDays} from 'lucide-react';
 import {Header, Sidebar} from '@/containers';
-import {StatCard, MentorChart, InternStatsWidget, InternProgressWidget, CourseProgressWidget, AchievementsWidget, SalaryCalculatorWidget } from "@/components";
+import {
+    StatCard,
+    MentorChart,
+    InternStatsWidget,
+    InternProgressWidget,
+    CourseProgressWidget,
+    AchievementsWidget,
+    SalaryCalculatorWidget,
+    InternRatingChartWidget
+} from "@/components";
 import {hasFeature} from "@/lib/permissions";
 
 type AdaptationInfo = {
@@ -109,13 +118,19 @@ export default function HomePage() {
                                     />
                                 )}
                                 <div className="flex gap-5 w-full shrink-0">
-                                    <CourseProgressWidget />
-                                    <AchievementsWidget />
+                                    <CourseProgressWidget/>
+                                    <AchievementsWidget/>
                                 </div>
                                 <div className="max-w-sm">
                                     <SalaryCalculatorWidget/>
                                 </div>
                             </>
+                        }
+
+                        {hasFeature(rid, 'studentRatingWidget') &&
+                            <div className="w-full">
+                                <InternRatingChartWidget/>
+                            </div>
                         }
 
                     </div>
