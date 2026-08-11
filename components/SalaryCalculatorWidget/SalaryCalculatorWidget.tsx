@@ -48,7 +48,7 @@ export default function SalaryCalculatorWidget() {
     const [deals, setDeals] = useState(0);
     const [showModal, setShowModal] = useState(false);
 
-    const quick = calculateSalary({ calls, conversion, avgCheck, repeatRevenue: 0, deals: 0 });
+    const quick = calculateSalary({ calls, conversion, avgCheck, repeatRevenue, deals });
     const full = calculateSalary({ calls, conversion, avgCheck, repeatRevenue, deals });
     const completed = Math.round(calls * (conversion / 100));
 
@@ -67,17 +67,17 @@ export default function SalaryCalculatorWidget() {
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                <div>
-                    <label className="block text-xs text-gray-500 mb-1">Конверсия, %</label>
-                    <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={conversion}
-                        onChange={e => setConversion(Number(e.target.value) || 0)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
+                {/*<div>*/}
+                {/*    <label className="block text-xs text-gray-500 mb-1">Конверсия, %</label>*/}
+                {/*    <input*/}
+                {/*        type="number"*/}
+                {/*        min={0}*/}
+                {/*        max={100}*/}
+                {/*        value={conversion}*/}
+                {/*        onChange={e => setConversion(Number(e.target.value) || 0)}*/}
+                {/*        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"*/}
+                {/*    />*/}
+                {/*</div>*/}
                 <div>
                     <label className="block text-xs text-gray-500 mb-1">Выполненные</label>
                     <input
@@ -90,15 +90,27 @@ export default function SalaryCalculatorWidget() {
                     />
                 </div>
                 <div>
-                    <label className="block text-xs text-gray-500 mb-1">Средний чек, ₽</label>
-                    <input
-                        type="number"
-                        min={0}
-                        value={avgCheck}
-                        onChange={e => setAvgCheck(Number(e.target.value) || 0)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">
+                        доп. выручка от повторных продаж
+                    </label>
+                    <input type="number" min={0} value={repeatRevenue} onChange={e => setRepeatRevenue(Number(e.target.value) || 0)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
+                <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">
+                        Переданные сделки <span className="text-gray-400 font-normal">бонус 100 ₽ за каждую</span>
+                    </label>
+                    <input type="number" min={0} value={deals} onChange={e => setDeals(Number(e.target.value) || 0)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                {/*<div>*/}
+                {/*    <label className="block text-xs text-gray-500 mb-1">Средний чек, ₽</label>*/}
+                {/*    <input*/}
+                {/*        type="number"*/}
+                {/*        min={0}*/}
+                {/*        value={avgCheck}*/}
+                {/*        onChange={e => setAvgCheck(Number(e.target.value) || 0)}*/}
+                {/*        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"*/}
+                {/*    />*/}
+                {/*</div>*/}
             </div>
 
             <div className="flex flex-col items-center bg-blue-50 rounded-lg px-4 py-3">

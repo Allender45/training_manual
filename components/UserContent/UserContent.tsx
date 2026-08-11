@@ -63,7 +63,6 @@ export default function UserContent({userId}: Props) {
     const {plans: adaptationPlans, fetchPlans} = useAdaptationPlansStore();
 
     const [newPassword, setNewPassword] = useState('');
-    const [createPw, setCreatePw] = useState({password: '', confirmPassword: ''});
 
     const [pwForm, setPwForm] = useState({currentPassword: '', newPassword: '', confirmPassword: ''});
     const [pwSaving, setPwSaving] = useState(false);
@@ -196,10 +195,12 @@ export default function UserContent({userId}: Props) {
     }
 
     async function handleSave() {
-        if (isCreate && createPw.password !== createPw.confirmPassword) {
-            setSaveError('Пароли не совпадают');
+        if (isCreate && (!form.last_name.trim() || !form.first_name.trim() || !form.middle_name.trim()
+            || !form.phone.trim() || newPassword.length < 8)) {
+            setSaveError('Заполните ФИО и телефон, пароль — минимум 8 символов');
             return;
         }
+
         setSaving(true);
         setSaveError(null);
         try {
@@ -208,7 +209,7 @@ export default function UserContent({userId}: Props) {
                 if (k === 'is_active') return;
                 fd.append(k, String(v));
             });
-            if (isCreate) fd.append('password', createPw.password);
+            if (isCreate) fd.append('password', newPassword);
             if (photoFile) fd.append('photo', photoFile);
 
             const res = await fetch(isCreate ? '/api/users' : `/api/users/${userId}`, {
@@ -456,26 +457,16 @@ export default function UserContent({userId}: Props) {
                         </div>
                     )}
 
-                    {isCreate ? (
-                        <>
-                            <Input label="Пароль *" name="password" type="password" value={createPw.password}
-                                   onChange={e => setCreatePw(prev => ({...prev, password: e.target.value}))}
-                                   icon="lock"/>
-                            <Input label="Подтверждение пароля *" name="confirmPassword" type="password"
-                                   value={createPw.confirmPassword}
-                                   onChange={e => setCreatePw(prev => ({...prev, confirmPassword: e.target.value}))}
-                                   icon="lock"/>
-                        </>
-                    ) : showSimplePassword && (
+                    {isCreate &&
                         <Input
-                            label="Новый пароль"
+                            label="Пароль"
                             name="newPassword"
                             type="password"
                             value={newPassword}
                             onChange={e => setNewPassword(e.target.value)}
                             icon="lock"
                         />
-                    )}
+                    }
 
                     {(showAdminFields && !isSelf) &&
                         <div className="sm:col-span-2">
