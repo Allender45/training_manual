@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
         }
         const role = roleRaw || 'Стажёр';
 
-        if (!last_name || !first_name || !middle_name || !phoneRaw || !password) {
+        if (!last_name || !first_name || !phoneRaw || !password) {
             return NextResponse.json({ error: 'Заполните обязательные поля: ФИО, телефон, пароль' }, { status: 400 });
         }
         if (password.length < 8) {
@@ -164,10 +164,10 @@ export async function POST(req: NextRequest) {
             `INSERT INTO users
              (last_name, first_name, middle_name, phone, email,
               photo, passport_series, passport_number, birthday, comment,
-              password_hash, role_id, departmentIdNum)
+              password_hash, role_id, department_id)
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, $13)
-             RETURNING id, last_name, first_name, middle_name, phone, email, registered_at, departmentIdNum`,
-            [last_name, first_name, middle_name, phone, email,
+             RETURNING id, last_name, first_name, middle_name, phone, email, registered_at, department_id`,
+            [last_name, first_name, middle_name || '', phone, email,
                 photoPath, passport_series, passport_number,
                 birthday, comment, password_hash, role_id, departmentIdNum]
         );
