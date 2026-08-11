@@ -195,7 +195,7 @@ export default function UserContent({userId}: Props) {
     }
 
     async function handleSave() {
-        if (isCreate && (!form.last_name.trim() || !form.first_name.trim() || !form.middle_name.trim()
+        if (isCreate && (!form.last_name.trim() || !form.first_name.trim()
             || !form.phone.trim() || newPassword.length < 8)) {
             setSaveError('Заполните ФИО и телефон, пароль — минимум 8 символов');
             return;
