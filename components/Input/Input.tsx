@@ -4,6 +4,14 @@ import { Calendar, X } from 'lucide-react';
 
 import { formatPhone } from '@/lib/format';
 
+export type DaDataSuggestion = {
+    value: string;
+    kladrId: string;
+    city: string;
+    street: string;
+    house: string;
+};
+
 function formatDateTimeLocal(date: Date): string {
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -28,6 +36,9 @@ type InputProps = {
     className?: string;
     disabled?: boolean;
     nearestTimeCheckbox?: boolean;
+    dadata?: 'city' | 'address';
+    dadataKladrId?: string;
+    onDaDataSelect?: (suggestion: DaDataSuggestion) => void;
 };
 
 const icons = {
@@ -66,10 +77,58 @@ const icons = {
 const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
     {
         label, name, type = 'text', value, onChange, required, placeholder,
-        maxLength, minLength, icon, error, onFocus, onBlur, accept, className, disabled, rows, nearestTimeCheckbox = true
+        maxLength, minLength, icon, error, onFocus, onBlur, accept, className, disabled, rows, nearestTimeCheckbox = true, dadata, dadataKladrId, onDaDataSelect
     },
     ref
 ) {
+    const [suggestions, setSuggestions] = React.useState<DaDataSuggestion[]>([]);
+    const [suggestionsOpen, setSuggestionsOpen] = React.useState(false);
+    const dadataTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const boxRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        if (!dadata) return;
+        function handleClickOutside(e: MouseEvent) {
+            if (boxRef.current && !boxRef.current.contains(e.target as Node)) {
+                setSuggestionsOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [dadata]);
+
+    function fetchDaDataSuggestions(v: string) {
+        if (!dadata) return;
+        if (dadataTimerRef.current) clearTimeout(dadataTimerRef.current);
+        if (v.trim().length < 2) {
+            setSuggestions([]);
+            setSuggestionsOpen(false);
+            return;
+        }
+        dadataTimerRef.current = setTimeout(async () => {
+            try {
+                const res = await fetch('/api/dadata/suggest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: v, mode: dadata, kladrId: dadataKladrId }),
+                });
+                const data = await res.json();
+                const list: DaDataSuggestion[] = data.suggestions ?? [];
+                setSuggestions(list);
+                setSuggestionsOpen(list.length > 0);
+            } catch {
+                setSuggestions([]);
+                setSuggestionsOpen(false);
+            }
+        }, 300);
+    }
+
+    function handleDaDataSelect(s: DaDataSuggestion) {
+        onDaDataSelect?.(s);
+        setSuggestions([]);
+        setSuggestionsOpen(false);
+    }
+
     function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
         if (!onChange) return;
         if (type === 'tel') {
@@ -185,7 +244,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
     }
 
     return (
-        <div className="relative">
+        <div className="relative" ref={boxRef}>
             <label htmlFor={name} className="block text-gray-500 text-sm mb-2">
                 {label}
             </label>
@@ -197,14 +256,23 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
                     name={name}
                     type={type === 'fileUpload' ? 'file' : type}
                     {...(type !== 'fileUpload' ? {value: value ?? ''} : {})}
-                    onChange={handleChange}
-                    onFocus={type !== 'fileUpload' ? handleFocus : undefined}
+                    onChange={e => {
+                        handleChange(e);
+                        fetchDaDataSuggestions(e.target.value);
+                    }}
+                    onFocus={e => {
+                        if (type !== 'fileUpload') {
+                            handleFocus(e);
+                            if (dadata && suggestions.length > 0) setSuggestionsOpen(true);
+                        }
+                    }}
                     onBlur={onBlur}
                     required={required}
                     placeholder={placeholder}
                     maxLength={maxLength}
                     minLength={minLength}
                     accept={accept}
+                    autoComplete={dadata ? 'off' : undefined}
                     className={className || (type === 'fileUpload'
                             ? `w-full border rounded-lg text-sm text-gray-500 transition-colors cursor-pointer
        file:border-0 file:bg-gray-100 file:text-gray-700 file:text-sm file:font-medium
@@ -221,6 +289,21 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
                     </div>
                 )}
             </div>
+            {dadata && suggestionsOpen && (
+                <ul className="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-auto">
+                    {suggestions.map((s, i) => (
+                        <li key={`${s.kladrId}-${i}`}>
+                            <button
+                                type="button"
+                                onClick={() => handleDaDataSelect(s)}
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                            >
+                                {s.value}
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            )}
             {error && (
                 <p className="text-red-500 text-xs mt-1">{error}</p>
             )}

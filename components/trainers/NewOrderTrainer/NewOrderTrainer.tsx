@@ -111,6 +111,7 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
     const [reviewError, setReviewError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof OrderForm, string>>>({});
     const [showAnswers, setShowAnswers] = useState(false);
+    const [cityKladrId, setCityKladrId] = useState('');
 
     function handleChange(field: keyof OrderForm, value: string) {
         setForm(prev => ({ ...prev, [field]: value }));
@@ -166,6 +167,7 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
         setReviewError(null);
         setFieldErrors({});
         setShowAnswers(false);
+        setCityKladrId('');
     }
 
     const isValid = !!(form.city.trim() && form.street.trim() && form.workDescription.trim() && (form.nearestTime || form.dateTime));
@@ -185,7 +187,15 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                 label="Город"
                 name="city"
                 value={form.city}
-                onChange={e => handleChange('city', e.target.value)}
+                onChange={e => {
+                    handleChange('city', e.target.value);
+                    setCityKladrId('');
+                }}
+                onDaDataSelect={s => {
+                    handleChange('city', s.city || s.value);
+                    setCityKladrId(s.kladrId);
+                }}
+                dadata="city"
                 placeholder="Введите город"
                 required
                 error={fieldErrors.city}
@@ -214,6 +224,11 @@ export default function NewOrderTrainer({ onComplete }: NewOrderTrainerProps) {
                 name="street"
                 value={form.street}
                 onChange={e => handleChange('street', e.target.value)}
+                onDaDataSelect={s =>
+                    handleChange('street', [s.street, s.house].filter(Boolean).join(' ') || s.value)
+                }
+                dadata="address"
+                dadataKladrId={cityKladrId}
                 placeholder="Улица, дом"
                 required
                 error={fieldErrors.street}

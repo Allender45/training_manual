@@ -114,6 +114,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
     const caseData = CASES[currentCase];
     const [order, setOrder] = useState<OrderForm>(getInitOrder(CASES[0]));
     const [formError, setFormError] = useState<string | null>(null);
+    const [cityKladrId, setCityKladrId] = useState('');
 
     function getInitOrder(c: CaseData): OrderForm {
         return {
@@ -149,6 +150,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
             setReviewError(null);
             setPricingError(false);
             setFormError(null);
+            setCityKladrId('');
         } else {
             onComplete?.();
         }
@@ -223,6 +225,7 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
         setReviewError(null);
         setPricingError(false);
         setFormError(null);
+        setCityKladrId('');
     }
 
     return (
@@ -239,7 +242,15 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                 label="Город"
                 name="city"
                 value={order.city}
-                onChange={e => handleOrderChange('city', e.target.value)}
+                onChange={e => {
+                    handleOrderChange('city', e.target.value);
+                    setCityKladrId('');
+                }}
+                onDaDataSelect={s => {
+                    setOrder(prev => ({ ...prev, city: s.city || s.value }));
+                    setCityKladrId(s.kladrId);
+                }}
+                dadata="city"
                 placeholder="Введите город"
                 required
             />
@@ -266,6 +277,11 @@ export default function FullOrderCreate({ onComplete }: FullOrderCreateProps) {
                 name="street"
                 value={order.street}
                 onChange={e => handleOrderChange('street', e.target.value)}
+                onDaDataSelect={s =>
+                    handleOrderChange('street', [s.street, s.house].filter(Boolean).join(' ') || s.value)
+                }
+                dadata="address"
+                dadataKladrId={cityKladrId}
                 placeholder="Улица, дом"
                 required
             />
