@@ -30,6 +30,8 @@ export type Feature =
     | 'usersTableDetailUserButton'
     | 'userProfileAddAchievementsButton'
     | 'adaptationTableAddButtons'
+    | 'achievementsTableAddButtons'
+    | 'functionalTableAddButtons'
     | 'coursesTableAddButtons'
     | 'manualsTableAddButtons'
     | 'trainingsTableAddButtons'
@@ -83,6 +85,12 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'profileActiveStatusChange',
         'sidebarAdminMenu',
         'manualsTableAddButtons',
+        'coursesTableAddButtons',
+        'trainingsTableAddButtons',
+        'testsTableAddButtons',
+        'adaptationTableAddButtons',
+        'achievementsTableAddButtons',
+        'functionalTableAddButtons',
     ],    // Кадровик
     2: [
         'sidebarMentorMenu',
