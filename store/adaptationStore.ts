@@ -40,6 +40,7 @@ type AdaptationStore = {
     adaptationRequestId: number;
     dayDataRequestId: number;
     reset: () => void;
+    salaryForecast: number | null;
 };
 
 export const useAdaptationStore = create<AdaptationStore>((set, get) => ({
@@ -72,7 +73,9 @@ export const useAdaptationStore = create<AdaptationStore>((set, get) => ({
             if (!res.ok) throw new Error(`Ошибка загрузки статистики: ${res.status}`);
             const json = await res.json();
             if (get().dayDataRequestId !== reqId) return;
-            set({ dayData: (json.data as ApiDayItem[]).map(mapApiDay) });
+            set({ dayData: (json.data as ApiDayItem[]).map(mapApiDay),
+                salaryForecast: json.meta?.salaryForecast?.amount ?? null,
+            });
         } catch {
             if (get().dayDataRequestId === reqId) set({ dayData: [] });
         } finally {
@@ -80,4 +83,5 @@ export const useAdaptationStore = create<AdaptationStore>((set, get) => ({
         }
     },
     reset: () => set({ adaptation: null, loading: false, dayData: [], dayDataLoading: false }),
+    salaryForecast: null,
 }));

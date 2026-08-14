@@ -116,6 +116,7 @@ export default function CourseStudyPage() {
     const [trainers, setTrainers] = useState<CourseTrainer[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [nextCourseId, setNextCourseId] = useState<number | null>(null);
 
     const [courseTest, setCourseTest] = useState<CourseTest | null>(null);
     const [testModalOpen, setTestModalOpen] = useState(false);
@@ -147,6 +148,9 @@ export default function CourseStudyPage() {
         setCourseTest(null);
         setLoading(true);
         setError(null);
+        setNextCourseId(null);
+        setTestPassed(false);
+        setTestAttempted(false);
 
         fetch(`/api/courses/${courseId}`)
             .then(r => r.json())
@@ -158,17 +162,22 @@ export default function CourseStudyPage() {
                     fetch(`/api/manuals?course_id=${courseId}`).then(r => r.json()),
                     testId ? fetch(`/api/courseTests/${testId}`).then(r => r.json()) : Promise.resolve(null),
                     fetch(`/api/courses/${courseId}/trainers`).then(r => r.json()),
+                    fetch('/api/courses').then(r => r.json()),   // ← добавить
                 ]);
             })
             .then(results => {
                 if (!results) return;
-                const [manualsData, testData, trainersData] = results;
+                const [manualsData, testData, trainersData, coursesData] = results;   // ← добавить coursesData
                 setManuals((manualsData.manuals ?? []).filter((m: Manual) => m.is_active));
                 if (testData?.test?.is_active) {
                     setCourseTest(testData.test);
                     setTestQuestions(testData.questions ?? []);
                 }
                 setTrainers(trainersData.trainers ?? []);
+
+                const coursesList: {id: number}[] = coursesData.courses ?? [];
+                const idx = coursesList.findIndex(c => c.id === Number(courseId));
+                setNextCourseId(idx >= 0 && idx < coursesList.length - 1 ? coursesList[idx + 1].id : null);
             })
             .catch(e => { if (e !== null) setError('Ошибка загрузки данных'); })
             .finally(() => setLoading(false));
@@ -451,6 +460,18 @@ export default function CourseStudyPage() {
                                         disabled={!allTrainersCompleted}
                                     >
                                         {testPassed ? 'Повторить' : testAttempted ? 'Пройти повторно' : 'Пройти тест'}
+                                    </Button>
+                                </div>
+                            )}
+
+                            {nextCourseId !== null && (
+                                <div className="mt-6 flex justify-end">
+                                    <Button
+                                        variant={!courseTest || testPassed ? 'primary' : 'outline'}
+                                        disabled={!!courseTest && !testPassed}
+                                        onClick={() => router.push(`/courses/study?id=${nextCourseId}`)}
+                                    >
+                                        Перейти к следующему курсу
                                     </Button>
                                 </div>
                             )}

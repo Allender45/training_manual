@@ -22,6 +22,7 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
     const fetchAdaptation = useAdaptationStore(s => s.fetchAdaptation);
     const fetchDayData  = useAdaptationStore(s => s.fetchDayData);
     const reset         = useAdaptationStore(s => s.reset);
+    const salaryForecast = useAdaptationStore(s => s.salaryForecast);
 
     useEffect(() => {
         fetchAdaptation(userId);
@@ -64,6 +65,9 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
                           icon={UserPlus} color="bg-blue-100 text-blue-600"/>
                 <StatCard label="План по кассе общей"
                           value={adaptation.plan_revenue_total != null ? formatMoney(adaptation.plan_revenue_total) : '—'}
+                          icon={Wallet} color="bg-green-100 text-green-600"/>
+                <StatCard label="Прогноз зарплаты"
+                          value={salaryForecast != null ? formatMoney(Math.round(salaryForecast)) : '—'}
                           icon={Wallet} color="bg-green-100 text-green-600"/>
                 <AdaptationCalendar data={dayData} plan={adaptation} onMonthChange={setCalendarPeriod}/>
                 <div></div>
