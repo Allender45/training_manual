@@ -82,6 +82,7 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'profilePassChange',
         'profileActiveStatusChange',
         'sidebarAdminMenu',
+        'manualsTableAddButtons',
     ],    // Кадровик
     2: [
         'sidebarMentorMenu',
