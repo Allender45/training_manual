@@ -38,3 +38,10 @@ export const BADGES = [
     { key: 'revNew'   as const, Icon: UserPlus  },
     { key: 'revTotal' as const, Icon: Wallet    },
 ];
+
+export function factVsPlanColor(fact: number | null, plan: number | null): string {
+    if (fact == null || !plan) return 'text-gray-800';
+    if (fact >= plan) return 'text-green-600';
+    if (fact >= plan / 2) return 'text-amber-500';
+    return 'text-red-500';
+}

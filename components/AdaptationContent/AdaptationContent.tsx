@@ -7,6 +7,7 @@ import {useAdaptationStore} from '@/store';
 import {computeScore} from '@/lib/adaptationUtils';
 import {toPeriod} from '@/lib/date';
 import {formatMoney} from '@/lib/format';
+import {factVsPlanColor} from '@/lib/adaptationUtils';
 
 type Props = {
     userId: number;
@@ -44,6 +45,14 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
         : { calls: 0, conv: 0, revNew: 0, revTotal: 0 };
     const { calls, conv, revNew, revTotal } = score;
 
+    const now = new Date();
+    const todayStr = [
+        String(now.getDate()).padStart(2, '0'),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        now.getFullYear(),
+    ].join('.');
+    const today = dayData.find(d => d.date === todayStr) ?? null;
+
     if (loading) return <p className="text-sm text-gray-400">Загрузка...</p>;
 
     if (!adaptation) return (
@@ -55,17 +64,17 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
     return (
         <>
             <div className="flex flex-wrap gap-4">
-                <StatCard label="План по звонкам" value={adaptation.plan_calls ? String(adaptation.plan_calls) : '—'}
-                          icon={PhoneCall} color="bg-purple-100 text-purple-600"/>
-                <StatCard label="План по конверсиям"
-                          value={adaptation.plan_conversion ? String(adaptation.plan_conversion) : '—'} icon={Percent}
-                          color="bg-yellow-100 text-yellow-600"/>
-                <StatCard label="План по кассе от новых клиентов"
-                          value={adaptation.plan_revenue_new != null ? formatMoney(adaptation.plan_revenue_new) : '—'}
-                          icon={UserPlus} color="bg-blue-100 text-blue-600"/>
-                <StatCard label="План по кассе общей"
-                          value={adaptation.plan_revenue_total != null ? formatMoney(adaptation.plan_revenue_total) : '—'}
-                          icon={Wallet} color="bg-green-100 text-green-600"/>
+                <StatCard label="Факт\план по звонкам" value={adaptation.plan_calls ? `${today ? `${today.calls} / ${String(adaptation.plan_calls)}` : '—'}` : '—'}
+                          icon={PhoneCall} color="bg-purple-100 text-purple-600" sub={today ? `Факт: ${today.calls}` : 'Факт: —'} valueClass={factVsPlanColor(today?.calls ?? null, adaptation.plan_calls)}/>
+                <StatCard label="Факт\план по конверсиям"
+                          value={adaptation.plan_conversion ? `${today ? `${today.conversion} / ${String(adaptation.plan_conversion)}` : '—'}` : '—'} icon={Percent}
+                          color="bg-yellow-100 text-yellow-600" valueClass={factVsPlanColor(today?.conversion ?? null, adaptation.plan_conversion)}/>
+                <StatCard label="Факт\план по кассе от новых клиентов"
+                          value={adaptation.plan_revenue_new ? `${today ? `${today.revenue_new} / ${String(adaptation.plan_revenue_new)}` : '—'}` : '—'}
+                          icon={UserPlus} color="bg-blue-100 text-blue-600" valueClass={factVsPlanColor(today?.revenue_new ?? null, adaptation.plan_revenue_new)}/>
+                <StatCard label="Факт\план по кассе общей"
+                          value={adaptation.plan_revenue_total ? `${today ? `${today.revenue_total} / ${String(adaptation.plan_revenue_total)}` : '—'}` : '—'}
+                          icon={Wallet} color="bg-green-100 text-green-600" valueClass={factVsPlanColor(today?.revenue_total ?? null, adaptation.plan_revenue_total)}/>
                 <StatCard label="Прогноз зарплаты"
                           value={salaryForecast != null ? formatMoney(Math.round(salaryForecast)) : '—'}
                           icon={Wallet} color="bg-green-100 text-green-600"/>
