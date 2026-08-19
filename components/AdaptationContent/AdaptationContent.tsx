@@ -64,15 +64,15 @@ export default function AdaptationContent({userId, crmUserId}: Props) {
     return (
         <>
             <div className="flex flex-wrap gap-4">
-                <StatCard label="Факт\план по звонкам" value={adaptation.plan_calls ? `${today ? `${today.calls} / ${String(adaptation.plan_calls)}` : '—'}` : '—'}
-                          icon={PhoneCall} color="bg-purple-100 text-purple-600" sub={today ? `Факт: ${today.calls}` : 'Факт: —'} valueClass={factVsPlanColor(today?.calls ?? null, adaptation.plan_calls)}/>
-                <StatCard label="Факт\план по конверсиям"
+                <StatCard label="Факт/план по звонкам" value={adaptation.plan_calls ? `${today ? `${today.calls} / ${String(adaptation.plan_calls)}` : '—'}` : '—'}
+                          icon={PhoneCall} color="bg-purple-100 text-purple-600"/>
+                <StatCard label="Факт/план по конверсиям"
                           value={adaptation.plan_conversion ? `${today ? `${today.conversion} / ${String(adaptation.plan_conversion)}` : '—'}` : '—'} icon={Percent}
                           color="bg-yellow-100 text-yellow-600" valueClass={factVsPlanColor(today?.conversion ?? null, adaptation.plan_conversion)}/>
-                <StatCard label="Факт\план по кассе от новых клиентов"
+                <StatCard label="Факт/план по кассе от новых клиентов"
                           value={adaptation.plan_revenue_new ? `${today ? `${today.revenue_new} / ${String(adaptation.plan_revenue_new)}` : '—'}` : '—'}
                           icon={UserPlus} color="bg-blue-100 text-blue-600" valueClass={factVsPlanColor(today?.revenue_new ?? null, adaptation.plan_revenue_new)}/>
-                <StatCard label="Факт\план по кассе общей"
+                <StatCard label="Факт/план по кассе общей"
                           value={adaptation.plan_revenue_total ? `${today ? `${today.revenue_total} / ${String(adaptation.plan_revenue_total)}` : '—'}` : '—'}
                           icon={Wallet} color="bg-green-100 text-green-600" valueClass={factVsPlanColor(today?.revenue_total ?? null, adaptation.plan_revenue_total)}/>
                 <StatCard label="Прогноз зарплаты"
