@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
 import { requireFeature } from '@/lib/apiAuth';
-import { AUDIO_EXT, IMAGE_EXT, VIDEO_EXT, extFromMime, validateUpload } from '@/lib/upload';
+import { AUDIO_EXT, IMAGE_EXT, VIDEO_EXT, PDF_EXT, extFromMime, validateUpload } from '@/lib/upload';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -62,15 +62,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             contentUpdate = contentText;
         } else if (contentFile && contentFile.size > 0) {
             const isVideo = type === 'video';
+            const isAudio = type === 'audio';
             const contentError = validateUpload(contentFile, {
-                allowedExt: isVideo ? VIDEO_EXT : AUDIO_EXT,
+                allowedExt: isVideo ? VIDEO_EXT : isAudio ? AUDIO_EXT : PDF_EXT,
                 maxSizeMb: isVideo ? 200 : 50,
             });
             if (contentError) {
                 return NextResponse.json({ error: contentError }, { status: 400 });
             }
-            const cExt   = extFromMime(contentFile.type) ?? (isVideo ? 'mp4' : 'mp3');
-            const subDir = type === 'video' ? 'video' : 'audio';
+            const cExt   = extFromMime(contentFile.type) ?? (isVideo ? 'mp4' : isAudio ? 'mp3' : 'pdf');
+            const subDir = isVideo ? 'video' : isAudio ? 'audio' : 'presentation';
             const cDir   = path.join(process.cwd(), 'public', 'uploads', 'manuals', subDir);
             await fs.mkdir(cDir, { recursive: true });
             const cFilename = `${Date.now()}_${params.id}.${cExt}`;

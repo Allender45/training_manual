@@ -4,8 +4,8 @@ import React, {useState, useEffect} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
 import {useUserStore, useNotificationsStore, useAchievementsStore} from '@/store';
 import {Header, Sidebar, Modal} from '@/containers';
-import {Clock, BookOpen, Video, Music, FileText, ClipboardList, CheckCircle, XCircle} from 'lucide-react';
-import {CallCardTrainer, CaseQuizTrainer, PricingQuizTrainer, NewOrderTrainer, Button, FullOrderCreate} from '@/components';
+import {Clock, BookOpen, Video, Music, FileText, Presentation, ClipboardList, CheckCircle, XCircle} from 'lucide-react';
+import {CallCardTrainer, CaseQuizTrainer, PricingQuizTrainer, NewOrderTrainer, Button, FullOrderCreate, PdfSlider} from '@/components';
 
 type Course = {
     id: number;
@@ -28,7 +28,7 @@ type Manual = {
     id: number;
     title: string;
     icon: string;
-    type: 'text' | 'video' | 'audio';
+    type: 'text' | 'video' | 'audio' | 'presentation';
     description: string;
     content: string | null;
     prerequisite_id: number | null;
@@ -87,9 +87,10 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 const TYPE_CONFIG = {
-    text:  {label: 'Текст', icon: FileText, color: 'bg-blue-50 text-blue-700'},
-    video: {label: 'Видео', icon: Video,    color: 'bg-purple-50 text-purple-700'},
-    audio: {label: 'Аудио', icon: Music,    color: 'bg-amber-50 text-amber-700'},
+    text:         {label: 'Текст',       icon: FileText,     color: 'bg-blue-50 text-blue-700'},
+    video:        {label: 'Видео',       icon: Video,        color: 'bg-purple-50 text-purple-700'},
+    audio:        {label: 'Аудио',       icon: Music,        color: 'bg-amber-50 text-amber-700'},
+    presentation: {label: 'Презентация', icon: Presentation, color: 'bg-green-50 text-green-700'},
 } as const;
 
 const TRAINER_COMPONENTS: Record<string, React.ComponentType<any>> = {
@@ -399,6 +400,8 @@ export default function CourseStudyPage() {
                                                                className="w-full rounded-xl bg-black max-h-96"/>
                                                     ) : manual.type === 'audio' && manual.content ? (
                                                         <audio src={manual.content} controls className="w-full"/>
+                                                    ) : manual.type === 'presentation' && manual.content ? (
+                                                        <PdfSlider src={manual.content} />
                                                     ) : (
                                                         <p className="text-sm text-gray-400 italic">Содержимое не добавлено</p>
                                                     )}

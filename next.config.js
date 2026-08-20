@@ -4,6 +4,10 @@ const nextConfig = {
         serverComponentsExternalPackages: ['pg'],
     },
     transpilePackages: ['ckeditor5', '@ckeditor/ckeditor5-react'],
+    webpack: (config) => {
+        config.resolve.alias.canvas = false;
+        return config;
+    },
     async headers() {
         return [
             {
@@ -24,3 +28,4 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+

@@ -375,7 +375,7 @@ export default function UserContent({userId}: Props) {
                             <div className="text-xs text-gray-400 mt-0.5">
                                 {form.telegram_chat_id
                                     ? '✅ Подключён'
-                                    : 'Не подключён — нажмите, чтобы получать заявки'}
+                                    : 'Не подключён'}
                             </div>
                         </div>
                         {!form.telegram_chat_id && (

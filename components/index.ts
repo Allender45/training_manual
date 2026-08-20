@@ -28,3 +28,4 @@ export { default as Badge } from './Badge/Badge';
 export { default as Pagination } from './Pagination/Pagination';
 export { default as GalleryCard } from './GalleryCard/GalleryCard';
 export { default as InternRatingChartWidget } from './InternRatingChartWidget/InternRatingChartWidget';
+export { default as PdfSlider } from './PdfSlider/PdfSlider';

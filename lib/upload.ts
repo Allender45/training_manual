@@ -5,6 +5,7 @@
 export const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 export const VIDEO_EXT = ['mp4', 'webm', 'mov'];
 export const AUDIO_EXT = ['mp3', 'wav', 'ogg'];
+export const PDF_EXT = ['pdf'];
 
 type UploadOptions = {
     allowedExt: string[];

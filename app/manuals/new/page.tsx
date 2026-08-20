@@ -6,7 +6,7 @@ import { useUserStore } from '@/store/userStore';
 import { Header, Sidebar } from '@/containers';
 import { Input, Button, Checkbox, Select, CKEditorField } from '@/components';
 
-type ManualType = 'text' | 'video' | 'audio';
+type ManualType = 'text' | 'video' | 'audio' | 'presentation';
 
 type NewManualForm = {
     title: string;
@@ -101,7 +101,7 @@ export default function NewManualPage() {
         const file = e.target.files?.[0];
         if (!file) return;
         setContentFile(file);
-        setContentPreview(URL.createObjectURL(file));
+        setContentPreview(file.type === 'application/pdf' ? 'pdf-selected' : URL.createObjectURL(file));
     }
 
     async function handleSave() {
@@ -118,7 +118,7 @@ export default function NewManualPage() {
             return;
         }
         if (!isEditMode && form.type !== 'text' && !contentFile) {
-            setSaveError('Выберите файл для видео или аудио материала');
+            setSaveError('Выберите файл материала (видео, аудио или PDF)');
             return;
         }
         setSaving(true);
@@ -195,9 +195,10 @@ export default function NewManualPage() {
                                         value={form.type}
                                         onChange={handleChange}
                                         options={[
-                                            { value: 'text',  label: '📝 Текст' },
-                                            { value: 'video', label: '🎥 Видео' },
-                                            { value: 'audio', label: '🎵 Аудио' },
+                                            { value: 'text',         label: '📝 Текст' },
+                                            { value: 'video',        label: '🎥 Видео' },
+                                            { value: 'audio',        label: '🎵 Аудио' },
+                                            { value: 'presentation', label: '📊 Презентация' },
                                         ]}
                                     />
                                 </div>
@@ -223,19 +224,27 @@ export default function NewManualPage() {
                                 ) : (
                                     <div>
                                         <label className="block text-gray-500 text-sm mb-2">
-                                            {form.type === 'video' ? 'Видео файл' : 'Аудио файл'}
+                                            {form.type === 'video' ? 'Видео файл'
+                                                : form.type === 'audio' ? 'Аудио файл'
+                                                    : 'PDF файл презентации'}
                                             {!isEditMode && ' *'}
                                         </label>
                                         <div className="flex flex-col gap-3">
                                             {currentContentUrl && !contentPreview && (
                                                 form.type === 'video'
                                                     ? <video src={currentContentUrl} controls className="w-full rounded-lg max-h-52 bg-black" />
-                                                    : <audio src={currentContentUrl} controls className="w-full" />
+                                                    : form.type === 'audio'
+                                                        ? <audio src={currentContentUrl} controls className="w-full" />
+                                                        : <p className="text-sm text-gray-500">
+                                                            Текущий файл: <a href={currentContentUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">открыть PDF</a>
+                                                        </p>
                                             )}
                                             <Input
                                                 label=""
                                                 type="fileUpload"
-                                                accept={form.type === 'video' ? 'video/*' : 'audio/*'}
+                                                accept={form.type === 'video' ? 'video/*'
+                                                    : form.type === 'audio' ? 'audio/*'
+                                                        : 'application/pdf'}
                                                 onChange={handleContentFileChange}
                                             />
                                             {contentPreview && form.type === 'video' && (
@@ -243,6 +252,9 @@ export default function NewManualPage() {
                                             )}
                                             {contentPreview && form.type === 'audio' && (
                                                 <audio src={contentPreview} controls className="w-full" />
+                                            )}
+                                            {contentPreview && form.type === 'presentation' && (
+                                                <p className="text-sm text-gray-500">Файл выбран: {contentFile?.name}</p>
                                             )}
                                         </div>
                                     </div>

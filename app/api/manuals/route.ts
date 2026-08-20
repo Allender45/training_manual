@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { unsignSession } from '@/lib/session';
 import { requireFeature } from '@/lib/apiAuth';
-import { AUDIO_EXT, IMAGE_EXT, VIDEO_EXT, extFromMime, validateUpload } from '@/lib/upload';
+import { AUDIO_EXT, IMAGE_EXT, PDF_EXT, VIDEO_EXT, extFromMime, validateUpload } from '@/lib/upload';
 
 export async function GET(req: NextRequest) {
     const raw = req.cookies.get('session')?.value ?? '';
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         if (!iconFile || iconFile.size === 0) {
             return NextResponse.json({ error: 'Выберите иконку материала' }, { status: 400 });
         }
-        if (!['text', 'video', 'audio'].includes(type)) {
+        if (!['text', 'video', 'audio', 'presentation'].includes(type)) {
             return NextResponse.json({ error: 'Некорректный тип материала' }, { status: 400 });
         }
 
@@ -71,15 +71,16 @@ export async function POST(req: NextRequest) {
         let contentValue: string | null = contentText;
         if (type !== 'text' && contentFile && contentFile.size > 0) {
             const isVideo = type === 'video';
+            const isAudio = type === 'audio';
             const contentError = validateUpload(contentFile, {
-                allowedExt: isVideo ? VIDEO_EXT : AUDIO_EXT,
+                allowedExt: isVideo ? VIDEO_EXT : isAudio ? AUDIO_EXT : PDF_EXT,
                 maxSizeMb: isVideo ? 200 : 50,
             });
             if (contentError) {
                 return NextResponse.json({ error: contentError }, { status: 400 });
             }
-            const cExt    = extFromMime(contentFile.type) ?? (isVideo ? 'mp4' : 'mp3');
-            const subDir  = type === 'video' ? 'video' : 'audio';
+            const cExt    = extFromMime(contentFile.type) ?? (isVideo ? 'mp4' : isAudio ? 'mp3' : 'pdf');
+            const subDir  = isVideo ? 'video' : isAudio ? 'audio' : 'presentation';
             const cDir    = path.default.join(process.cwd(), 'public', 'uploads', 'manuals', subDir);
             await fs.default.mkdir(cDir, { recursive: true });
             const cFilename = `${Date.now()}_${title.replace(/[^a-zA-Zа-яА-ЯёЁ0-9]/g, '_').slice(0, 40)}.${cExt}`;
