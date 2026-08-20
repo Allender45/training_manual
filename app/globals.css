@@ -32,3 +32,16 @@ body {
   from { transform: translateX(-50%) translateY(0);    opacity: 1; }
   to   { transform: translateX(-50%) translateY(-120%); opacity: 0; }
 }
+
+@keyframes pdf-slide-next {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pdf-slide-prev {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.pdf-slide-next { animation: pdf-slide-next 0.3s ease-out; }
+.pdf-slide-prev { animation: pdf-slide-prev 0.3s ease-out; }
