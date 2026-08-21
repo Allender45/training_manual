@@ -171,7 +171,7 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
             {
                 key: 'type', header: 'Тип',
                 render: (row: ManualRow) => {
-                    const map: Record<string, string> = {text: '📝 Текст', video: '🎥 Видео', audio: '🎵 Аудио'};
+                    const map: Record<string, string> = {text: '📝 Текст', video: '🎥 Видео', audio: '🎵 Аудио', presentation: '📊 Презентация'};
                     return <span className="text-sm text-gray-600">{map[row.type] ?? row.type}</span>;
                 },
             },

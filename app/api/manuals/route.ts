@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
                     m.prerequisite_id, m.comment, m.is_active, m.created_at
              FROM manuals m
                  ${courseId ? 'JOIN course_manuals cm ON cm.manual_id = m.id WHERE cm.course_id = $1' : ''}
-             ORDER BY m.created_at ASC`,
+             ORDER BY ${courseId ? 'cm.position ASC' : 'm.created_at ASC'}`,
             courseId ? [courseId] : []
         );
         return NextResponse.json({ manuals: result.rows });

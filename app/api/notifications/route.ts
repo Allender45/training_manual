@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { unsignSession } from '@/lib/session';
-import { getAuth } from '@/lib/apiAuth';
-import { hasFeature } from '@/lib/permissions';
+import { maybeRunScheduledEngine, hasFeature, getAuth, unsignSession } from '@/lib';
 
 export async function GET(req: NextRequest) {
+    maybeRunScheduledEngine();
     const raw = req.cookies.get('session')?.value ?? '';
     const userId = unsignSession(raw);
     if (!userId) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });

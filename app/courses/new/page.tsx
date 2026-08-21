@@ -12,6 +12,7 @@ import {
 } from '@/store';
 import {Header, Sidebar} from '@/containers';
 import {Input, Button, Select, Checkbox} from '@/components';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 type CourseForm = {
     title: string;
@@ -109,6 +110,14 @@ export default function NewCoursePage() {
         } else {
             setForm(prev => ({...prev, [name]: value}));
         }
+    }
+
+    function moveManual(idx: number, dir: -1 | 1) {
+        const next = [...manualRows];
+        const target = idx + dir;
+        if (target < 0 || target >= next.length) return;
+        [next[idx], next[target]] = [next[target], next[idx]];
+        setManualRows(next);
     }
 
     function handleIconChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -296,6 +305,9 @@ export default function NewCoursePage() {
                                 <div className="flex flex-col gap-2">
                                     {manualRows.map((val, idx) => (
                                         <div key={idx} className="flex gap-2 items-center">
+                                            <span className="w-6 text-center text-sm text-gray-400 flex-shrink-0">
+                                                {idx + 1}
+                                            </span>
                                             <div className="flex-1">
                                                 <Select
                                                     label=""
@@ -314,6 +326,20 @@ export default function NewCoursePage() {
                                                         }))
                                                     ]}
                                                 />
+                                            </div>
+                                            <div className="flex flex-col flex-shrink-0">
+                                                <button
+                                                    type="button"
+                                                    disabled={idx === 0}
+                                                    onClick={() => moveManual(idx, -1)}
+                                                    className="text-gray-400 hover:text-gray-600 transition disabled:opacity-30"
+                                                ><ChevronUp size={14} /></button>
+                                                <button
+                                                    type="button"
+                                                    disabled={idx === manualRows.length - 1}
+                                                    onClick={() => moveManual(idx, 1)}
+                                                    className="text-gray-400 hover:text-gray-600 transition disabled:opacity-30"
+                                                ><ChevronDown size={14} /></button>
                                             </div>
                                             {manualRows.length > 1 && (
                                                 <button

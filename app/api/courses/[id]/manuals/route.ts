@@ -12,10 +12,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     try {
         await client.query('BEGIN');
         await client.query('DELETE FROM course_manuals WHERE course_id = $1', [params.id]);
-        for (const id of manual_ids as number[]) {
+        for (const [index, id] of (manual_ids as number[]).entries()) {
             await client.query(
-                'INSERT INTO course_manuals (course_id, manual_id) VALUES ($1, $2)',
-                [params.id, id]
+                'INSERT INTO course_manuals (course_id, manual_id, position) VALUES ($1, $2, $3)',
+                [params.id, id, index + 1]
             );
         }
         await client.query('COMMIT');

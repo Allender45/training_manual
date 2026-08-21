@@ -4,7 +4,7 @@
 
 export const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 export const VIDEO_EXT = ['mp4', 'webm', 'mov'];
-export const AUDIO_EXT = ['mp3', 'wav', 'ogg'];
+export const AUDIO_EXT = ['mp3', 'wav', 'ogg', 'webm'];
 export const PDF_EXT = ['pdf'];
 
 type UploadOptions = {
@@ -13,19 +13,19 @@ type UploadOptions = {
 };
 
 // Допустимый префикс MIME-типа для каждого расширения из whitelist.
-const EXT_MIME_PREFIX: Record<string, string> = {
-    jpg: 'image/',
-    jpeg: 'image/',
-    png: 'image/',
-    webp: 'image/',
-    gif: 'image/',
-    mp4: 'video/',
-    webm: 'video/',
-    mov: 'video/',
-    mp3: 'audio/',
-    wav: 'audio/',
-    ogg: 'audio/',
-    pdf: 'application/pdf',
+const EXT_MIME_PREFIX: Record<string, string[]> = {
+    jpg: ['image/'],
+    jpeg: ['image/'],
+    png: ['image/'],
+    webp: ['image/'],
+    gif: ['image/'],
+    mp4: ['video/'],
+    webm: ['video/', 'audio/'],
+    mov: ['video/'],
+    mp3: ['audio/'],
+    wav: ['audio/'],
+    ogg: ['audio/'],
+    pdf: ['application/pdf'],
 };
 
 // Каноническое расширение по MIME-типу (только whitelist).
@@ -42,6 +42,7 @@ const MIME_TO_EXT: Record<string, string> = {
     'audio/x-wav': 'wav',
     'audio/ogg': 'ogg',
     'application/pdf': 'pdf',
+    'audio/webm': 'webm',
 };
 
 export function extFromMime(mime: string): string | null {
@@ -58,7 +59,7 @@ export function validateUpload(file: File, opts: UploadOptions): string | null {
     }
 
     const mime = (file.type || '').toLowerCase();
-    const prefixes = opts.allowedExt.map((e) => EXT_MIME_PREFIX[e] ?? '');
+    const prefixes = opts.allowedExt.flatMap((e) => EXT_MIME_PREFIX[e] ?? []);
     if (!mime || !prefixes.some((p) => p && mime.startsWith(p))) {
         return 'Тип файла не соответствует допустимому формату';
     }

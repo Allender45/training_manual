@@ -260,16 +260,13 @@ export default function NewManualPage() {
                                     </div>
                                 )}
 
-                                <div>
-                                    <label className="block text-gray-500 text-sm mb-2">Описание</label>
-                                    <textarea
-                                        name="description"
-                                        value={form.description}
-                                        onChange={handleChange}
-                                        rows={3}
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                    />
-                                </div>
+                                <CKEditorField
+                                    label="Описание"
+                                    value={form.description}
+                                    onChange={value => setForm(prev => ({ ...prev, description: value }))}
+                                    placeholder="Введите описание материала..."
+                                    minHeight={120}
+                                />
 
                                 <div>
                                     <label className="block text-gray-500 text-sm mb-2">Комментарий</label>

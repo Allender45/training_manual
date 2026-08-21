@@ -30,6 +30,7 @@ type TableProps<T extends Record<string, any>> = {
     onEdit?: (row: T) => void;
     onDelete?: (row: T) => void;
     extraActions?: (row: T) => React.ReactNode;
+    onRowClick?: (row: T) => void;
 };
 
 export default function Table<T extends Record<string, any>>({
@@ -37,7 +38,7 @@ export default function Table<T extends Record<string, any>>({
                                                                  buttonEdit, buttonDel, buttonDetail, onEdit, onDelete,
                                                                  buttonPlay, buttonAnalyze, buttonViewAnalysis,
                                                                  onPlay, onAnalyze, onViewAnalysis, isPlayLoading,
-                                                                 isAnalysing, hasAnalysis, extraActions,
+                                                                 isAnalysing, hasAnalysis, extraActions, onRowClick,
                                                              }: TableProps<T>) {
     return (
         <div className="overflow-x-auto rounded-xl border border-gray-100">
@@ -50,7 +51,8 @@ export default function Table<T extends Record<string, any>>({
                             {col.header}
                         </th>
                     ))}
-                    {(buttonEdit || buttonDel || buttonPlay || buttonAnalyze || buttonViewAnalysis || extraActions) && <th className="px-4 py-3"/>}
+                    {(buttonEdit || buttonDel || buttonPlay || buttonAnalyze || buttonViewAnalysis || extraActions) &&
+                        <th className="px-4 py-3"/>}
                 </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -62,7 +64,8 @@ export default function Table<T extends Record<string, any>>({
                     </tr>
                 ) : (
                     data.map(row => (
-                            <tr key={String(row[keyField])} className="bg-white hover:bg-gray-50 transition-colors">
+                            <tr key={String(row[keyField])} className="bg-white hover:bg-gray-50 transition-colors"
+                                onClick={() => onRowClick?.(row)}>
                                 {columns.map(col => (
                                     <td key={col.key} className={`px-4 py-3 text-gray-700 ${col.className ?? ''}`}>
                                         {col.render ? col.render(row) : row[col.key]}
@@ -76,7 +79,7 @@ export default function Table<T extends Record<string, any>>({
                                                     className="p-1.5 rounded-lg text-white bg-[#41A141] transition-colors"
                                                     onClick={() => onEdit?.(row)}
                                                 >
-                                                    <Pencil size={14} />
+                                                    <Pencil size={14}/>
                                                 </button>
                                             )}
                                             {buttonDel && (
@@ -84,7 +87,7 @@ export default function Table<T extends Record<string, any>>({
                                                     className="p-1.5 rounded-lg text-white bg-red-600 transition-colors"
                                                     onClick={() => onDelete?.(row)}
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={14}/>
                                                 </button>
                                             )}
                                             {buttonDetail && (
@@ -92,31 +95,34 @@ export default function Table<T extends Record<string, any>>({
                                                     className="p-1.5 rounded-lg text-white bg-blue-500 transition-colors"
                                                     onClick={() => onEdit?.(row)}
                                                 >
-                                                    <Eye  size={14} />
+                                                    <Eye size={14}/>
                                                 </button>
                                             )}
                                             {(typeof buttonPlay === 'function' ? buttonPlay(row) : buttonPlay) && (
-                                                <button className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50"
-                                                        disabled={isPlayLoading?.(row)}
-                                                        onClick={() => onPlay?.(row)} title="Воспроизвести">
+                                                <button
+                                                    className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50"
+                                                    disabled={isPlayLoading?.(row)}
+                                                    onClick={() => onPlay?.(row)} title="Воспроизвести">
                                                     {isPlayLoading?.(row)
-                                                        ? <Loader2 size={14} className="animate-spin" />
-                                                        : <Play size={14} />}
+                                                        ? <Loader2 size={14} className="animate-spin"/>
+                                                        : <Play size={14}/>}
                                                 </button>
                                             )}
                                             {(typeof buttonAnalyze === 'function' ? buttonAnalyze(row) : buttonAnalyze) && (
-                                                <button className="p-1.5 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 disabled:opacity-50"
-                                                        disabled={isAnalysing?.(row)}
-                                                        onClick={() => onAnalyze?.(row)} title="Анализировать">
+                                                <button
+                                                    className="p-1.5 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 disabled:opacity-50"
+                                                    disabled={isAnalysing?.(row)}
+                                                    onClick={() => onAnalyze?.(row)} title="Анализировать">
                                                     {isAnalysing?.(row)
-                                                        ? <Loader2 size={14} className="animate-spin" />
-                                                        : <Sparkles size={14} />}
+                                                        ? <Loader2 size={14} className="animate-spin"/>
+                                                        : <Sparkles size={14}/>}
                                                 </button>
                                             )}
                                             {buttonViewAnalysis && hasAnalysis?.(row) && (
-                                                <button className="p-1.5 rounded-lg bg-green-100 text-green-600 hover:bg-green-200"
-                                                        onClick={() => onViewAnalysis?.(row)} title="Просмотр анализа">
-                                                    <Eye size={14} />
+                                                <button
+                                                    className="p-1.5 rounded-lg bg-green-100 text-green-600 hover:bg-green-200"
+                                                    onClick={() => onViewAnalysis?.(row)} title="Просмотр анализа">
+                                                    <Eye size={14}/>
                                                 </button>
                                             )}
                                             {extraActions && (

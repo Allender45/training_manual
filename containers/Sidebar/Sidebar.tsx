@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
     Home, FileText, Dumbbell, ClipboardList,
     Users, Building2, Shield, Trophy, BarChart2,
-    BookOpen, ChevronRight, BadgePercent, Sheet, Phone, GraduationCap, Images
+    BookOpen, ChevronRight, BadgePercent, Sheet, Phone, GraduationCap, Images, ListChecks
 } from 'lucide-react';
 import {usePathname} from 'next/navigation';
 import {SidebarButton} from '@/components';
@@ -80,12 +80,12 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
 
                     {/*Панель наставника*/}
                     {hasFeature(rid, 'sidebarStudentsTable') &&
-                            <SidebarButton href="/users" icon={Users} label="Стажёры"
-                                           sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
+                        <SidebarButton href="/users" icon={Users} label="Стажёры"
+                                       sidebarOpen={sidebarOpen} active={pathname.startsWith('/users')}/>
                     }
                     {hasFeature(rid, 'sidebarAdaptationPlans') &&
-                            <SidebarButton href="/adaptationPlans" icon={Sheet} label="Планы адаптации"
-                                           sidebarOpen={sidebarOpen} active={pathname.startsWith('/adaptationPlans')}/>
+                        <SidebarButton href="/adaptationPlans" icon={Sheet} label="Планы адаптации"
+                                       sidebarOpen={sidebarOpen} active={pathname.startsWith('/adaptationPlans')}/>
                     }
 
                     {/*Панель кадровика*/}
@@ -108,6 +108,11 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                             <SidebarButton href="/teachers" icon={GraduationCap} label="Наставники"
                                            sidebarOpen={sidebarOpen} active={pathname.startsWith('/teachers')}/>
                         </>
+                    }
+
+                    {(hasFeature(rid, 'sidebarServeysTable') || hasFeature(rid, 'checklistsManage')) &&
+                        <SidebarButton href="/surveys" icon={ClipboardList} label="Беседы"
+                                       sidebarOpen={sidebarOpen} active={pathname.startsWith('/surveys')}/>
                     }
 
 
@@ -150,14 +155,26 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                                    sidebarOpen={sidebarOpen}
                                                    active={pathname.startsWith('/departments')}/>
                                     {hasFeature(rid, 'sidebarAdminMenuRoles') &&
-                                        <SidebarButton href="/roles" icon={Shield} label="Роли" sidebarOpen={sidebarOpen}
+                                        <SidebarButton href="/roles" icon={Shield} label="Роли"
+                                                       sidebarOpen={sidebarOpen}
                                                        active={pathname.startsWith('/roles')}/>
                                     }
                                     <SidebarButton href="/achievements" icon={Trophy} label="Достижения"
-                                                   sidebarOpen={sidebarOpen} active={pathname.startsWith('/achievements')}/>
+                                                   sidebarOpen={sidebarOpen}
+                                                   active={pathname.startsWith('/achievements')}/>
                                     <SidebarButton href="/reports" icon={BarChart2} label="Отчёты"
                                                    sidebarOpen={sidebarOpen}
                                                    active={pathname.startsWith('/reports')}/>
+                                    {hasFeature(rid, 'checklistTriggersManage') &&
+                                        <SidebarButton href="/checklistTriggers" icon={BarChart2} label="Триггеры бесед"
+                                                       sidebarOpen={sidebarOpen}
+                                                       active={pathname.startsWith('/checklistTriggers')}/>
+                                    }
+                                    {hasFeature(rid, 'checklistsManage') &&
+                                        <SidebarButton href="/checklists" icon={ListChecks} label="Чек-листы"
+                                                       sidebarOpen={sidebarOpen}
+                                                       active={pathname.startsWith('/checklists')}/>
+                                    }
                                 </div>
                             )}
                         </div>}
