@@ -387,7 +387,10 @@ export default function CourseStudyPage() {
                                                             </span>
                                                         </div>
                                                         {manual.description && (
-                                                            <p className="text-sm text-gray-400 mt-0.5">{manual.description}</p>
+                                                            <div
+                                                                className="text-sm text-gray-400 mt-0.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-blue-500 [&_a]:underline"
+                                                                dangerouslySetInnerHTML={{ __html: manual.description }}
+                                                            />
                                                         )}
                                                     </div>
                                                 </div>
