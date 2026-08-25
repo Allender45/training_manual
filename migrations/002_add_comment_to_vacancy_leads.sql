@@ -1,0 +1,1 @@
+ALTER TABLE vacancy_leads ADD COLUMN IF NOT EXISTS comment TEXT;

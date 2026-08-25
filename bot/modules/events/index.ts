@@ -88,9 +88,9 @@ export const eventsModule: BotModule = {
         bot.hears('📅 Мероприятия', async (ctx) => {
             await showEventsList(ctx, false);
             if (isAdmin(ctx.user)) {
-                await ctx.reply('', Markup.keyboard([
+                await ctx.reply('Мероприятия:', Markup.keyboard([
                     ['➕ Создать мероприятие'],
-                    ['📅 Мероприятия'],
+                    ['🏠 Домой'],
                 ]).resize());
             }
         });

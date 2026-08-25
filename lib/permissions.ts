@@ -45,7 +45,9 @@ export type Feature =
     | 'courseTests'
     | 'checklistsManage'
     | 'sidebarServeysTable'
-    | 'checklistTriggersManage';
+    | 'checklistTriggersManage'
+    | 'sidebarEventsMenu'
+    | 'eventsTableAddButtons';
 
 type RolePermissions = Feature[] | '*';
 
@@ -98,6 +100,8 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'checklistTriggersManage',
         'checklistsManage',
         'sidebarServeysTable',
+        'sidebarEventsMenu',
+        'eventsTableAddButtons',
     ],    // Кадровик
     2: [
         'sidebarMentorMenu',
@@ -120,6 +124,8 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'checklistTriggersManage',
         'checklistsManage',
         'sidebarServeysTable',
+        'sidebarEventsMenu',
+        'eventsTableAddButtons',
     ],    // Админ
     1: '*',  // СуперПользователь
 };

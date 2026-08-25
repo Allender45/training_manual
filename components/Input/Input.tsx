@@ -18,7 +18,7 @@ function formatDateTimeLocal(date: Date): string {
 }
 
 type InputProps = {
-    label: string;
+    label?: string;
     name?: string;
     type?: 'text' | 'email' | 'tel' | 'password' | 'fileUpload' | 'number' | 'datetime' | 'textarea';
     rows?: number;

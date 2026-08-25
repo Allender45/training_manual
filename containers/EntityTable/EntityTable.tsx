@@ -79,8 +79,22 @@ export type FunctionalRow = {
     href: string;
 };
 
-export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow | AchievementRow | FunctionalRow;
-export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans' | 'achievements' | 'functional';
+export type EventRow = {
+    id: number;
+    title: string;
+    description: string;
+    category: string;
+    starts_at: string;
+    status: string;
+    visibility: 'all' | 'department' | 'whitelist';
+    department_id: number | null;
+    department_name: string | null;
+    hide_participants: boolean;
+    created_at: string;
+};
+
+export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow | AchievementRow | FunctionalRow | EventRow;
+export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans' | 'achievements' | 'functional' | 'events';
 
 type ColVisibility = Record<string, boolean>;
 
@@ -377,6 +391,33 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         ],
         addButtonFeature: 'functionalTableAddButtons',
     },
+    events: {
+        title: 'Мероприятия',
+        addHref: '/events',
+        emptyText: 'Мероприятия не найдены',
+        searchFields: (row: EventRow) => [row.title, row.description, row.category],
+        colVisibilityDefaults: { category: true, starts_at: true, visibility: true, department_name: true, status: true },
+        colLabels: { category: 'Категория', starts_at: 'Дата начала', visibility: 'Видимость', department_name: 'Подразделение', status: 'Статус' },
+        hasActiveFilter: false,
+        columns: [
+            { key: 'title', header: 'Название', render: (row: EventRow) => <span className="font-medium text-gray-800">{row.title}</span> },
+            { key: 'category', header: 'Категория', render: (row: EventRow) => <span className="text-sm text-gray-600">{row.category}</span> },
+            { key: 'starts_at', header: 'Дата начала', render: (row: EventRow) => <span className="text-sm text-gray-600">{new Date(row.starts_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span> },
+            {
+                key: 'visibility', header: 'Видимость',
+                render: (row: EventRow) => {
+                    const map: Record<string, string> = { all: 'Все', department: 'Подразделение', whitelist: 'Выборочно' };
+                    return <span className="text-sm text-gray-600">{map[row.visibility] ?? row.visibility}</span>;
+                },
+            },
+            { key: 'department_name', header: 'Подразделение', render: (row: EventRow) => row.department_name ? <span className="text-sm text-gray-600">{row.department_name}</span> : <span className="text-gray-400 text-sm">—</span> },
+            {
+                key: 'status', header: 'Статус',
+                render: (row: EventRow) => <Badge variant={row.status === 'open' ? 'green' : 'gray'} text={row.status === 'open' ? 'Открыто' : 'Закрыто'} />,
+            },
+        ],
+        addButtonFeature: 'eventsTableAddButtons',
+    },
 };
 
 type EntityTableProps = {
@@ -388,9 +429,10 @@ type EntityTableProps = {
     onDelete?: (row: EntityRow) => void;
     onAdd?: () => void;
     additionalFilters?: React.ReactNode;
+    onRowClick?: (row: EntityRow) => void;
 };
 
-export default function EntityTable({entityType, data, onEdit, onDelete, buttonEdit, buttonDel, onAdd, additionalFilters}: EntityTableProps) {
+export default function EntityTable({entityType, data, onEdit, onDelete, buttonEdit, buttonDel, onAdd, additionalFilters, onRowClick}: EntityTableProps) {
     const config = ENTITY_CONFIGS[entityType];
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -540,7 +582,7 @@ export default function EntityTable({entityType, data, onEdit, onDelete, buttonE
             <Table<any>
                 columns={columns} data={pageData} keyField="id"
                 emptyText={config.emptyText} buttonEdit={buttonEdit} buttonDel={buttonDel}
-                onEdit={onEdit} onDelete={onDelete}
+                onEdit={onEdit} onDelete={onDelete} onRowClick={onRowClick}
             />
 
             {showPagination && (
