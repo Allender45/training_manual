@@ -89,7 +89,7 @@ const CASES: CaseData[] = [
         client: 'Вовка без морды',
         city: 'Кострома',
         correctCity: 'Кострома',
-        address: 'Волжская 12',
+        address: 'Волжская 2-я 12',
         transcript: `Работы: Разгрузить фуру. Коробки по 40 кг.`,
         workerPrice: 400,
         correctPriceForClient: 475,
