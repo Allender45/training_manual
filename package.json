@@ -9,7 +9,8 @@
     "lint": "eslint",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "postinstall": "node -e \"require('fs').copyFileSync('node_modules/pdfjs-dist/build/pdf.worker.min.js','public/pdf.worker.min.js')\""
+    "postinstall": "node -e \"require('fs').copyFileSync('node_modules/pdfjs-dist/build/pdf.worker.min.js','public/pdf.worker.min.js')\"",
+    "bot": "tsx watch bot/index.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1054.0",
@@ -28,6 +29,8 @@
     "react-dom": "^18.3.1",
     "react-pdf": "^7.7.3",
     "recharts": "^3.8.1",
+    "telegraf": "^4.16.3",
+    "tsx": "^4.23.12",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
