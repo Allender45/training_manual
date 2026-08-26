@@ -93,8 +93,32 @@ export type EventRow = {
     created_at: string;
 };
 
-export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow | AchievementRow | FunctionalRow | EventRow;
-export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans' | 'achievements' | 'functional' | 'events';
+export type VacancyRow = {
+    id: number;
+    title: string;
+    description: string;
+    image_url: string | null;
+    status: string;
+    created_by: number;
+    created_at: string;
+    leads_count: number;
+};
+
+export type VacancyLeadRow = {
+    id: number;
+    vacancy_id: number;
+    vacancy_title: string;
+    referrer_user_id: number | null;
+    telegram_id: number;
+    full_name: string;
+    phone: string;
+    status: string;
+    comment: string | null;
+    created_at: string;
+};
+
+export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow | AchievementRow | FunctionalRow | EventRow | VacancyRow | VacancyLeadRow;
+export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans' | 'achievements' | 'functional' | 'events' | 'vacancies' | 'vacancyLeads';
 
 type ColVisibility = Record<string, boolean>;
 
@@ -106,7 +130,7 @@ type EntityConfig = {
     colVisibilityDefaults: ColVisibility;
     colLabels: Record<string, string>;
     searchFields: (row: any) => (string | null | undefined)[];
-    addButtonFeature: string;
+    addButtonFeature?: string;
     hasActiveFilter?: boolean;
 };
 
@@ -418,6 +442,62 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
         ],
         addButtonFeature: 'eventsTableAddButtons',
     },
+    vacancies: {
+        title: 'Вакансии',
+        addHref: '/vacancies',
+        emptyText: 'Вакансии не найдены',
+        searchFields: (row: VacancyRow) => [row.title, row.description],
+        colVisibilityDefaults: { status: true, leads_count: true, created_at: true },
+        colLabels: { status: 'Статус', leads_count: 'Отклики', created_at: 'Дата создания' },
+        hasActiveFilter: false,
+        columns: [
+            { key: 'title', header: 'Название', render: (row: VacancyRow) => <span className="font-medium text-gray-800">{row.title}</span> },
+            {
+                key: 'status', header: 'Статус',
+                render: (row: VacancyRow) => <Badge variant={row.status === 'open' ? 'green' : 'gray'} text={row.status === 'open' ? 'Открыта' : 'Закрыта'} />,
+            },
+            { key: 'leads_count', header: 'Отклики', render: (row: VacancyRow) => <span className="text-sm text-gray-600">{row.leads_count}</span> },
+            { key: 'created_at', header: 'Дата создания', render: (row: VacancyRow) => <span className="text-sm text-gray-600">{new Date(row.created_at).toLocaleDateString('ru-RU')}</span> },
+        ],
+        addButtonFeature: 'vacanciesTableAddButtons',
+    },
+    vacancyLeads: {
+        title: 'Отклики на вакансии',
+        addHref: '/vacancies/leads',
+        emptyText: 'Отклики не найдены',
+        searchFields: (row: VacancyLeadRow) => [row.full_name, row.phone, row.vacancy_title],
+        colVisibilityDefaults: { vacancy_title: true, phone: true, status: true, comment: false, created_at: true },
+        colLabels: { vacancy_title: 'Вакансия', phone: 'Телефон', status: 'Статус', comment: 'Комментарий', created_at: 'Дата отклика' },
+        hasActiveFilter: false,
+        columns: [
+            { key: 'full_name', header: 'Кандидат', render: (row: VacancyLeadRow) => <span className="font-medium text-gray-800">{row.full_name}</span> },
+            { key: 'vacancy_title', header: 'Вакансия', render: (row: VacancyLeadRow) => <span className="text-sm text-gray-600">{row.vacancy_title}</span> },
+            { key: 'phone', header: 'Телефон', render: (row: VacancyLeadRow) => <span className="text-sm text-gray-600">{row.phone}</span> },
+            {
+                key: 'status', header: 'Статус',
+                render: (row: VacancyLeadRow) => {
+                    const map: Record<string, { text: string; variant: 'green' | 'gray' | 'amber' | 'blue' }> = {
+                        new: { text: '🆕 Новый', variant: 'gray' },
+                        in_progress: { text: '⏳ В работе', variant: 'blue' },
+                        hired: { text: '✅ Принят', variant: 'green' },
+                        rejected: { text: '❌ Отказ', variant: 'amber' },
+                    };
+                    const cfg = map[row.status] ?? { text: row.status, variant: 'gray' as const };
+                    return <Badge variant={cfg.variant} text={cfg.text} />;
+                },
+            },
+            {
+                key: 'comment', header: 'Комментарий',
+                render: (row: VacancyLeadRow) => row.comment
+                    ? <span className="text-sm text-gray-600 line-clamp-2">{row.comment}</span>
+                    : <span className="text-gray-400 text-sm">—</span>,
+            },
+            {
+                key: 'created_at', header: 'Дата отклика',
+                render: (row: VacancyLeadRow) => <span className="text-sm text-gray-600">{new Date(row.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>,
+            },
+        ],
+    },
 };
 
 type EntityTableProps = {
@@ -529,7 +609,7 @@ export default function EntityTable({entityType, data, onEdit, onDelete, buttonE
                         <Settings size={18}/>
                     </button>
                 </div>
-                {hasFeature(rid, config.addButtonFeature as any) && (
+                {config.addButtonFeature && hasFeature(rid, config.addButtonFeature as any) && (
                     <Button size="sm" onClick={() => onAdd ? onAdd() : router.push(config.addHref)}>
                         <Plus size={14} className="mr-1"/>
                         Добавить

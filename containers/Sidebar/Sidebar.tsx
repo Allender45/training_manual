@@ -4,7 +4,7 @@ import React, {useState} from 'react';
 import Link from 'next/link';
 import {
     Home, FileText, Dumbbell, ClipboardList,
-    Users, Building2, Shield, Trophy, BarChart2, Calendar,
+    Users, Building2, Shield, Trophy, BarChart2, Calendar, Briefcase,
     BookOpen, ChevronRight, BadgePercent, Sheet, Phone, GraduationCap, Images, ListChecks
 } from 'lucide-react';
 import {usePathname} from 'next/navigation';
@@ -183,6 +183,17 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                 </div>
                             )}
                         </div>}
+
+                    {hasFeature(rid, 'sidebarVacanciesMenu') &&
+                        <>
+                            <SidebarButton href="/vacancies" icon={Briefcase} label="Вакансии"
+                                           sidebarOpen={sidebarOpen}
+                                           active={pathname === '/vacancies'}/>
+                            <SidebarButton href="/vacancies/leads" icon={ClipboardList} label="Отклики"
+                                           sidebarOpen={sidebarOpen}
+                                           active={pathname.startsWith('/vacancies/leads')}/>
+                        </>
+                    }
 
                     <SidebarButton href="/gallery" icon={Images} label="Фотогалерея" sidebarOpen={sidebarOpen}
                                    active={pathname.startsWith('/gallery')}/>
