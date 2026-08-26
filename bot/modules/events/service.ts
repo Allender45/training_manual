@@ -43,7 +43,15 @@ export async function getDepartments(): Promise<DepartmentRow[]> {
 }
 
 export async function getVisibleEvents(user: AppUser | null): Promise<EventRow[]> {
-    if (!user) return [];
+    if (!user) {
+        const { rows } = await pool.query(
+            `SELECT id, title, description, category, starts_at, status, visibility, hide_participants
+             FROM events
+             WHERE status = 'open' AND visibility = 'all'
+             ORDER BY starts_at`
+        );
+        return rows;
+    }
 
     if (isAdmin(user)) {
         const { rows } = await pool.query(
