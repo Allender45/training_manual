@@ -117,8 +117,18 @@ export type VacancyLeadRow = {
     created_at: string;
 };
 
-export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow | AchievementRow | FunctionalRow | EventRow | VacancyRow | VacancyLeadRow;
-export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans' | 'achievements' | 'functional' | 'events' | 'vacancies' | 'vacancyLeads';
+export type NewsRow = {
+    id: number;
+    title: string;
+    body: string;
+    image_url: string | null;
+    author_name: string | null;
+    published: boolean;
+    created_at: string;
+};
+
+export type EntityRow = CourseRow | ManualRow | TrainingRow | TestRow | AdaptationPlanRow | AchievementRow | FunctionalRow | EventRow | VacancyRow | VacancyLeadRow | NewsRow;
+export type EntityType = 'courses' | 'manuals' | 'trainings' | 'tests' | 'adaptation_plans' | 'achievements' | 'functional' | 'events' | 'vacancies' | 'vacancyLeads' | 'news';
 
 type ColVisibility = Record<string, boolean>;
 
@@ -497,6 +507,25 @@ const ENTITY_CONFIGS: Record<EntityType, EntityConfig> = {
                 render: (row: VacancyLeadRow) => <span className="text-sm text-gray-600">{new Date(row.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>,
             },
         ],
+    },
+    news: {
+        title: 'Новости',
+        addHref: '/news',
+        emptyText: 'Новости не найдены',
+        searchFields: (row: NewsRow) => [row.title, row.body, row.author_name],
+        colVisibilityDefaults: { author_name: true, published: true, created_at: true },
+        colLabels: { author_name: 'Автор', published: 'Видимость', created_at: 'Дата создания' },
+        hasActiveFilter: false,
+        columns: [
+            { key: 'title', header: 'Заголовок', render: (row: NewsRow) => <span className="font-medium text-gray-800">{row.title}</span> },
+            { key: 'author_name', header: 'Автор', render: (row: NewsRow) => row.author_name ? <span className="text-sm text-gray-600">{row.author_name}</span> : <span className="text-gray-400 text-sm">—</span> },
+            {
+                key: 'published', header: 'Видимость',
+                render: (row: NewsRow) => <Badge variant={row.published ? 'green' : 'gray'} text={row.published ? 'Показывается' : 'Скрыта'} />,
+            },
+            { key: 'created_at', header: 'Дата создания', render: (row: NewsRow) => <span className="text-sm text-gray-600">{new Date(row.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span> },
+        ],
+        addButtonFeature: 'newsTableManage',
     },
 };
 

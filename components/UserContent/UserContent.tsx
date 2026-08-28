@@ -91,6 +91,12 @@ export default function UserContent({userId}: Props) {
     }, [userId]);
 
     useEffect(() => {
+        if (!isCreate || !activeUser || activeUser.role_id !== 4) return;
+        setForm(prev => ({ ...prev, department_id: String(activeUser.department_id ?? '') }));
+        setMentorForm({ mentor_id: String(activeUser.id) });
+    }, [isCreate, activeUser]);
+
+    useEffect(() => {
         return () => {
             if (photoPreview) URL.revokeObjectURL(photoPreview);
         };

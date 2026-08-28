@@ -49,7 +49,9 @@ export type Feature =
     | 'sidebarEventsMenu'
     | 'eventsTableAddButtons'
     | 'sidebarVacanciesMenu'
-    | 'vacanciesTableAddButtons';
+    | 'vacanciesTableAddButtons'
+    | 'sidebarNewsMenu'
+    | 'newsTableManage';
 
 
 type RolePermissions = Feature[] | '*';
@@ -107,6 +109,8 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'eventsTableAddButtons',
         'sidebarVacanciesMenu',
         'vacanciesTableAddButtons',
+        'sidebarNewsMenu',
+        'newsTableManage',
     ],    // Кадровик
     2: [
         'sidebarMentorMenu',
@@ -133,6 +137,8 @@ export const ROLE_PERMISSIONS: Record<number, RolePermissions> = {
         'eventsTableAddButtons',
         'sidebarVacanciesMenu',
         'vacanciesTableAddButtons',
+        'sidebarNewsMenu',
+        'newsTableManage',
     ],    // Админ
     1: '*',  // СуперПользователь
 };

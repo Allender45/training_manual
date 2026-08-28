@@ -7,6 +7,7 @@ export interface NewsRow {
     image_url: string | null;
     created_by: number;
     created_at: string;
+    published: boolean;
 }
 
 export interface CreateNewsInput {
@@ -25,7 +26,10 @@ export async function createNews(input: CreateNewsInput): Promise<number> {
 }
 
 export async function getLatestNews(limit = 5): Promise<NewsRow[]> {
-    const { rows } = await pool.query('SELECT * FROM news ORDER BY created_at DESC LIMIT $1', [limit]);
+    const { rows } = await pool.query(
+        'SELECT * FROM news WHERE published = true ORDER BY created_at DESC LIMIT $1',
+        [limit]
+    );
     return rows;
 }
 

@@ -20,7 +20,7 @@ function formatDateTimeLocal(date: Date): string {
 type InputProps = {
     label?: string;
     name?: string;
-    type?: 'text' | 'email' | 'tel' | 'password' | 'fileUpload' | 'number' | 'datetime' | 'textarea';
+    type?: 'text' | 'email' | 'tel' | 'password' | 'fileUpload' | 'number' | 'date' | 'datetime' | 'textarea';
     rows?: number;
     value?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;

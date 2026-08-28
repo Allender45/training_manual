@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
     Home, FileText, Dumbbell, ClipboardList,
     Users, Building2, Shield, Trophy, BarChart2, Calendar, Briefcase,
-    BookOpen, ChevronRight, BadgePercent, Sheet, Phone, GraduationCap, Images, ListChecks
+    BookOpen, ChevronRight, BadgePercent, Sheet, Phone, GraduationCap, Images, ListChecks, Newspaper
 } from 'lucide-react';
 import {usePathname} from 'next/navigation';
 import {SidebarButton} from '@/components';
@@ -179,6 +179,11 @@ export default function Sidebar({sidebarOpen, mobileMenuOpen, setMobileMenuOpen}
                                         <SidebarButton href="/events" icon={Calendar} label="Мероприятия"
                                                        sidebarOpen={sidebarOpen}
                                                        active={pathname.startsWith('/events')}/>
+                                    }
+                                    {hasFeature(rid, 'sidebarNewsMenu') &&
+                                        <SidebarButton href="/news" icon={Newspaper} label="Новости"
+                                                       sidebarOpen={sidebarOpen}
+                                                       active={pathname.startsWith('/news')}/>
                                     }
                                 </div>
                             )}
