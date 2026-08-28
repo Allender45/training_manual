@@ -212,6 +212,12 @@ export default function EventsPage() {
         }
     }
 
+    async function handleDelete(row: EventRow) {
+        if (!confirm(`Удалить мероприятие «${row.title}»?`)) return;
+        const res = await fetch(`/api/events/${row.id}`, { method: 'DELETE' });
+        if (res.ok) setEvents(prev => prev.filter(e => e.id !== row.id));
+    }
+
     async function handleMoveParticipant(participantId: number, slotValue: string) {
         if (!detail) return;
         setMovingParticipantId(participantId);
@@ -247,6 +253,8 @@ export default function EventsPage() {
                         data={events}
                         onAdd={() => setModalOpen(true)}
                         onRowClick={row => openDetail(row as EventRow)}
+                        onDelete={row => handleDelete(row as EventRow)}
+                        buttonDel
                     />
                 </main>
             </div>

@@ -167,6 +167,12 @@ export default function VacanciesPage() {
         }
     }
 
+    async function handleDelete(row: VacancyRow) {
+        if (!confirm(`Удалить вакансию «${row.title}»?`)) return;
+        const res = await fetch(`/api/vacancies/${row.id}`, { method: 'DELETE' });
+        if (res.ok) setVacancies(prev => prev.filter(v => v.id !== row.id));
+    }
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             <Sidebar sidebarOpen={sidebarOpen} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
@@ -179,6 +185,8 @@ export default function VacanciesPage() {
                         data={vacancies}
                         onAdd={() => setModalOpen(true)}
                         onRowClick={row => openDetail(row as VacancyRow)}
+                        onDelete={row => handleDelete(row as VacancyRow)}
+                        buttonDel
                     />
                 </main>
             </div>

@@ -39,6 +39,7 @@ type InputProps = {
     dadata?: 'city' | 'address';
     dadataKladrId?: string;
     onDaDataSelect?: (suggestion: DaDataSuggestion) => void;
+    showCharCount?: boolean;
 };
 
 const icons = {
@@ -77,7 +78,7 @@ const icons = {
 const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
     {
         label, name, type = 'text', value, onChange, required, placeholder,
-        maxLength, minLength, icon, error, onFocus, onBlur, accept, className, disabled, rows, nearestTimeCheckbox = true, dadata, dadataKladrId, onDaDataSelect
+        maxLength, minLength, icon, error, onFocus, onBlur, accept, className, disabled, rows, nearestTimeCheckbox = true, dadata, dadataKladrId, onDaDataSelect, showCharCount
     },
     ref
 ) {
@@ -218,6 +219,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
     }
 
     if (type === 'textarea') {
+        const length = (value ?? '').length;
+        const atLimit = !!maxLength && length >= maxLength;
         return (
             <div className="relative">
                 <label htmlFor={name} className="block text-gray-500 text-sm mb-2">
@@ -238,7 +241,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
                         error ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                     }`}
                 />
-                {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+                <div className="flex items-center justify-between mt-1">
+                    {error ? <p className="text-red-500 text-xs">{error}</p> : <span/>}
+                    {showCharCount && maxLength && (
+                        <p className={`text-xs ${atLimit ? 'text-red-500' : 'text-gray-400'}`}>
+                            {length}/{maxLength}
+                        </p>
+                    )}
+                </div>
             </div>
         );
     }

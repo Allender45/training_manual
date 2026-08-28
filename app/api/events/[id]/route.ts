@@ -132,3 +132,30 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+    const auth = await requireFeature(req, 'eventsTableAddButtons');
+    if (auth instanceof NextResponse) return auth;
+
+    const eventId = Number(params.id);
+    if (!Number.isInteger(eventId)) return NextResponse.json({ error: 'Некорректный id' }, { status: 400 });
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query('DELETE FROM event_participants WHERE event_id = $1', [eventId]);
+        await client.query('DELETE FROM event_slots WHERE event_id = $1', [eventId]);
+        const result = await client.query('DELETE FROM events WHERE id = $1 RETURNING id', [eventId]);
+        await client.query('COMMIT');
+        if (result.rows.length === 0) {
+            return NextResponse.json({ error: 'Мероприятие не найдено' }, { status: 404 });
+        }
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        await client.query('ROLLBACK');
+        console.error('[events/[id] DELETE]', error);
+        return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
+    } finally {
+        client.release();
+    }
+}

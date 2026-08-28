@@ -77,7 +77,7 @@ export default function Table<T extends Record<string, any>>({
                                             {buttonEdit && (
                                                 <button
                                                     className="p-1.5 rounded-lg text-white bg-[#41A141] transition-colors"
-                                                    onClick={() => onEdit?.(row)}
+                                                    onClick={(e) => { e.stopPropagation(); onEdit?.(row); }}
                                                 >
                                                     <Pencil size={14}/>
                                                 </button>
@@ -85,7 +85,7 @@ export default function Table<T extends Record<string, any>>({
                                             {buttonDel && (
                                                 <button
                                                     className="p-1.5 rounded-lg text-white bg-red-600 transition-colors"
-                                                    onClick={() => onDelete?.(row)}
+                                                    onClick={(e) => { e.stopPropagation(); onDelete?.(row); }}
                                                 >
                                                     <Trash2 size={14}/>
                                                 </button>
@@ -93,7 +93,7 @@ export default function Table<T extends Record<string, any>>({
                                             {buttonDetail && (
                                                 <button
                                                     className="p-1.5 rounded-lg text-white bg-blue-500 transition-colors"
-                                                    onClick={() => onEdit?.(row)}
+                                                    onClick={(e) => { e.stopPropagation(); onEdit?.(row); }}
                                                 >
                                                     <Eye size={14}/>
                                                 </button>

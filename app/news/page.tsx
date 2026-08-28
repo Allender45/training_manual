@@ -159,6 +159,12 @@ export default function NewsPage() {
         }
     }
 
+    async function handleDelete(row: NewsRow) {
+        if (!confirm(`Удалить новость «${row.title}»?`)) return;
+        const res = await fetch(`/api/news/${row.id}`, { method: 'DELETE' });
+        if (res.ok) setNews(prev => prev.filter(n => n.id !== row.id));
+    }
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             <Sidebar sidebarOpen={sidebarOpen} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
@@ -171,6 +177,8 @@ export default function NewsPage() {
                         data={news}
                         onAdd={() => setModalOpen(true)}
                         onRowClick={row => openDetail(row as NewsRow)}
+                        onDelete={row => handleDelete(row as NewsRow)}
+                        buttonDel
                     />
                 </main>
             </div>
@@ -180,7 +188,7 @@ export default function NewsPage() {
                 <div className="flex flex-col gap-4">
                     <Input label="Заголовок" name="title" value={form.title}
                            onChange={e => { setForm(p => ({ ...p, title: e.target.value })); setFormError(null); }} />
-                    <Input label="Текст новости" name="body" type="textarea" rows={4} value={form.body}
+                    <Input label="Текст новости" name="body" type="textarea" rows={4} value={form.body} maxLength={4096} showCharCount
                            onChange={e => setForm(p => ({ ...p, body: e.target.value }))} />
                     <NewsImageField value={form.imageUrl} onChange={url => setForm(p => ({ ...p, imageUrl: url }))} />
 

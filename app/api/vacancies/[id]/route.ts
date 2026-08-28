@@ -59,3 +59,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+    const auth = await requireFeature(req, 'vacanciesTableAddButtons');
+    if (auth instanceof NextResponse) return auth;
+
+    const vacancyId = Number(params.id);
+    if (!Number.isInteger(vacancyId)) return NextResponse.json({ error: 'Некорректный id' }, { status: 400 });
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query('DELETE FROM vacancy_leads WHERE vacancy_id = $1', [vacancyId]);
+        const result = await client.query('DELETE FROM vacancies WHERE id = $1 RETURNING id', [vacancyId]);
+        await client.query('COMMIT');
+        if (result.rows.length === 0) {
+            return NextResponse.json({ error: 'Вакансия не найдена' }, { status: 404 });
+        }
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        await client.query('ROLLBACK');
+        console.error('[vacancies/[id] DELETE]', error);
+        return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
+    } finally {
+        client.release();
+    }
+}

@@ -22,3 +22,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+    const auth = await requireFeature(req, 'newsTableManage');
+    if (auth instanceof NextResponse) return auth;
+
+    try {
+        const result = await pool.query('DELETE FROM news WHERE id = $1 RETURNING id', [params.id]);
+        if (result.rows.length === 0) {
+            return NextResponse.json({ error: 'Новость не найдена' }, { status: 404 });
+        }
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error('[news DELETE]', error);
+        return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
+    }
+}
