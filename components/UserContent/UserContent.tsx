@@ -463,14 +463,15 @@ export default function UserContent({userId}: Props) {
                         </div>
                     )}
 
-                    {isCreate &&
+                    {(isCreate || showSimplePassword) &&
                         <Input
-                            label="Пароль"
+                            label={isCreate ? 'Пароль' : 'Новый пароль'}
                             name="newPassword"
                             type="password"
                             value={newPassword}
                             onChange={e => setNewPassword(e.target.value)}
                             icon="lock"
+                            placeholder={isCreate ? undefined : 'Оставьте пустым, чтобы не менять'}
                         />
                     }
 
