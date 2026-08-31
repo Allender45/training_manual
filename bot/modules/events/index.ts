@@ -122,12 +122,13 @@ export const eventsModule: BotModule = {
         });
 
         bot.action(/^ev:reg:(\d+):(\d+)$/, async (ctx) => {
-            if (!ctx.user) {
-                await ctx.answerCbQuery('Сначала привяжите аккаунт: /start', { show_alert: true });
-                return;
-            }
             const eventId = Number(ctx.match[1]);
             const slotId = Number(ctx.match[2]) || null;
+            if (!ctx.user) {
+                await ctx.answerCbQuery();
+                await ctx.scene.enter('event-register-user', { eventId, slotId });
+                return;
+            }
             const ok = await registerForEvent(eventId, ctx.user.id, slotId);
             await ctx.answerCbQuery(ok ? 'Вы записаны!' : 'Не удалось записаться (места закончились или вы уже записаны)');
             await showEventCard(ctx, eventId);

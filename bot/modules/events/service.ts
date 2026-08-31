@@ -1,4 +1,5 @@
 import pool from '../../db';
+import bcrypt from 'bcryptjs';
 import { AppUser } from '../../middlewares/resolveUser';
 import { isAdmin } from '../../permissions';
 
@@ -35,6 +36,14 @@ export interface CreateEventInput {
     createdBy: number;
     hideParticipants: boolean;
     slots: { label: string; capacity: number }[];
+}
+
+export interface GuestUserInput {
+    lastName: string;
+    firstName: string;
+    middleName: string;
+    phone: string;
+    telegramChatId: number;
 }
 
 export async function getDepartments(): Promise<DepartmentRow[]> {
@@ -204,4 +213,25 @@ export async function closeEvent(eventId: number): Promise<void> {
 
 export async function deleteEvent(eventId: number): Promise<void> {
     await pool.query('DELETE FROM events WHERE id = $1', [eventId]);
+}
+
+export async function createGuestUser(input: GuestUserInput): Promise<number> {
+    const roleRes = await pool.query("SELECT id FROM roles WHERE name = 'Стажёр'");
+    const roleId = roleRes.rows[0]?.id ?? null;
+    const passwordHash = await bcrypt.hash(input.phone, 12);
+    const res = await pool.query(
+        `INSERT INTO users (last_name, first_name, middle_name, phone, password_hash, role_id, telegram_chat_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id`,
+        [input.lastName, input.firstName, input.middleName, input.phone, passwordHash, roleId, input.telegramChatId]
+    );
+    return res.rows[0].id;
+}
+
+export async function getAppUserById(userId: number): Promise<AppUser | null> {
+    const { rows } = await pool.query(
+        'SELECT id, role_id, first_name, last_name, department_id FROM users WHERE id = $1',
+        [userId]
+    );
+    return rows[0] ?? null;
 }
