@@ -1,11 +1,11 @@
 'use client';
 
 import { Header, Sidebar } from "@/containers";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { TrainerRegistry } from "@/components/trainers/registry";
 
-export default function TestPage() {
+function TestPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const searchParams = useSearchParams();
@@ -29,5 +29,13 @@ export default function TestPage() {
                 </main>
             </div>
         </div>
+    );
+}
+
+export default function TestPageWrapper() {
+    return (
+        <Suspense fallback={null}>
+            <TestPage />
+        </Suspense>
     );
 }

@@ -1,11 +1,11 @@
 'use client';
 
-import {useState} from 'react';
+import {useState, Suspense} from 'react';
 import {useSearchParams} from 'next/navigation';
 import {Header, Sidebar} from '@/containers';
 import {UserContent} from '@/components';
 
-export default function EditUserPage() {
+function EditUserPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const searchParams = useSearchParams();
@@ -20,5 +20,13 @@ export default function EditUserPage() {
                 <UserContent userId={userId}/>
             </div>
         </div>
+    );
+}
+
+export default function EditUserPageWrapper() {
+    return (
+        <Suspense fallback={null}>
+            <EditUserPage />
+        </Suspense>
     );
 }

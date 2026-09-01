@@ -36,6 +36,8 @@ export const WithUser: Story = {
                     registered_at: new Date().toISOString(),
                     role_id: 1,
                     role: 'manager',
+                    crm_id: null,
+                    department_id: null,
                 },
                 loaded: true,
             });

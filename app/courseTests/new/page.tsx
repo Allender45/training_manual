@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
-import { useUserStore, useNotificationsStore, useCoursesStore, useAchievementsStore } from '@/store';
+import { useUserStore, useCoursesStore, useAchievementsStore } from '@/store';
 import { Header, Sidebar } from '@/containers';
-import { Input, Button, Checkbox, Select } from '@/components';
+import { Input, Button, Checkbox } from '@/components';
 import { Plus, Trash2, X } from 'lucide-react';
 
 type QuestionDraft = {
@@ -30,7 +30,7 @@ function emptyQuestion(): QuestionDraft {
     return { question: '', correct_answer: '', wrong_answers: ['', ''] };
 }
 
-export default function NewTestPage() {
+function NewTestPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
@@ -43,10 +43,8 @@ export default function NewTestPage() {
     const [questions, setQuestions] = useState<QuestionDraft[]>([emptyQuestion()]);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
-    const { courses, fetch: fetchCourses } = useCoursesStore();
-    const { achievements, fetch: fetchAchievements } = useAchievementsStore();
-
-    const achievementOptions = achievements.map(a => ({ value: String(a.id), label: a.title }));
+    const { fetch: fetchCourses } = useCoursesStore();
+    const { fetch: fetchAchievements } = useAchievementsStore();
 
     useEffect(() => {
         fetchUser(() => router.push('/login'));
@@ -245,7 +243,7 @@ export default function NewTestPage() {
                                                         />
                                                         {q.wrong_answers.length > 1 && (
                                                             <button onClick={() => removeWrongAnswer(qi, ai)}
-                                                                    className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0">
+                                                                    className="text-gray-300 hover:text-red-400 transition-colors shrink-0">
                                                                 <X size={16} />
                                                             </button>
                                                         )}
@@ -277,5 +275,13 @@ export default function NewTestPage() {
                 </main>
             </div>
         </div>
+    );
+}
+
+export default function NewTestPageWrapper() {
+    return (
+        <Suspense fallback={null}>
+            <NewTestPage />
+        </Suspense>
     );
 }

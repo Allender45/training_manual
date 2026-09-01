@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUserStore } from '@/store/userStore';
 import { Header, Sidebar } from '@/containers';
-import { Clock, BookOpen, Video, Music, FileText, ChevronRight } from 'lucide-react';
+import { Clock, BookOpen, Video, Music, FileText } from 'lucide-react';
 
 type Course = {
     id: number;
@@ -46,7 +46,7 @@ const TYPE_CONFIG = {
     audio: { label: 'Аудио', icon: Music,    color: 'bg-amber-50 text-amber-700'  },
 } as const;
 
-export default function CourseStudyPage() {
+function CourseStudyPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
@@ -102,7 +102,7 @@ export default function CourseStudyPage() {
                                     <img
                                         src={course.icon}
                                         alt={course.title}
-                                        className="w-20 h-20 rounded-2xl object-cover flex-shrink-0 border border-gray-100"
+                                        className="w-20 h-20 rounded-2xl object-cover shrink-0 border border-gray-100"
                                     />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3 flex-wrap mb-1">
@@ -151,18 +151,18 @@ export default function CourseStudyPage() {
                                             <div key={manual.id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
                                                 {/* Шапка материала */}
                                                 <div className="p-4 flex items-center gap-4 border-b border-gray-100">
-                                                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-sm font-semibold flex-shrink-0">
+                                                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-sm font-semibold shrink-0">
                                                         {index + 1}
                                                     </div>
                                                     <img
                                                         src={manual.icon}
                                                         alt={manual.title}
-                                                        className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
+                                                        className="w-10 h-10 rounded-xl object-cover shrink-0"
                                                     />
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 flex-wrap">
                                                             <span className="font-semibold text-gray-800">{manual.title}</span>
-                                                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${cfg.color}`}>
+                                                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full shrink-0 ${cfg.color}`}>
                                 <TypeIcon size={11} />
                                                                 {cfg.label}
                             </span>
@@ -202,5 +202,13 @@ export default function CourseStudyPage() {
                 </main>
             </div>
         </div>
+    );
+}
+
+export default function CourseStudyPageWrapper() {
+    return (
+        <Suspense fallback={null}>
+            <CourseStudyPage />
+        </Suspense>
     );
 }

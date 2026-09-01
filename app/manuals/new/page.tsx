@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUserStore } from '@/store/userStore';
 import { Header, Sidebar } from '@/containers';
@@ -21,7 +21,7 @@ const emptyForm: NewManualForm = {
     title: '', type: 'text', description: '', prerequisite_id: '', comment: '', is_active: true,
 };
 
-export default function NewManualPage() {
+function NewManualPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
@@ -294,5 +294,13 @@ export default function NewManualPage() {
                 </main>
             </div>
         </div>
+    );
+}
+
+export default function NewManualPageWrapper() {
+    return (
+        <Suspense fallback={null}>
+            <NewManualPage />
+        </Suspense>
     );
 }

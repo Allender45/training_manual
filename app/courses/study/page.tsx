@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, Suspense} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
 import {useUserStore, useNotificationsStore, useAchievementsStore} from '@/store';
 import {Header, Sidebar, Modal} from '@/containers';
@@ -101,7 +101,7 @@ const TRAINER_COMPONENTS: Record<string, React.ComponentType<any>> = {
     FullOrderCreate,
 };
 
-export default function CourseStudyPage() {
+function CourseStudyPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
@@ -622,5 +622,13 @@ export default function CourseStudyPage() {
                 );
             })()}
         </div>
+    );
+}
+
+export default function CourseStudyPageWrapper() {
+    return (
+        <Suspense fallback={null}>
+            <CourseStudyPage />
+        </Suspense>
     );
 }

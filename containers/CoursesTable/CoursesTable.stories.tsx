@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
 import CoursesTable from './CoursesTable';
-import type { CourseRow } from './CoursesTable';
+import type { CourseRow } from '@/containers';
 
 const meta: Meta<typeof CoursesTable> = {
     title: 'Containers/CoursesTable',
@@ -32,6 +32,7 @@ const SAMPLE_COURSES: CourseRow[] = [
         description: 'Базовый курс для новых сотрудников отдела продаж.',
         study_time_minutes: 90, achievement: 'Продавец новичок',
         is_active: true, created_at: '2025-01-15T10:00:00Z',
+        prerequisite_course_id: null, is_locked: false,
     },
     {
         id: 2, title: 'Работа с возражениями',
@@ -39,6 +40,7 @@ const SAMPLE_COURSES: CourseRow[] = [
         description: 'Продвинутые техники работы с возражениями клиентов.',
         study_time_minutes: 120, achievement: null,
         is_active: true, created_at: '2025-02-01T10:00:00Z',
+        prerequisite_course_id: 1, is_locked: false,
     },
     {
         id: 3, title: 'Клиентский сервис',
@@ -46,6 +48,7 @@ const SAMPLE_COURSES: CourseRow[] = [
         description: 'Стандарты обслуживания клиентов компании.',
         study_time_minutes: 60, achievement: 'Мастер сервиса',
         is_active: false, created_at: '2025-03-10T10:00:00Z',
+        prerequisite_course_id: null, is_locked: false,
     },
     {
         id: 4, title: 'Безопасность данных',
@@ -53,6 +56,7 @@ const SAMPLE_COURSES: CourseRow[] = [
         description: 'Правила информационной безопасности.',
         study_time_minutes: null, achievement: null,
         is_active: true, created_at: '2025-04-05T10:00:00Z',
+        prerequisite_course_id: null, is_locked: true,
     },
 ];
 
@@ -77,6 +81,8 @@ const MANY_COURSES: CourseRow[] = Array.from({ length: 25 }, (_, i) => ({
     achievement: i % 3 === 0 ? `Достижение ${i + 1}` : null,
     is_active: i % 4 !== 0,
     created_at: new Date(2025, i % 12, (i % 28) + 1).toISOString(),
+    prerequisite_course_id: null,
+    is_locked: false,
 }));
 
 export const WithPagination: Story = {

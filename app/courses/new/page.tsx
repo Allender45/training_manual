@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, useEffect} from 'react';
+import {useState, useEffect, Suspense} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
 import {
     useUserStore,
@@ -34,7 +34,7 @@ const emptyForm: CourseForm = {
     notify_trainee: '', notify_mentor: '',
 };
 
-export default function NewCoursePage() {
+function NewCoursePage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const router = useRouter();
@@ -451,5 +451,13 @@ export default function NewCoursePage() {
                 </main>
             </div>
         </div>
+    );
+}
+
+export default function NewCoursePageWrapper() {
+    return (
+        <Suspense fallback={null}>
+            <NewCoursePage />
+        </Suspense>
     );
 }
