@@ -6,6 +6,8 @@ export interface AppUser {
     role_id: number;
     first_name: string;
     last_name: string;
+    middle_name: string;
+    phone: string;
     department_id: number | null;
 }
 
@@ -23,7 +25,7 @@ export const resolveUser: MiddlewareFn<BotContext> = async (ctx, next) => {
     }
 
     const { rows } = await pool.query(
-        'SELECT id, role_id, first_name, last_name, department_id FROM users WHERE telegram_chat_id = $1 AND is_active = true',
+        'SELECT id, role_id, first_name, last_name, middle_name, phone, department_id FROM users WHERE telegram_chat_id = $1 AND is_active = true',
         [chatId]
     );
     ctx.user = rows[0] ?? null;

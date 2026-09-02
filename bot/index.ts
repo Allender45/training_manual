@@ -10,8 +10,9 @@ import { leadScene } from './modules/hr/leadScene';
 import { leadCommentScene } from './modules/hr/commentScene';
 import { createNewsScene } from './modules/news/createNewsScene';
 import { eventRegisterUserScene } from './modules/events/registerUserScene';
+import { supportRequestScene } from './modules/support/scene';
 
-const stage = new Scenes.Stage<BotContext>([createEventScene, createVacancyScene, leadScene, leadCommentScene, createNewsScene, eventRegisterUserScene]);
+const stage = new Scenes.Stage<BotContext>([createEventScene, createVacancyScene, leadScene, leadCommentScene, createNewsScene, eventRegisterUserScene, supportRequestScene]);
 
 bot.use(resolveUser);
 bot.use(session());

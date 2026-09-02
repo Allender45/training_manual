@@ -230,7 +230,7 @@ export async function createGuestUser(input: GuestUserInput): Promise<number> {
 
 export async function getAppUserById(userId: number): Promise<AppUser | null> {
     const { rows } = await pool.query(
-        'SELECT id, role_id, first_name, last_name, department_id FROM users WHERE id = $1',
+        'SELECT id, role_id, first_name, last_name, middle_name, phone, department_id FROM users WHERE id = $1',
         [userId]
     );
     return rows[0] ?? null;
