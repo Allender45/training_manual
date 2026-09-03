@@ -3,6 +3,7 @@ import { BotContext } from '../../middlewares/resolveUser';
 import { mainMenuKeyboard } from '../../menu';
 import { sendSupportRequest } from './service';
 import { createGuestUser, getAppUserById } from '../events/service';
+import { SUPPORT_STAFF_TELEGRAM_IDS } from '../../config';
 
 function isText(ctx: BotContext): ctx is BotContext & { message: { text: string } } {
     return !!ctx.message && 'text' in ctx.message;
@@ -121,22 +122,56 @@ async function registerGuestAndFinish(ctx: BotContext, phone: string) {
 
 async function finish(ctx: BotContext) {
     const state = ctx.wizard.state as any;
+    const payload = {
+        description: state.data.description,
+        contactPhone: state.data.contactPhone,
+        workplaceNumber: state.data.workplaceNumber,
+        lastName: state.lastName,
+        firstName: state.firstName,
+        middleName: state.middleName,
+        phone: state.phone,
+        telegramChatId: ctx.chat!.id,
+        userId: state.userId ?? null,
+    };
+
     try {
-        await sendSupportRequest({
-            description: state.data.description,
-            contactPhone: state.data.contactPhone,
-            workplaceNumber: state.data.workplaceNumber,
-            lastName: state.lastName,
-            firstName: state.firstName,
-            middleName: state.middleName,
-            phone: state.phone,
-            telegramChatId: ctx.chat!.id,
-            userId: state.userId ?? null,
-        });
+        await sendSupportRequest(payload);
         await ctx.reply('✅ Заявка передана в техподдержку.', mainMenuKeyboard(ctx));
     } catch (e) {
         console.error('[support] Не удалось отправить заявку:', e);
         await ctx.reply('Не удалось отправить заявку. Попробуйте позже.', mainMenuKeyboard(ctx));
     }
+
+    await notifySupportStaff(ctx, payload);
     return ctx.scene.leave();
+}
+
+async function notifySupportStaff(ctx: BotContext, payload: {
+    description: string;
+    contactPhone: string;
+    workplaceNumber: string;
+    lastName: string;
+    firstName: string;
+    middleName: string;
+    phone: string;
+}) {
+    if (SUPPORT_STAFF_TELEGRAM_IDS.length === 0) {
+        console.warn('[support] SUPPORT_STAFF_TELEGRAM_ID не задан, уведомление сотруднику не отправлено');
+        return;
+    }
+
+    const text = `🆘 *Новое обращение в техподдержку*\n\n`
+        + `👤 ${payload.lastName} ${payload.firstName} ${payload.middleName}\n`
+        + `📞 Свой телефон: ${payload.phone}\n`
+        + `☎️ Контактный телефон: ${payload.contactPhone}\n`
+        + `🖥 Рабочее место: ${payload.workplaceNumber}\n\n`
+        + `💬 ${payload.description}`;
+
+    for (const chatId of SUPPORT_STAFF_TELEGRAM_IDS) {
+        try {
+            await ctx.telegram.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+        } catch (e) {
+            console.error(`[support] Не удалось уведомить сотрудника ${chatId}:`, e);
+        }
+    }
 }
