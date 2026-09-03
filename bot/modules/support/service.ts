@@ -1,4 +1,4 @@
-import { SUPPORT_API_URL } from '../../config';
+import { SUPPORT_API_URL, SUPPORT_BOT_API_KEY } from '../../config';
 
 export interface SupportRequestInput {
     description: string;
@@ -20,7 +20,10 @@ export async function sendSupportRequest(input: SupportRequestInput): Promise<vo
 
     const response = await fetch(SUPPORT_API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': SUPPORT_BOT_API_KEY,
+        },
         body: JSON.stringify(input),
     });
 
