@@ -16,6 +16,7 @@ type Course = {
     study_time_minutes: number | null;
     is_active: boolean;
     test_id: number | null;
+    achievement_id: number | null;
 };
 
 type CourseTrainer = {
@@ -42,7 +43,6 @@ type CourseTest = {
     shuffle_questions: boolean;
     shuffle_answers: boolean;
     notify_trainee: string | null;
-    achievement_id: number | null;
 };
 
 type TestQuestion = {
@@ -270,8 +270,8 @@ function CourseStudyPage() {
                     push({text: 'Стажёр: ' + user?.last_name + ' ' + user?.first_name + ' ' + user?.middle_name + ' ' + courseTest.notify_trainee, icon: '📋'});
                 }
 
-                if (courseTest?.achievement_id) {
-                    const achievement = achievements.find(a => a.id === courseTest.achievement_id);
+                if (course?.achievement_id) {
+                    const achievement = achievements.find(a => a.id === course.achievement_id);
                     if (achievement) showAchievement(achievement);
                 }
 
