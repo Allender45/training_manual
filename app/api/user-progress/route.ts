@@ -22,6 +22,29 @@ export async function POST(req: NextRequest) {
              ON CONFLICT (user_id, content_type, content_id) DO UPDATE SET completed_at = NOW(), score = $4`,
             [userId, content_type, content_id, score ?? null]
         );
+
+        // При завершении курса выдаём привязанную к курсу награду, если она задана.
+        // Отдельный try/catch: сбой выдачи награды не должен ломать запись прогресса.
+        if (content_type === 'course') {
+            try {
+                const courseRes = await pool.query(
+                    'SELECT achievement_id FROM courses WHERE id = $1',
+                    [content_id]
+                );
+                const achievementId = courseRes.rows[0]?.achievement_id;
+                if (achievementId) {
+                    await pool.query(
+                        `INSERT INTO user_progress (user_id, content_type, content_id)
+                         VALUES ($1, 'achievement', $2)
+                         ON CONFLICT (user_id, content_type, content_id) DO NOTHING`,
+                        [userId, achievementId]
+                    );
+                }
+            } catch (grantError) {
+                console.error('[POST /api/user-progress] Не удалось выдать награду курса:', grantError);
+            }
+        }
+
         return NextResponse.json({ ok: true });
     } catch (error: any) {
         console.error('[POST /api/user-progress]', error);
